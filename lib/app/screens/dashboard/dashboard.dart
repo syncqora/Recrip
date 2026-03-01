@@ -17,7 +17,6 @@ class Dashboard extends GetView<DashboardController> {
   const Dashboard({super.key});
 
   static const _sidebarWidth = 264.0;
-  static const _sidebarHeight = 900.0;
   static const _menuContentWidth = 220.0;
 
   // Design colors (exact from image)
@@ -51,36 +50,31 @@ class Dashboard extends GetView<DashboardController> {
     }
     return Scaffold(
       backgroundColor: Colors.white,
-      body: Column(
+      body: Row(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        mainAxisAlignment: MainAxisAlignment.end,
         children: [
-          Expanded(
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisAlignment: MainAxisAlignment.end,
-              children: [
-                _buildSidebar(context),
-                Expanded(child: _buildMainContent(context)),
-              ],
-            ),
-          ),
-          _buildFooter(),
+          _buildSidebar(context),
+          Expanded(child: _buildMainContent(context)),
         ],
       ),
     );
   }
 
+  /// Footer shown only in the main content area (right of sidebar), centered, at the end of the column.
   Widget _buildFooter() {
     return Container(
       width: double.infinity,
-      color: Color(0xFFF8FAFC),
+      color: const Color(0xFFF8FAFC),
       padding: const EdgeInsets.symmetric(vertical: 16),
-      alignment: Alignment.center,
-      child: Text(
-        '© 2026 All rights reserved',
-        style: Get.textTheme.bodySmall?.copyWith(
-          color: _textMuted,
-          fontSize: 12,
-          fontFamily: 'Poppins',
+      child: Center(
+        child: Text(
+          '© 2026 All rights reserved',
+          style: Get.textTheme.bodySmall?.copyWith(
+            color: _textMuted,
+            fontSize: 12,
+            fontFamily: 'Poppins',
+          ),
         ),
       ),
     );
@@ -138,20 +132,18 @@ class Dashboard extends GetView<DashboardController> {
       ];
       return Container(
         width: _sidebarWidth,
-        height: _sidebarHeight,
         decoration: const BoxDecoration(
           color: Colors.white,
-          // border: Border(right: BorderSide(color: Color(0xFFE5E7EB), width: 1)),
         ),
         child: Column(
           children: [
             const SizedBox(height: 24),
             Expanded(
-              child: Center(
+              child: Align(
+                alignment: Alignment.topCenter,
                 child: SizedBox(
                   width: _menuContentWidth,
                   child: Column(
-                    mainAxisSize: MainAxisSize.min,
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
                       Padding(
@@ -178,10 +170,9 @@ class Dashboard extends GetView<DashboardController> {
             ),
             const Divider(thickness: 1, color: Color(0xFFCBD5E1)),
             Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 22),
+              padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 16),
               child: _buildLogoutTile(),
             ),
-            const SizedBox(height: 16),
           ],
         ),
       );
@@ -290,6 +281,7 @@ class Dashboard extends GetView<DashboardController> {
             }),
           ),
         ),
+        _buildFooter(),
       ],
     );
   }
@@ -598,11 +590,11 @@ class Dashboard extends GetView<DashboardController> {
                   border: Border.all(color: Color(0xFFE2E8F0)),
                 ),
                 children: [
-                  _tableCell('Name', isHeader: true, horizontalPadding: 24),
-                  _tableCell('Plan', isHeader: true, horizontalPadding: 24),
-                  _tableCell('Expiry', isHeader: true, horizontalPadding: 24),
-                  _tableCell('Status', isHeader: true, horizontalPadding: 24),
-                  _tableCell('Action', isHeader: true, horizontalPadding: 24),
+                  _tableCell('Name', isHeader: true, horizontalPadding: 24, align: Alignment.centerLeft),
+                  _tableCell('Plan', isHeader: true, horizontalPadding: 24, align: Alignment.center),
+                  _tableCell('Expiry', isHeader: true, horizontalPadding: 24, align: Alignment.center),
+                  _tableCell('Status', isHeader: true, horizontalPadding: 24, align: Alignment.center),
+                  _tableCell('Action', isHeader: true, horizontalPadding: 24, align: Alignment.center),
                 ],
               ),
               ...rows.asMap().entries.map(
@@ -614,16 +606,17 @@ class Dashboard extends GetView<DashboardController> {
                     border: Border.all(color: Color(0xFFE2E8F0)),
                   ),
                   children: [
-                    _tableCell(e.value.name, horizontalPadding: 24),
-                    _tableCell(e.value.plan, horizontalPadding: 24),
-                    _tableCell(e.value.expiry, horizontalPadding: 24),
+                    _tableCell(e.value.name, horizontalPadding: 24, align: Alignment.centerLeft),
+                    _tableCell(e.value.plan, horizontalPadding: 24, align: Alignment.center),
+                    _tableCell(e.value.expiry, horizontalPadding: 24, align: Alignment.center),
                     _tableCell(
                       e.value.status,
                       isBadge: true,
                       isExpired: e.value.isExpired,
                       horizontalPadding: 24,
+                      align: Alignment.center,
                     ),
-                    _tableCell('', isActions: true, horizontalPadding: 24),
+                    _tableCell('', isActions: true, horizontalPadding: 24, align: Alignment.center),
                   ],
                 ),
               ),
@@ -641,49 +634,53 @@ class Dashboard extends GetView<DashboardController> {
     bool isExpired = false,
     bool isActions = false,
     double horizontalPadding = 16,
+    Alignment align = Alignment.centerLeft,
   }) {
+    Widget content = isActions
+        ? Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              _actionImage('assets/icons/bell-ring.png'),
+              const SizedBox(width: 8),
+              _actionImage('assets/icons/renew.png'),
+            ],
+          )
+        : isBadge
+            ? Container(
+                width: 91,
+                height: 32,
+                decoration: BoxDecoration(
+                  color: isExpired ? _expiredBadge : _expiringBadge,
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                child: Center(
+                  child: Text(
+                    text,
+                    style: Get.textTheme.labelSmall?.copyWith(
+                      color: isExpired ? Color(0xFF991B1B) : Color(0xFF92400E),
+                      fontWeight: FontWeight.w500,
+                      fontSize: 12,
+                    ),
+                  ),
+                ),
+              )
+            : Text(
+                text,
+                style: Get.textTheme.labelMedium?.copyWith(
+                  color: isHeader ? Color(0xFF475569) : Color(0xFF0F172A),
+                  fontWeight: isHeader ? FontWeight.w600 : FontWeight.w400,
+                ),
+              );
     return Padding(
       padding: EdgeInsets.symmetric(
         horizontal: horizontalPadding,
         vertical: 14,
       ),
-      child: isActions
-          ? Row(
-              mainAxisAlignment: MainAxisAlignment.end,
-              mainAxisSize: MainAxisSize.max,
-              children: [
-                _actionImage('assets/icons/bell-ring.png'),
-                const SizedBox(width: 8),
-                _actionImage('assets/icons/renew.png'),
-              ],
-            )
-          : isBadge
-          ? Container(
-              width: 91,
-              height: 32,
-              // padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-              decoration: BoxDecoration(
-                color: isExpired ? _expiredBadge : _expiringBadge,
-                borderRadius: BorderRadius.circular(16),
-              ),
-              child: Center(
-                child: Text(
-                  text,
-                  style: Get.textTheme.labelSmall?.copyWith(
-                    color: isExpired ? Color(0xFF991B1B) : Color(0xFF92400E),
-                    fontWeight: FontWeight.w500,
-                    fontSize: 12,
-                  ),
-                ),
-              ),
-            )
-          : Text(
-              text,
-              style: Get.textTheme.labelMedium?.copyWith(
-                color: isHeader ? Color(0xFF475569) : Color(0xFF0F172A),
-                fontWeight: isHeader ? FontWeight.w600 : FontWeight.w400,
-              ),
-            ),
+      child: Align(
+        alignment: align,
+        child: content,
+      ),
     );
   }
 

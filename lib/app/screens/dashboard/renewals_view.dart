@@ -10,7 +10,6 @@ class _RenewalRow {
   final int daysLeft;
   final String plan;
   final RenewalStatus status;
-  final String lastReminder;
 
   _RenewalRow({
     required this.name,
@@ -19,7 +18,6 @@ class _RenewalRow {
     required this.daysLeft,
     required this.plan,
     required this.status,
-    required this.lastReminder,
   });
 }
 
@@ -37,8 +35,14 @@ class _RenewalsViewState extends State<RenewalsView> {
   static const _textDark = Color(0xFF333333);
   static const _textMuted = Color(0xFF666666);
   static const _border = Color(0xFFE5E7EB);
-  static const _iconCircleOrange = Color(0xFFF59E0B);
-  static const _iconCircleRed = Color(0xFFDC2626);
+  static const _headerBg = Color(0xFFF1F5F9);
+  /// Light orange/yellow for "Expiring" badge
+  static const _expiringBadge = Color(0xFFFEF3C7);
+  /// Light red for "Expired" badge
+  static const _expiredBadge = Color(0xFFFEE2E2);
+  static const _expiredTextRed = Color(0xFFDC2626);
+  static const _renewedBadge = Color(0xFFD1FAE5);
+  static const _renewedText = Color(0xFF059669);
 
   int _selectedTabIndex = 0;
   static const _statusTabs = ['All', 'Expiring Soon', 'Expired', 'Renewed'];
@@ -51,7 +55,6 @@ class _RenewalsViewState extends State<RenewalsView> {
       daysLeft: 7,
       plan: 'Monthly',
       status: RenewalStatus.expiring,
-      lastReminder: 'WhatsApp. Yesterday',
     ),
     _RenewalRow(
       name: 'Rahul Kamath',
@@ -60,7 +63,6 @@ class _RenewalsViewState extends State<RenewalsView> {
       daysLeft: 0,
       plan: 'Quarterly',
       status: RenewalStatus.expired,
-      lastReminder: 'SMS. 1 Month back',
     ),
     _RenewalRow(
       name: 'Vishal A V',
@@ -69,7 +71,6 @@ class _RenewalsViewState extends State<RenewalsView> {
       daysLeft: 7,
       plan: 'Monthly',
       status: RenewalStatus.expiring,
-      lastReminder: 'WhatsApp. Yesterday',
     ),
   ];
 
@@ -244,21 +245,19 @@ class _RenewalsViewState extends State<RenewalsView> {
           3: FlexColumnWidth(0.8),
           4: FlexColumnWidth(0.9),
           5: FlexColumnWidth(1),
-          6: FlexColumnWidth(1.5),
-          7: FlexColumnWidth(1),
+          6: FlexColumnWidth(0.9),
         },
         children: [
           TableRow(
-            decoration: BoxDecoration(color: Color(0xFF64748B)),
+            decoration: BoxDecoration(color: _headerBg),
             children: [
-              _tableCell('Name', isHeader: true, headerStyle: true),
-              _tableCell('Phone Number', isHeader: true, headerStyle: true),
-              _tableCell('Expiry Date', isHeader: true, headerStyle: true),
-              _tableCell('Days Left', isHeader: true, headerStyle: true),
-              _tableCell('Plan', isHeader: true, headerStyle: true),
-              _tableCell('Status', isHeader: true, headerStyle: true),
-              _tableCell('Last Reminder', isHeader: true, headerStyle: true),
-              _tableCell('Action', isHeader: true, headerStyle: true),
+              _tableCell('Name', isHeader: true),
+              _tableCell('Phone Number', isHeader: true),
+              _tableCell('Expiry Date', isHeader: true),
+              _tableCell('Days Left', isHeader: true),
+              _tableCell('Plan', isHeader: true),
+              _tableCell('Status', isHeader: true),
+              _tableCell('Action', isHeader: true),
             ],
           ),
           ..._tableData.map(
@@ -270,9 +269,9 @@ class _RenewalsViewState extends State<RenewalsView> {
                 _tableCell(row.expiryDate),
                 _tableCell(
                   Text(
-                    '${row.daysLeft}',
+                    row.daysLeft == 0 ? '0' : row.daysLeft.toString().padLeft(2, '0'),
                     style: Get.textTheme.bodySmall?.copyWith(
-                      color: row.daysLeft == 0 ? _iconCircleRed : _textDark,
+                      color: row.daysLeft == 0 ? _expiredTextRed : _textDark,
                       fontWeight: row.daysLeft == 0 ? FontWeight.w600 : null,
                       fontSize: 14,
                     ),
@@ -280,7 +279,6 @@ class _RenewalsViewState extends State<RenewalsView> {
                 ),
                 _tableCell(row.plan),
                 _tableCell(_statusPill(row.status)),
-                _tableCell(row.lastReminder),
                 _tableCell(_actionIcons()),
               ],
             ),
@@ -290,8 +288,7 @@ class _RenewalsViewState extends State<RenewalsView> {
     );
   }
 
-  Widget _tableCell(dynamic content,
-      {bool isHeader = false, bool headerStyle = false}) {
+  Widget _tableCell(dynamic content, {bool isHeader = false}) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
       child: Align(
@@ -301,7 +298,7 @@ class _RenewalsViewState extends State<RenewalsView> {
                 content as String,
                 style: Get.textTheme.bodySmall?.copyWith(
                   fontWeight: isHeader ? FontWeight.w600 : FontWeight.normal,
-                  color: headerStyle ? Colors.white : _textDark,
+                  color: isHeader ? _textDark : _textDark,
                   fontSize: 14,
                 ),
               )
@@ -311,10 +308,10 @@ class _RenewalsViewState extends State<RenewalsView> {
   }
 
   Widget _statusPill(RenewalStatus status) {
-    final (String label, Color bg) = switch (status) {
-      RenewalStatus.expiring => ('Expiring', _iconCircleOrange),
-      RenewalStatus.expired => ('Expired', _iconCircleRed),
-      RenewalStatus.renewed => ('Renewed', Color(0xFF16A34A)),
+    final (String label, Color bg, Color textColor) = switch (status) {
+      RenewalStatus.expiring => ('Expiring', _expiringBadge, const Color(0xFFB45309)),
+      RenewalStatus.expired => ('Expired', _expiredBadge, _expiredTextRed),
+      RenewalStatus.renewed => ('Renewed', _renewedBadge, _renewedText),
     };
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
@@ -325,7 +322,7 @@ class _RenewalsViewState extends State<RenewalsView> {
       child: Text(
         label,
         style: Get.textTheme.bodySmall?.copyWith(
-          color: Colors.white,
+          color: textColor,
           fontWeight: FontWeight.w500,
           fontSize: 12,
         ),
@@ -337,20 +334,19 @@ class _RenewalsViewState extends State<RenewalsView> {
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        _actionIcon(Icons.visibility_outlined),
-        _actionIcon(Icons.refresh),
-        _actionIcon(Icons.notifications_outlined),
+        _actionIcon(Icons.refresh, onTap: () {}),
+        _actionIcon(Icons.notifications_outlined, onTap: () {}),
       ],
     );
   }
 
-  Widget _actionIcon(IconData icon) {
+  Widget _actionIcon(IconData icon, {VoidCallback? onTap}) {
     return Padding(
       padding: const EdgeInsets.only(right: 4),
       child: Material(
         color: Colors.transparent,
         child: InkWell(
-          onTap: () {},
+          onTap: onTap,
           borderRadius: BorderRadius.circular(20),
           child: Container(
             padding: const EdgeInsets.all(6),

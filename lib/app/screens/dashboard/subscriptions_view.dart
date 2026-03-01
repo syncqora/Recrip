@@ -1,6 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
+import '../../../shared/widgets/success_toast.dart';
+import 'create_plan_modal.dart';
+import 'delete_plan_confirm_dialog.dart';
+import 'edit_plan_modal.dart';
+
 class _SubscriptionPlanRow {
   final String planName;
   final String duration;
@@ -60,11 +65,7 @@ class SubscriptionsView extends StatelessWidget {
     return SingleChildScrollView(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          _buildHeader(),
-          const SizedBox(height: 20),
-          _buildTable(),
-        ],
+        children: [_buildHeader(), const SizedBox(height: 20), _buildTable(context)],
       ),
     );
   }
@@ -93,7 +94,7 @@ class SubscriptionsView extends StatelessWidget {
           ],
         ),
         FilledButton(
-          onPressed: () {},
+          onPressed: () => Get.dialog(const CreatePlanModal()),
           style: FilledButton.styleFrom(
             backgroundColor: _purple,
             foregroundColor: Colors.white,
@@ -108,7 +109,7 @@ class SubscriptionsView extends StatelessWidget {
     );
   }
 
-  Widget _buildTable() {
+  Widget _buildTable(BuildContext context) {
     return Container(
       decoration: BoxDecoration(
         color: Colors.white,
@@ -145,7 +146,7 @@ class SubscriptionsView extends StatelessWidget {
                 _tableCell(row.price),
                 _tableCell(row.activeMembers),
                 _tableCell(_statusPill(row.isActive)),
-                _tableCell(_actionIcons()),
+                _tableCell(_actionIcons(context, row)),
               ],
             ),
           ),
@@ -191,23 +192,60 @@ class SubscriptionsView extends StatelessWidget {
     );
   }
 
-  Widget _actionIcons() {
+  Widget _actionIcons(BuildContext context, _SubscriptionPlanRow row) {
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        _actionIcon(Icons.edit_outlined),
-        _actionIcon(Icons.delete_outline),
+        _actionIcon(
+          Icons.edit_outlined,
+          onTap: () => _showEditPlanDialog(context, row),
+        ),
+        _actionIcon(
+          Icons.delete_outline,
+          onTap: () => _showDeletePlanDialog(context),
+        ),
       ],
     );
   }
 
-  Widget _actionIcon(IconData icon) {
+  void _showEditPlanDialog(BuildContext context, _SubscriptionPlanRow row) {
+    Get.dialog(
+      EditPlanModal(
+        plan: EditPlanData(
+          planName: row.planName,
+          duration: row.duration,
+          price: row.price,
+          isActive: row.isActive,
+        ),
+      ),
+    );
+  }
+
+  void _showDeletePlanDialog(BuildContext context) {
+    showDialog<void>(
+      context: context,
+      builder: (ctx) => DeletePlanConfirmDialog(
+        onCancel: () => Navigator.of(ctx).pop(),
+        onDelete: () {
+          final overlayState = Overlay.of(ctx);
+          Navigator.of(ctx).pop();
+          SuccessToast.showWithOverlay(
+          overlayState,
+          title: 'Plan Deleted',
+          iconColor: SuccessToast.iconColorRed,
+        );
+        },
+      ),
+    );
+  }
+
+  Widget _actionIcon(IconData icon, {VoidCallback? onTap}) {
     return Padding(
       padding: const EdgeInsets.only(right: 4),
       child: Material(
         color: Colors.transparent,
         child: InkWell(
-          onTap: () {},
+          onTap: onTap,
           borderRadius: BorderRadius.circular(20),
           child: Container(
             padding: const EdgeInsets.all(6),

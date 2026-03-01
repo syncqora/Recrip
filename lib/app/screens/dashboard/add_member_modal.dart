@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
+import '../../../shared/widgets/success_toast.dart';
 import '../authentication/widgets/auth_constants.dart';
 import '../authentication/widgets/auth_form_field_section.dart';
 import '../authentication/widgets/auth_text_field.dart';
@@ -485,8 +486,11 @@ class _AddMemberModalState extends State<AddMemberModal> {
                 Get.snackbar('Required', 'Please select Start Date');
                 return;
               }
-              // TODO: save member
-              Navigator.of(context).pop();
+              SuccessToast.show(
+                context,
+                title: 'Member Added Successfully!',
+                popRoute: true,
+              );
             },
             style: FilledButton.styleFrom(
               backgroundColor: AuthConstants.buttonEnabledColor,
