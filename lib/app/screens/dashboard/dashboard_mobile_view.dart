@@ -46,24 +46,21 @@ class DashboardMobileView extends StatelessWidget {
       appBar: AppBar(
         backgroundColor: Colors.white,
         elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.menu),
-          onPressed: () => Scaffold.of(context).openDrawer(),
-          color: _textDark,
+        leading: Builder(
+          builder: (context) => IconButton(
+            icon: const Icon(Icons.menu),
+            onPressed: () => Scaffold.of(context).openDrawer(),
+            color: _textDark,
+          ),
         ),
-        title: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Image.asset('assets/images/saas-logo.png', height: 28),
-            const SizedBox(width: 6),
-            Text(
-              'SaaS',
-              style: Get.textTheme.titleMedium?.copyWith(
-                fontWeight: FontWeight.bold,
-                color: _textDark,
-              ),
-            ),
-          ],
+        title: Center(
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Image.asset('assets/images/saas-logo.png', height: 28),
+            ],
+          ),
         ),
         actions: [
           IconButton(
@@ -106,60 +103,110 @@ class DashboardMobileView extends StatelessWidget {
 
   Widget _buildDrawer(BuildContext context, DashboardController controller) {
     return Drawer(
-      child: Column(
-        children: [
-          const SizedBox(height: 48),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Image.asset('assets/images/saas-logo.png', height: 32),
-              const SizedBox(width: 8),
-              Text('SaaS', style: Get.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold, color: _textDark)),
-            ],
-          ),
-          const SizedBox(height: 24),
-          Obx(() => Column(
-            mainAxisSize: MainAxisSize.min,
-            children: ['Dashboard', 'Members', 'Subscriptions', 'Renewals', 'Reminders', 'Reports', 'Settings']
-                .asMap()
-                .entries
-                .map((e) => ListTile(
-                      dense: true,
-                      leading: Image.asset(
-                        _getIconForIndex(e.key),
-                        width: 22,
-                        height: 22,
-                        color: controller.selectedNavIndex.value == e.key ? _purple : _textMuted,
-                        colorBlendMode: BlendMode.srcIn,
-                      ),
-                      title: Text(
-                        e.value,
-                        style: TextStyle(
-                          fontSize: 15,
-                          color: controller.selectedNavIndex.value == e.key ? _purple : _textDark,
-                          fontWeight: controller.selectedNavIndex.value == e.key ? FontWeight.w600 : FontWeight.normal,
+      width: MediaQuery.sizeOf(context).width,
+      backgroundColor: Colors.white,
+      child: SafeArea(
+        child: Column(
+          children: [
+            // Header
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              child: Row(
+                children: [
+                  IconButton(
+                    icon: const Icon(Icons.close_rounded, color: _textMuted),
+                    onPressed: () => Navigator.of(context).pop(),
+                  ),
+                  const Spacer(),
+                  Image.asset('assets/images/saas-logo.png', height: 28),
+                  const Spacer(),
+                  CircleAvatar(
+                    radius: 18,
+                    backgroundColor: const Color(0xFFEEF2FF),
+                    child: Image.asset('assets/images/profile-icon.png', width: 24, height: 24),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 24),
+            // Navigation Items
+            Expanded(
+              child: Obx(() => ListView(
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    children: ['Dashboard', 'Members', 'Subscriptions', 'Renewals', 'Reminders', 'Reports', 'Settings']
+                        .asMap()
+                        .entries
+                        .map((e) {
+                      final isActive = controller.selectedNavIndex.value == e.key;
+                      return Padding(
+                        padding: const EdgeInsets.only(bottom: 8),
+                        child: Material(
+                          color: isActive ? const Color(0xFFEEF2FF) : Colors.transparent,
+                          borderRadius: BorderRadius.circular(32),
+                          child: ListTile(
+                            onTap: () {
+                              controller.onNavTap(e.key);
+                              Navigator.of(context).pop();
+                            },
+                            dense: true,
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(32)),
+                            leading: Image.asset(
+                              _getIconForIndex(e.key),
+                              width: 22,
+                              height: 22,
+                              color: isActive ? _purple : const Color(0xFF64748B),
+                              colorBlendMode: BlendMode.srcIn,
+                            ),
+                            title: Text(
+                              e.value,
+                              style: TextStyle(
+                                fontSize: 16,
+                                color: isActive ? _purple : const Color(0xFF475569),
+                                fontWeight: isActive ? FontWeight.w600 : FontWeight.w500,
+                              ),
+                            ),
+                          ),
                         ),
-                      ),
-                      onTap: () {
-                        controller.onNavTap(e.key);
-                        Navigator.of(context).pop();
-                      },
-                    ))
-                .toList(),
-          )),
-          const Spacer(),
-          const Divider(height: 1),
-          ListTile(
-            dense: true,
-            leading: Image.asset('assets/icons/log-out.png', width: 22, height: 22, color: _textMuted, colorBlendMode: BlendMode.srcIn),
-            title: Text('Logout', style: TextStyle(color: _textMuted, fontSize: 15)),
-            onTap: () {
-              Navigator.of(context).pop();
-              controller.onLogout();
-            },
-          ),
-          const SizedBox(height: 16),
-        ],
+                      );
+                    }).toList(),
+                  )),
+            ),
+            // Logout and Footer
+            const Divider(height: 1, color: Color(0xFFF1F5F9)),
+            ListTile(
+              onTap: () {
+                Navigator.of(context).pop();
+                controller.onLogout();
+              },
+              contentPadding: const EdgeInsets.symmetric(horizontal: 28, vertical: 4),
+              leading: Image.asset(
+                'assets/icons/log-out.png',
+                width: 22,
+                height: 22,
+                color: const Color(0xFF64748B),
+                colorBlendMode: BlendMode.srcIn,
+              ),
+              title: const Text(
+                'Logout',
+                style: TextStyle(
+                  color: Color(0xFF475569),
+                  fontSize: 16,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.only(bottom: 24, top: 8),
+              child: Text(
+                '© 2026 All rights reserved',
+                style: Get.textTheme.bodySmall?.copyWith(
+                  color: _textMuted,
+                  fontSize: 11,
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

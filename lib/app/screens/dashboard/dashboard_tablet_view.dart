@@ -47,24 +47,20 @@ class DashboardTabletView extends StatelessWidget {
       appBar: AppBar(
         backgroundColor: Colors.white,
         elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.menu),
-          onPressed: () => Scaffold.of(context).openDrawer(),
-          color: _textDark,
+        leading: Builder(
+          builder: (context) => IconButton(
+            icon: const Icon(Icons.menu),
+            onPressed: () => Scaffold.of(context).openDrawer(),
+            color: _textDark,
+          ),
         ),
-        title: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Image.asset('assets/images/saas-logo.png', height: 32),
-            const SizedBox(width: 8),
-            Text(
-              'SaaS',
-              style: Get.textTheme.titleLarge?.copyWith(
-                fontWeight: FontWeight.bold,
-                color: _textDark,
-              ),
-            ),
-          ],
+        title: Center(
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Image.asset('assets/images/saas-logo.png', height: 32),
+            ],
+          ),
         ),
         actions: [
           IconButton(
@@ -105,57 +101,95 @@ class DashboardTabletView extends StatelessWidget {
 
   Widget _buildDrawer(BuildContext context, DashboardController controller) {
     return Drawer(
-      child: Column(
-        children: [
-          const SizedBox(height: 48),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Image.asset('assets/images/saas-logo.png', height: 36),
-              const SizedBox(width: 8),
-              Text('SaaS', style: Get.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold, color: _textDark)),
-            ],
-          ),
-          const SizedBox(height: 32),
-          Obx(() => Column(
-            mainAxisSize: MainAxisSize.min,
-            children: ['Dashboard', 'Members', 'Subscriptions', 'Renewals', 'Reminders', 'Reports', 'Settings']
-                .asMap()
-                .entries
-                .map((e) => ListTile(
-                      leading: Image.asset(
-                        _getIconForIndex(e.key),
-                        width: 24,
-                        height: 24,
-                        color: controller.selectedNavIndex.value == e.key ? _purple : _textMuted,
-                        colorBlendMode: BlendMode.srcIn,
-                      ),
-                      title: Text(
-                        e.value,
-                        style: TextStyle(
-                          color: controller.selectedNavIndex.value == e.key ? _purple : _textDark,
-                          fontWeight: controller.selectedNavIndex.value == e.key ? FontWeight.w600 : FontWeight.normal,
+      backgroundColor: Colors.white,
+      child: SafeArea(
+        child: Column(
+          children: [
+            // Close Button
+            Align(
+              alignment: Alignment.topRight,
+              child: Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: IconButton(
+                  icon: const Icon(Icons.close_rounded, color: Color(0xFF64748B), size: 28),
+                  onPressed: () => Navigator.of(context).pop(),
+                ),
+              ),
+            ),
+            const SizedBox(height: 8),
+            // Navigation Items
+            Expanded(
+              child: Obx(() => ListView(
+                    padding: const EdgeInsets.symmetric(horizontal: 24),
+                    children: ['Dashboard', 'Members', 'Subscriptions', 'Renewals', 'Reminders', 'Reports', 'Settings']
+                        .asMap()
+                        .entries
+                        .map((e) {
+                      final isActive = controller.selectedNavIndex.value == e.key;
+                      return Padding(
+                        padding: const EdgeInsets.only(bottom: 12),
+                        child: Material(
+                          color: isActive ? const Color(0xFFEEF2FF) : Colors.transparent,
+                          borderRadius: BorderRadius.circular(32),
+                          child: ListTile(
+                            onTap: () {
+                              controller.onNavTap(e.key);
+                              Navigator.of(context).pop();
+                            },
+                            dense: true,
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(32)),
+                            contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 4),
+                            leading: Image.asset(
+                              _getIconForIndex(e.key),
+                              width: 24,
+                              height: 24,
+                              color: isActive ? _purple : const Color(0xFF64748B),
+                              colorBlendMode: BlendMode.srcIn,
+                            ),
+                            title: Text(
+                              e.value,
+                              style: TextStyle(
+                                fontSize: 17,
+                                color: isActive ? _purple : const Color(0xFF475569),
+                                fontWeight: isActive ? FontWeight.w600 : FontWeight.w500,
+                              ),
+                            ),
+                          ),
                         ),
-                      ),
-                      onTap: () {
-                        controller.onNavTap(e.key);
-                        Navigator.of(context).pop();
-                      },
-                    ))
-                .toList(),
-          )),
-          const Spacer(),
-          const Divider(height: 1),
-          ListTile(
-            leading: Image.asset('assets/icons/log-out.png', width: 24, height: 24, color: _textMuted, colorBlendMode: BlendMode.srcIn),
-            title: Text('Logout', style: TextStyle(color: _textMuted, fontSize: 16)),
-            onTap: () {
-              Navigator.of(context).pop();
-              controller.onLogout();
-            },
-          ),
-          const SizedBox(height: 16),
-        ],
+                      );
+                    }).toList(),
+                  )),
+            ),
+            // Logout
+            const Padding(
+              padding: EdgeInsets.symmetric(horizontal: 24),
+              child: Divider(height: 1, color: Color(0xFFF1F5F9)),
+            ),
+            ListTile(
+              onTap: () {
+                Navigator.of(context).pop();
+                controller.onLogout();
+              },
+              contentPadding: const EdgeInsets.symmetric(horizontal: 44, vertical: 12),
+              leading: Image.asset(
+                'assets/icons/log-out.png',
+                width: 24,
+                height: 24,
+                color: const Color(0xFF64748B),
+                colorBlendMode: BlendMode.srcIn,
+              ),
+              title: const Text(
+                'Logout',
+                style: TextStyle(
+                  color: Color(0xFF475569),
+                  fontSize: 17,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+            ),
+            const SizedBox(height: 16),
+          ],
+        ),
       ),
     );
   }
@@ -409,7 +443,7 @@ class DashboardTabletView extends StatelessWidget {
 
   Widget _tableCell(String text, {bool isHeader = false}) {
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
       child: Align(
         alignment: Alignment.centerLeft,
         child: Text(
@@ -425,7 +459,7 @@ class DashboardTabletView extends StatelessWidget {
 
   Widget _tableCellBadge(String text, bool isExpired) {
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
       child: Container(
         width: 91,
         height: 32,
@@ -448,15 +482,15 @@ class DashboardTabletView extends StatelessWidget {
 
   Widget _tableCellActions() {
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.end,
         mainAxisSize: MainAxisSize.min,
         children: [
           _actionIcon(Icons.notifications_outlined),
-          const SizedBox(width: 8),
+          const SizedBox(width: 4),
           _actionIcon(Icons.refresh),
-          const SizedBox(width: 8),
+          const SizedBox(width: 4),
           _actionIcon(Icons.visibility_outlined),
         ],
       ),
