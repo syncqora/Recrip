@@ -1,25 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
-enum RenewalStatus { expiring, expired, renewed }
-
-class _RenewalRow {
-  final String name;
-  final String phone;
-  final String expiryDate;
-  final int daysLeft;
-  final String plan;
-  final RenewalStatus status;
-
-  _RenewalRow({
-    required this.name,
-    required this.phone,
-    required this.expiryDate,
-    required this.daysLeft,
-    required this.plan,
-    required this.status,
-  });
-}
+import 'renewals_mobile_view.dart';
+import 'renewals_tablet_view.dart';
 
 /// Renewals page content: header, status tabs, search/filters, table.
 /// Used inside the dashboard main content area when Renewals nav is selected.
@@ -48,7 +31,7 @@ class _RenewalsViewState extends State<RenewalsView> {
   static const _statusTabs = ['All', 'Expiring Soon', 'Expired', 'Renewed'];
 
   static final _tableData = [
-    _RenewalRow(
+    RenewalRow(
       name: 'Vishal A V',
       phone: '+91 98642 13565',
       expiryDate: '15/02/2026',
@@ -56,7 +39,7 @@ class _RenewalsViewState extends State<RenewalsView> {
       plan: 'Monthly',
       status: RenewalStatus.expiring,
     ),
-    _RenewalRow(
+    RenewalRow(
       name: 'Rahul Kamath',
       phone: '+91 98642 13565',
       expiryDate: '01/01/2026',
@@ -64,7 +47,7 @@ class _RenewalsViewState extends State<RenewalsView> {
       plan: 'Quarterly',
       status: RenewalStatus.expired,
     ),
-    _RenewalRow(
+    RenewalRow(
       name: 'Vishal A V',
       phone: '+91 98642 13565',
       expiryDate: '15/02/2026',
@@ -76,17 +59,27 @@ class _RenewalsViewState extends State<RenewalsView> {
 
   @override
   Widget build(BuildContext context) {
+    final width = MediaQuery.sizeOf(context).width;
+    final isMobile = width < 600;
+    final isTablet = width >= 600 && width < 1024;
+
     return SingleChildScrollView(
+      padding: isMobile ? const EdgeInsets.all(16) : EdgeInsets.zero,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           _buildHeader(),
           const SizedBox(height: 20),
-          _buildStatusTabs(),
+          _buildStatusTabs(isMobile),
           const SizedBox(height: 16),
-          _buildSearchRow(),
+          _buildSearchRow(isMobile),
           const SizedBox(height: 16),
-          _buildTable(),
+          if (isMobile)
+            RenewalsMobileView(tableData: _tableData)
+          else if (isTablet)
+            RenewalsTabletView(tableData: _tableData)
+          else
+            _buildDesktopTable(),
         ],
       ),
     );
@@ -113,42 +106,82 @@ class _RenewalsViewState extends State<RenewalsView> {
     );
   }
 
-  Widget _buildStatusTabs() {
-    return Row(
-      children: List.generate(_statusTabs.length, (i) {
-        final isActive = _selectedTabIndex == i;
-        return Padding(
-          padding: EdgeInsets.only(right: i < _statusTabs.length - 1 ? 8 : 0),
-          child: Material(
-            color: Colors.transparent,
-            child: InkWell(
-              onTap: () => setState(() => _selectedTabIndex = i),
-              borderRadius: BorderRadius.circular(8),
-              child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-                decoration: BoxDecoration(
-                  color: isActive ? _purple : Colors.white,
-                  borderRadius: BorderRadius.circular(8),
-                  border: Border.all(
-                    color: isActive ? _purple : _border,
+  Widget _buildStatusTabs(bool isMobile) {
+    return SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
+      child: Row(
+        children: List.generate(_statusTabs.length, (i) {
+          final isActive = _selectedTabIndex == i;
+          return Padding(
+            padding: EdgeInsets.only(right: i < _statusTabs.length - 1 ? 8 : 0),
+            child: Material(
+              color: Colors.transparent,
+              child: InkWell(
+                onTap: () => setState(() => _selectedTabIndex = i),
+                borderRadius: BorderRadius.circular(8),
+                child: Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                  decoration: BoxDecoration(
+                    color: isActive ? _purple : Colors.white,
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(
+                      color: isActive ? _purple : _border,
+                    ),
                   ),
-                ),
-                child: Text(
-                  _statusTabs[i],
-                  style: Get.textTheme.bodyMedium?.copyWith(
-                    color: isActive ? Colors.white : _textMuted,
-                    fontWeight: isActive ? FontWeight.w600 : FontWeight.normal,
+                  child: Text(
+                    _statusTabs[i],
+                    style: Get.textTheme.bodyMedium?.copyWith(
+                      color: isActive ? Colors.white : _textMuted,
+                      fontWeight: isActive ? FontWeight.w600 : FontWeight.normal,
+                      fontSize: isMobile ? 12 : 14,
+                    ),
                   ),
                 ),
               ),
             ),
-          ),
-        );
-      }),
+          );
+        }),
+      ),
     );
   }
 
-  Widget _buildSearchRow() {
+  Widget _buildSearchRow(bool isMobile) {
+    if (isMobile) {
+      return Column(
+        children: [
+          Container(
+            height: 44,
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(10),
+              border: Border.all(color: _border),
+            ),
+            child: const TextField(
+              decoration: InputDecoration(
+                hintText: 'Search by name or phone',
+                hintStyle: TextStyle(color: Color(0xFF666666), fontSize: 13),
+                prefixIcon: Icon(Icons.search, size: 20, color: Color(0xFF666666)),
+                border: InputBorder.none,
+                contentPadding: EdgeInsets.symmetric(vertical: 11),
+              ),
+            ),
+          ),
+          const SizedBox(height: 12),
+          Row(
+            children: [
+              Expanded(
+                child: _buildFilterBox('Select Dates', Icons.calendar_today_outlined),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: _buildFilterBox('Plan', Icons.keyboard_arrow_down),
+              ),
+            ],
+          ),
+        ],
+      );
+    }
     return Row(
       children: [
         Expanded(
@@ -159,13 +192,13 @@ class _RenewalsViewState extends State<RenewalsView> {
               borderRadius: BorderRadius.circular(10),
               border: Border.all(color: _border),
             ),
-            child: TextField(
+            child: const TextField(
               decoration: InputDecoration(
                 hintText: 'Search by name or phone number',
-                hintStyle: TextStyle(color: _textMuted, fontSize: 14),
-                prefixIcon: Icon(Icons.search, size: 22, color: _textMuted),
+                hintStyle: TextStyle(color: Color(0xFF666666), fontSize: 14),
+                prefixIcon: Icon(Icons.search, size: 22, color: Color(0xFF666666)),
                 border: InputBorder.none,
-                contentPadding: const EdgeInsets.symmetric(
+                contentPadding: EdgeInsets.symmetric(
                   horizontal: 12,
                   vertical: 12,
                 ),
@@ -174,54 +207,16 @@ class _RenewalsViewState extends State<RenewalsView> {
           ),
         ),
         const SizedBox(width: 12),
-        Container(
-          height: 44,
-          padding: const EdgeInsets.symmetric(horizontal: 12),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(10),
-            border: Border.all(color: _border),
-          ),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(Icons.calendar_today_outlined, size: 20, color: _textMuted),
-              const SizedBox(width: 8),
-              Text(
-                'Select Dates',
-                style: Get.textTheme.bodyMedium?.copyWith(color: _textMuted),
-              ),
-            ],
-          ),
-        ),
+        _buildFilterBox('Select Dates', Icons.calendar_today_outlined),
         const SizedBox(width: 12),
-        Container(
-          height: 44,
-          padding: const EdgeInsets.symmetric(horizontal: 12),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(10),
-            border: Border.all(color: _border),
-          ),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(
-                'Plan',
-                style: Get.textTheme.bodyMedium?.copyWith(color: _textDark),
-              ),
-              const SizedBox(width: 8),
-              Icon(Icons.keyboard_arrow_down, size: 20, color: _textMuted),
-            ],
-          ),
-        ),
+        _buildFilterBox('Plan', Icons.keyboard_arrow_down, isDropdown: true),
         const SizedBox(width: 12),
         TextButton(
           onPressed: () {},
-          child: Text(
+          child: const Text(
             'Clear Filters',
-            style: Get.textTheme.bodyMedium?.copyWith(
-              color: _purple,
+            style: TextStyle(
+              color: Color(0xFF4F46E5),
               fontWeight: FontWeight.w500,
             ),
           ),
@@ -230,7 +225,33 @@ class _RenewalsViewState extends State<RenewalsView> {
     );
   }
 
-  Widget _buildTable() {
+  Widget _buildFilterBox(String label, IconData icon, {bool isDropdown = false}) {
+    return Container(
+      height: 44,
+      padding: const EdgeInsets.symmetric(horizontal: 12),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: _border),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          if (!isDropdown) Icon(icon, size: 18, color: _textMuted),
+          if (!isDropdown) const SizedBox(width: 8),
+          Text(
+            label,
+            style: Get.textTheme.bodyMedium?.copyWith(color: _textMuted, fontSize: 13),
+          ),
+          if (isDropdown) const SizedBox(width: 8),
+          if (isDropdown) Icon(icon, size: 18, color: _textMuted),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildDesktopTable() {
     return Container(
       decoration: BoxDecoration(
         color: Colors.white,
@@ -249,7 +270,7 @@ class _RenewalsViewState extends State<RenewalsView> {
         },
         children: [
           TableRow(
-            decoration: BoxDecoration(color: _headerBg),
+            decoration: const BoxDecoration(color: Color(0xFFF1F5F9)),
             children: [
               _tableCell('Name', isHeader: true),
               _tableCell('Phone Number', isHeader: true),
@@ -262,7 +283,7 @@ class _RenewalsViewState extends State<RenewalsView> {
           ),
           ..._tableData.map(
             (row) => TableRow(
-              decoration: BoxDecoration(color: Colors.white),
+              decoration: const BoxDecoration(color: Colors.white),
               children: [
                 _tableCell(row.name),
                 _tableCell(row.phone),
@@ -298,7 +319,7 @@ class _RenewalsViewState extends State<RenewalsView> {
                 content as String,
                 style: Get.textTheme.bodySmall?.copyWith(
                   fontWeight: isHeader ? FontWeight.w600 : FontWeight.normal,
-                  color: isHeader ? _textDark : _textDark,
+                  color: _textDark,
                   fontSize: 14,
                 ),
               )

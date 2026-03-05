@@ -3,6 +3,12 @@ import 'package:get/get.dart';
 
 import 'add_member_modal.dart';
 import 'dashboard_controller.dart';
+import 'members_view.dart';
+import 'reminders_view.dart';
+import 'renewals_view.dart';
+import 'reports_view.dart';
+import 'settings_view.dart';
+import 'subscriptions_view.dart';
 
 /// Tablet layout: app bar with hamburger + drawer, no persistent sidebar.
 /// Dashboard content: header, 2x2 KPI cards, AI Insights + Upcoming Reminders, renewals table.
@@ -79,22 +85,35 @@ class DashboardTabletView extends StatelessWidget {
         ],
       ),
       drawer: _buildDrawer(context, controller),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(24),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            _buildHeader(),
-            const SizedBox(height: 24),
-            _buildSummaryGrid(),
-            const SizedBox(height: 24),
-            _buildInsightsRow(),
-            const SizedBox(height: 24),
-            _buildRenewalsSection(controller),
-            const SizedBox(height: 32),
-            _buildFooter(),
-          ],
-        ),
+      body: Obx(() {
+        final index = controller.selectedNavIndex.value;
+        if (index == 1) return const MembersView();
+        if (index == 2) return const SubscriptionsView();
+        if (index == 3) return const RenewalsView();
+        if (index == 4) return const RemindersView();
+        if (index == 5) return const ReportsView();
+        if (index == 6) return const SettingsView();
+        return _buildDashboardContent(controller);
+      }),
+    );
+  }
+
+  Widget _buildDashboardContent(DashboardController controller) {
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(24),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _buildHeader(),
+          const SizedBox(height: 24),
+          _buildSummaryGrid(),
+          const SizedBox(height: 24),
+          _buildInsightsRow(),
+          const SizedBox(height: 24),
+          _buildRenewalsSection(controller),
+          const SizedBox(height: 32),
+          _buildFooter(),
+        ],
       ),
     );
   }

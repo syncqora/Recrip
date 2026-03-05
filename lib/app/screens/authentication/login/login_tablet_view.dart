@@ -1,29 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:saas/app/screens/authentication/widgets/auth_widgets.dart';
-
+import '../widgets/auth_widgets.dart';
 import 'login_controller.dart';
-import 'login_mobile_view.dart';
-import 'login_tablet_view.dart';
 
-class Login extends GetView<LoginController> {
-  const Login({super.key});
+class LoginTabletView extends GetView<LoginController> {
+  const LoginTabletView({super.key});
 
   @override
   Widget build(BuildContext context) {
-    Get.put(LoginController());
-    final width = MediaQuery.sizeOf(context).width;
-
-    if (width < 600) {
-      return const LoginMobileView();
-    }
-
-    if (width < 1024) {
-      return const LoginTabletView();
-    }
-
     return Scaffold(
       body: AuthScreenLayout(
+        padding: const EdgeInsets.symmetric(horizontal: 48, vertical: 48),
         child: AuthFormCard(
           title: 'Login',
           child: Column(
@@ -32,31 +19,23 @@ class Login extends GetView<LoginController> {
             children: [
               AuthFormFieldSection(
                 label: 'User Name',
-                child: MouseRegion(
-                  onEnter: (_) => controller.setUsernameHovered(true),
-                  onExit: (_) => controller.setUsernameHovered(false),
-                  child: Obx(
-                    () => AuthTextField(
-                      controller: controller.usernameController,
-                      hint: 'Enter username',
-                      isHovered: controller.isUsernameHovered.value,
-                    ),
+                child: Obx(
+                  () => AuthTextField(
+                    controller: controller.usernameController,
+                    hint: 'Enter username',
+                    isHovered: controller.isUsernameHovered.value,
                   ),
                 ),
               ),
               const SizedBox(height: AuthConstants.spacingBetweenFields),
               AuthFormFieldSection(
                 label: 'Password',
-                child: MouseRegion(
-                  onEnter: (_) => controller.setPasswordHovered(true),
-                  onExit: (_) => controller.setPasswordHovered(false),
-                  child: Obx(
-                    () => AuthPasswordField(
-                      controller: controller.passwordController,
-                      obscureText: !controller.isPasswordVisible.value,
-                      onToggleVisibility: controller.togglePasswordVisibility,
-                      isHovered: controller.isPasswordHovered.value,
-                    ),
+                child: Obx(
+                  () => AuthPasswordField(
+                    controller: controller.passwordController,
+                    obscureText: !controller.isPasswordVisible.value,
+                    onToggleVisibility: controller.togglePasswordVisibility,
+                    isHovered: controller.isPasswordHovered.value,
                   ),
                 ),
               ),

@@ -5,6 +5,8 @@ import '../../../shared/widgets/success_toast.dart';
 import '../authentication/widgets/auth_constants.dart';
 import '../authentication/widgets/auth_form_field_section.dart';
 import '../authentication/widgets/auth_text_field.dart';
+import 'add_member_modal_mobile_view.dart';
+import 'add_member_modal_tablet_view.dart';
 
 class AddMemberModal extends StatefulWidget {
   const AddMemberModal({super.key});
@@ -41,8 +43,70 @@ class _AddMemberModalState extends State<AddMemberModal> {
     if (date != null) setState(() => _startDate = date);
   }
 
+  void _onSave() {
+    if (_fullNameController.text.trim().isEmpty) {
+      Get.snackbar('Required', 'Please enter Full Name');
+      return;
+    }
+    if (_emailController.text.trim().isEmpty) {
+      Get.snackbar('Required', 'Please enter Email Address');
+      return;
+    }
+    if (_selectedPlan == null) {
+      Get.snackbar('Required', 'Please choose a Plan');
+      return;
+    }
+    if (_startDate == null) {
+      Get.snackbar('Required', 'Please select Start Date');
+      return;
+    }
+    SuccessToast.show(
+      context,
+      title: 'Member Added Successfully!',
+      popRoute: true,
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
+    final width = MediaQuery.sizeOf(context).width;
+
+    if (width < 600) {
+      return AddMemberModalMobileView(
+        fullNameController: _fullNameController,
+        phoneController: _phoneController,
+        emailController: _emailController,
+        selectedPlan: _selectedPlan,
+        startDate: _startDate,
+        whatsApp: _whatsApp,
+        email: _email,
+        onPickStartDate: _pickStartDate,
+        onPlanChanged: (v) => setState(() => _selectedPlan = v),
+        onWhatsAppChanged: (v) => setState(() => _whatsApp = v),
+        onEmailChanged: (v) => setState(() => _email = v),
+        onCancel: () => Navigator.of(context).pop(),
+        onSave: _onSave,
+      );
+    }
+
+    if (width < 1024) {
+      return AddMemberModalTabletView(
+        fullNameController: _fullNameController,
+        phoneController: _phoneController,
+        emailController: _emailController,
+        selectedPlan: _selectedPlan,
+        startDate: _startDate,
+        whatsApp: _whatsApp,
+        email: _email,
+        onPickStartDate: _pickStartDate,
+        onPlanChanged: (v) => setState(() => _selectedPlan = v),
+        onWhatsAppChanged: (v) => setState(() => _whatsApp = v),
+        onEmailChanged: (v) => setState(() => _email = v),
+        onCancel: () => Navigator.of(context).pop(),
+        onSave: _onSave,
+      );
+    }
+
     return Dialog(
       backgroundColor: Colors.transparent,
       insetPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 48),

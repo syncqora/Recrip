@@ -1,29 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:saas/app/screens/authentication/widgets/auth_widgets.dart';
-
+import '../widgets/auth_widgets.dart';
 import 'otp_authentication_controller.dart';
-import 'otp_authentication_mobile_view.dart';
-import 'otp_authentication_tablet_view.dart';
 
-class OtpAuthentication extends GetView<OtpAuthenticationController> {
-  const OtpAuthentication({super.key});
+class OtpAuthenticationTabletView extends GetView<OtpAuthenticationController> {
+  const OtpAuthenticationTabletView({super.key});
 
   @override
   Widget build(BuildContext context) {
-    Get.put(OtpAuthenticationController());
-    final width = MediaQuery.sizeOf(context).width;
-
-    if (width < 600) {
-      return const OtpAuthenticationMobileView();
-    }
-
-    if (width < 1024) {
-      return const OtpAuthenticationTabletView();
-    }
-
     return Scaffold(
       body: AuthScreenLayout(
+        padding: const EdgeInsets.symmetric(horizontal: 48, vertical: 48),
         child: AuthFormCard(
           title: 'Forgot Password?',
           child: Column(

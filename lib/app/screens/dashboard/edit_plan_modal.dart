@@ -5,6 +5,8 @@ import '../../../shared/widgets/success_toast.dart';
 import '../authentication/widgets/auth_constants.dart';
 import '../authentication/widgets/auth_form_field_section.dart';
 import 'create_plan_modal.dart';
+import 'edit_plan_modal_mobile_view.dart';
+import 'edit_plan_modal_tablet_view.dart';
 
 /// Initial data for editing a plan.
 class EditPlanData {
@@ -92,8 +94,54 @@ class _EditPlanModalState extends State<EditPlanModal> {
     }
   }
 
+  void _onSave() {
+    SuccessToast.show(
+      context,
+      title: 'Changes Saved Successfully!',
+      popRoute: true,
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
+    final width = MediaQuery.sizeOf(context).width;
+
+    if (width < 600) {
+      return EditPlanModalMobileView(
+        planNameController: _planNameController,
+        priceController: _priceController,
+        selectedDuration: _selectedDuration,
+        customStartDate: _customStartDate,
+        customEndDate: _customEndDate,
+        selectedStatus: _selectedStatus,
+        onPickCustomDates: _pickCustomDates,
+        onDurationChanged: (v) => setState(() => _selectedDuration = v),
+        onStatusTap: () {
+          setState(() => _selectedStatus = _selectedStatus == 'Active' ? 'Inactive' : 'Active');
+        },
+        onCancel: () => Navigator.of(context).pop(),
+        onSave: _onSave,
+      );
+    }
+
+    if (width < 1024) {
+      return EditPlanModalTabletView(
+        planNameController: _planNameController,
+        priceController: _priceController,
+        selectedDuration: _selectedDuration,
+        customStartDate: _customStartDate,
+        customEndDate: _customEndDate,
+        selectedStatus: _selectedStatus,
+        onPickCustomDates: _pickCustomDates,
+        onDurationChanged: (v) => setState(() => _selectedDuration = v),
+        onStatusTap: () {
+          setState(() => _selectedStatus = _selectedStatus == 'Active' ? 'Inactive' : 'Active');
+        },
+        onCancel: () => Navigator.of(context).pop(),
+        onSave: _onSave,
+      );
+    }
+
     return Dialog(
       backgroundColor: Colors.transparent,
       insetPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 48),
@@ -252,31 +300,36 @@ class _EditPlanModalState extends State<EditPlanModal> {
           child: AuthFormFieldSection(
             label: 'Status*',
             spacingAfterLabel: 8,
-            child: Container(
-              height: 44,
-              padding: const EdgeInsets.symmetric(horizontal: 14),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(_inputBorderRadius),
-                border: Border.all(color: _inputBorderColor),
-              ),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: Text(
-                      _selectedStatus ?? 'Select Plan Status',
-                      style: Get.theme.textTheme.bodyMedium?.copyWith(
-                        fontSize: 14,
-                        color: _selectedStatus != null ? _labelColor : _hintColor,
+            child: InkWell(
+              onTap: () {
+                setState(() => _selectedStatus = _selectedStatus == 'Active' ? 'Inactive' : 'Active');
+              },
+              child: Container(
+                height: 44,
+                padding: const EdgeInsets.symmetric(horizontal: 14),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(_inputBorderRadius),
+                  border: Border.all(color: _inputBorderColor),
+                ),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        _selectedStatus ?? 'Select Plan Status',
+                        style: Get.theme.textTheme.bodyMedium?.copyWith(
+                          fontSize: 14,
+                          color: _selectedStatus != null ? _labelColor : _hintColor,
+                        ),
                       ),
                     ),
-                  ),
-                  const Icon(
-                    Icons.keyboard_arrow_down,
-                    size: 20,
-                    color: Color(0xFF64748B),
-                  ),
-                ],
+                    const Icon(
+                      Icons.keyboard_arrow_down,
+                      size: 20,
+                      color: Color(0xFF64748B),
+                    ),
+                  ],
+                ),
               ),
             ),
           ),
@@ -417,13 +470,7 @@ class _EditPlanModalState extends State<EditPlanModal> {
         ),
         const SizedBox(width: 14),
         FilledButton(
-          onPressed: () {
-            SuccessToast.show(
-              context,
-              title: 'Changes Saved Successfully!',
-              popRoute: true,
-            );
-          },
+          onPressed: _onSave,
           style: FilledButton.styleFrom(
             backgroundColor: AuthConstants.buttonEnabledColor,
             foregroundColor: Colors.white,

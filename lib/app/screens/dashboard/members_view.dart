@@ -2,27 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
 import 'add_member_modal.dart';
+import 'members_mobile_view.dart';
+import 'members_tablet_view.dart';
 import 'view_member_modal.dart';
-
-enum MemberStatus { active, expired, expiring }
-
-class _MemberRow {
-  final String name;
-  final String phone;
-  final String email;
-  final String plan;
-  final String expiry;
-  final MemberStatus status;
-
-  _MemberRow({
-    required this.name,
-    required this.phone,
-    required this.email,
-    required this.plan,
-    required this.expiry,
-    required this.status,
-  });
-}
 
 /// Members page content: header, search/filters, table, pagination.
 /// Used inside the dashboard main content area when Members nav is selected.
@@ -37,7 +19,6 @@ class _MembersViewState extends State<MembersView> {
   static const _purple = Color(0xFF4F46E5);
   static const _textDark = Color(0xFF333333);
   static const _textMuted = Color(0xFF666666);
-  static const _border = Color(0xFFE5E7EB);
   static const _iconCircleOrange = Color(0xFFF59E0B);
   static const _iconCircleRed = Color(0xFFDC2626);
   static const _iconCircleGreen = Color(0xFF16A34A);
@@ -51,13 +32,13 @@ class _MembersViewState extends State<MembersView> {
   static const _planOptions = ['Monthly', 'Quarterly', 'Yearly'];
   static const _statusOptions = ['Active', 'Expiring', 'Expired'];
   static const _statusColors = [
-    _iconCircleGreen,  // Active
+    _iconCircleGreen, // Active
     Color(0xFFB45309), // Expiring (orange-brown)
-    _iconCircleRed,    // Expired
+    _iconCircleRed, // Expired
   ];
 
   static final _tableData = [
-    _MemberRow(
+    MemberRow(
       name: 'Rahul Kamath',
       phone: '+91 98642 13565',
       email: 'rahul.kamath@gmail.com',
@@ -65,7 +46,7 @@ class _MembersViewState extends State<MembersView> {
       expiry: '08/07/2027',
       status: MemberStatus.active,
     ),
-    _MemberRow(
+    MemberRow(
       name: 'Mithun Shetty',
       phone: '+91 98642 13565',
       email: 'mithunshetty96@gmail.com',
@@ -73,7 +54,7 @@ class _MembersViewState extends State<MembersView> {
       expiry: '31/12/2025',
       status: MemberStatus.expired,
     ),
-    _MemberRow(
+    MemberRow(
       name: 'Vishal AV',
       phone: '+91 98642 13565',
       email: 'vishal.av@gmail.com',
@@ -85,64 +66,159 @@ class _MembersViewState extends State<MembersView> {
 
   @override
   Widget build(BuildContext context) {
+    final width = MediaQuery.sizeOf(context).width;
+    final isMobile = width < 600;
+    final isTablet = width >= 600 && width < 1024;
+
     return SingleChildScrollView(
+      padding: isMobile ? const EdgeInsets.all(16) : EdgeInsets.zero,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _buildHeader(),
+          _buildHeader(isMobile),
           const SizedBox(height: 20),
-          _buildSearchRow(),
+          _buildSearchRow(isMobile),
           const SizedBox(height: 16),
-          _buildTable(),
+          if (isMobile)
+            MembersMobileView(
+              tableData: _tableData,
+              onOpenViewMember: _openViewMember,
+            )
+          else if (isTablet)
+            MembersTabletView(
+              tableData: _tableData,
+              onOpenViewMember: _openViewMember,
+            )
+          else
+            _buildDesktopTable(),
           const SizedBox(height: 16),
-          _buildPagination(),
+          _buildPagination(isMobile),
         ],
       ),
     );
   }
 
-  Widget _buildHeader() {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+  Widget _buildHeader(bool isMobile) {
+    return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Column(
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
           crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisSize: MainAxisSize.min,
           children: [
-            Text(
-              'Members',
-              style: Get.textTheme.headlineMedium?.copyWith(
-                fontWeight: FontWeight.bold,
-                color: _textDark,
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    'Members',
+                    style: (isMobile
+                            ? Get.textTheme.headlineSmall
+                            : Get.textTheme.headlineMedium)
+                        ?.copyWith(
+                      fontWeight: FontWeight.bold,
+                      color: _textDark,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    'Manage all your members and their subscriptions',
+                    style: Get.textTheme.bodyMedium?.copyWith(
+                      color: _textMuted,
+                      fontSize: isMobile ? 13 : 14,
+                    ),
+                  ),
+                ],
               ),
             ),
-            const SizedBox(height: 4),
-            Text(
-              'Manage all your members and their subscriptions',
-              style: Get.textTheme.bodyMedium?.copyWith(color: _textMuted),
-            ),
+            if (!isMobile)
+              FilledButton(
+                onPressed: () => Get.dialog(const AddMemberModal()),
+                style: FilledButton.styleFrom(
+                  backgroundColor: _purple,
+                  foregroundColor: Colors.white,
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                ),
+                child: const Text('Add Member'),
+              ),
           ],
         ),
-        FilledButton(
-          onPressed: () => Get.dialog(const AddMemberModal()),
-          style: FilledButton.styleFrom(
-            backgroundColor: _purple,
-            foregroundColor: Colors.white,
-            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(8),
+        if (isMobile) ...[
+          const SizedBox(height: 16),
+          SizedBox(
+            width: double.infinity,
+            child: FilledButton(
+              onPressed: () => Get.dialog(const AddMemberModal()),
+              style: FilledButton.styleFrom(
+                backgroundColor: _purple,
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(vertical: 12),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+              ),
+              child: const Text('Add Member'),
             ),
           ),
-          child: const Text('Add Member'),
-        ),
+        ],
       ],
     );
   }
 
   static const _searchFieldWidth = 380.0;
 
-  Widget _buildSearchRow() {
+  Widget _buildSearchRow(bool isMobile) {
+    if (isMobile) {
+      return Column(
+        children: [
+          Container(
+            height: 44,
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: const Color(0xFFE2E8F0)),
+            ),
+            child: const TextField(
+              style: TextStyle(fontSize: 14),
+              decoration: InputDecoration(
+                hintText: 'Search by name or phone',
+                hintStyle: TextStyle(color: Color(0xFF94A3B8), fontSize: 13),
+                prefixIcon: Icon(Icons.search, size: 18),
+                border: InputBorder.none,
+                contentPadding: EdgeInsets.symmetric(vertical: 11),
+              ),
+            ),
+          ),
+          const SizedBox(height: 12),
+          Row(
+            children: [
+              Expanded(
+                child: _buildFilterDropdown(
+                  key: _statusDropdownKey,
+                  label: 'Status',
+                  selected: _selectedStatus,
+                  onTap: _showStatusMenu,
+                ),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: _buildFilterDropdown(
+                  key: _planDropdownKey,
+                  label: 'Plan',
+                  selected: _selectedPlan,
+                  onTap: _showPlanMenu,
+                ),
+              ),
+            ],
+          ),
+        ],
+      );
+    }
     return Row(
       children: [
         SizedBox(
@@ -357,12 +433,12 @@ class _MembersViewState extends State<MembersView> {
     );
   }
 
-  Widget _buildTable() {
+  Widget _buildDesktopTable() {
     return Container(
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: _border),
+        border: Border.all(color: const Color(0xFFE5E7EB)),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withValues(alpha: 0.04),
@@ -398,29 +474,30 @@ class _MembersViewState extends State<MembersView> {
             ],
           ),
           ..._tableData.asMap().entries.map(
-            (entry) => TableRow(
-              decoration: BoxDecoration(
-                color: entry.key.isEven
-                    ? Colors.white
-                    : const Color(0xFFFAFAFA),
-                border: Border(bottom: BorderSide(color: _border, width: 1)),
+                (entry) => TableRow(
+                  decoration: BoxDecoration(
+                    color: entry.key.isEven
+                        ? Colors.white
+                        : const Color(0xFFFAFAFA),
+                    border: const Border(
+                        bottom: BorderSide(color: Color(0xFFE5E7EB), width: 1)),
+                  ),
+                  children: [
+                    _tapableCell(entry.value, entry.value.name),
+                    _tapableCell(entry.value, entry.value.phone),
+                    _tapableCell(entry.value, entry.value.email),
+                    _tapableCell(entry.value, entry.value.plan),
+                    _tapableCell(entry.value, entry.value.expiry),
+                    _tapableCell(entry.value, _statusPill(entry.value.status)),
+                  ],
+                ),
               ),
-              children: [
-                _tapableCell(entry.value, entry.value.name),
-                _tapableCell(entry.value, entry.value.phone),
-                _tapableCell(entry.value, entry.value.email),
-                _tapableCell(entry.value, entry.value.plan),
-                _tapableCell(entry.value, entry.value.expiry),
-                _tapableCell(entry.value, _statusPill(entry.value.status)),
-              ],
-            ),
-          ),
         ],
       ),
     );
   }
 
-  void _openViewMember(_MemberRow row) {
+  void _openViewMember(MemberRow row) {
     final (String label, Color color) = switch (row.status) {
       MemberStatus.active => ('Active', _iconCircleGreen),
       MemberStatus.expired => ('Expired', _iconCircleRed),
@@ -441,7 +518,7 @@ class _MembersViewState extends State<MembersView> {
     );
   }
 
-  Widget _tapableCell(_MemberRow row, dynamic content) {
+  Widget _tapableCell(MemberRow row, dynamic content) {
     return Material(
       color: Colors.transparent,
       child: InkWell(
@@ -493,7 +570,7 @@ class _MembersViewState extends State<MembersView> {
     );
   }
 
-  Widget _buildPagination() {
+  Widget _buildPagination(bool isMobile) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
@@ -501,55 +578,39 @@ class _MembersViewState extends State<MembersView> {
           'Showing 1-10 of 248 members',
           style: Get.textTheme.bodySmall?.copyWith(
             color: const Color(0xFF64748B),
-            fontSize: 14,
+            fontSize: isMobile ? 12 : 14,
           ),
         ),
         const SizedBox(width: 24),
-        Material(
-          color: Colors.transparent,
-          child: InkWell(
-            onTap: () {},
-            borderRadius: BorderRadius.circular(8),
-            child: Container(
-              width: 40,
-              height: 40,
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(8),
-                border: Border.all(color: const Color(0xFFE2E8F0)),
-              ),
-              alignment: Alignment.center,
-              child: const Icon(
-                Icons.chevron_left,
-                color: Color(0xFF64748B),
-                size: 20,
-              ),
-            ),
-          ),
-        ),
+        _paginationButton(Icons.chevron_left, false),
         const SizedBox(width: 8),
-        Material(
-          color: Colors.transparent,
-          child: InkWell(
-            onTap: () {},
+        _paginationButton(Icons.chevron_right, true),
+      ],
+    );
+  }
+
+  Widget _paginationButton(IconData icon, bool isActive) {
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: () {},
+        borderRadius: BorderRadius.circular(8),
+        child: Container(
+          width: 40,
+          height: 40,
+          decoration: BoxDecoration(
+            color: isActive ? _purple : Colors.white,
             borderRadius: BorderRadius.circular(8),
-            child: Container(
-              width: 40,
-              height: 40,
-              decoration: BoxDecoration(
-                color: _purple,
-                borderRadius: BorderRadius.circular(8),
-              ),
-              alignment: Alignment.center,
-              child: const Icon(
-                Icons.chevron_right,
-                color: Colors.white,
-                size: 20,
-              ),
-            ),
+            border: isActive ? null : Border.all(color: const Color(0xFFE2E8F0)),
+          ),
+          alignment: Alignment.center,
+          child: Icon(
+            icon,
+            color: isActive ? Colors.white : const Color(0xFF64748B),
+            size: 20,
           ),
         ),
-      ],
+      ),
     );
   }
 }

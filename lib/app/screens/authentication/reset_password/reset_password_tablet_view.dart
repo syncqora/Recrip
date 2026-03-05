@@ -1,29 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:saas/app/screens/authentication/widgets/auth_widgets.dart';
-
+import '../widgets/auth_widgets.dart';
 import 'reset_password_controller.dart';
-import 'reset_password_mobile_view.dart';
-import 'reset_password_tablet_view.dart';
 
-class ResetPassword extends GetView<ResetPasswordController> {
-  const ResetPassword({super.key});
+class ResetPasswordTabletView extends GetView<ResetPasswordController> {
+  const ResetPasswordTabletView({super.key});
 
   @override
   Widget build(BuildContext context) {
-    Get.put(ResetPasswordController());
-    final width = MediaQuery.sizeOf(context).width;
-
-    if (width < 600) {
-      return const ResetPasswordMobileView();
-    }
-
-    if (width < 1024) {
-      return const ResetPasswordTabletView();
-    }
-
     return Scaffold(
       body: AuthScreenLayout(
+        padding: const EdgeInsets.symmetric(horizontal: 48, vertical: 48),
         child: AuthFormCard(
           title: 'Reset Password',
           child: Column(
@@ -50,8 +37,7 @@ class ResetPassword extends GetView<ResetPasswordController> {
                   () => AuthPasswordField(
                     controller: controller.confirmPasswordController,
                     obscureText: !controller.isConfirmPasswordVisible.value,
-                    onToggleVisibility:
-                        controller.toggleConfirmPasswordVisibility,
+                    onToggleVisibility: controller.toggleConfirmPasswordVisibility,
                     hint: 'Enter New Password',
                   ),
                 ),

@@ -3,6 +3,12 @@ import 'package:get/get.dart';
 
 import 'add_member_modal.dart';
 import 'dashboard_controller.dart';
+import 'members_view.dart';
+import 'reminders_view.dart';
+import 'renewals_view.dart';
+import 'reports_view.dart';
+import 'settings_view.dart';
+import 'subscriptions_view.dart';
 
 /// Mobile layout: compact app bar + drawer, single-column scroll.
 /// Dashboard content: header, 2x2 KPI cards, AI Insights, Upcoming Reminders, renewals as list cards, footer.
@@ -79,24 +85,37 @@ class DashboardMobileView extends StatelessWidget {
         ],
       ),
       drawer: _buildDrawer(context, controller),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            _buildHeader(),
-            const SizedBox(height: 20),
-            _buildSummaryGrid(),
-            const SizedBox(height: 20),
-            _buildInsightsCard(),
-            const SizedBox(height: 16),
-            _buildUpcomingRemindersCard(),
-            const SizedBox(height: 20),
-            _buildRenewalsSection(controller),
-            const SizedBox(height: 24),
-            _buildFooter(),
-          ],
-        ),
+      body: Obx(() {
+        final index = controller.selectedNavIndex.value;
+        if (index == 1) return const MembersView();
+        if (index == 2) return const SubscriptionsView();
+        if (index == 3) return const RenewalsView();
+        if (index == 4) return const RemindersView();
+        if (index == 5) return const ReportsView();
+        if (index == 6) return const SettingsView();
+        return _buildDashboardContent(controller);
+      }),
+    );
+  }
+
+  Widget _buildDashboardContent(DashboardController controller) {
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _buildHeader(),
+          const SizedBox(height: 20),
+          _buildSummaryGrid(),
+          const SizedBox(height: 20),
+          _buildInsightsCard(),
+          const SizedBox(height: 16),
+          _buildUpcomingRemindersCard(),
+          const SizedBox(height: 20),
+          _buildRenewalsSection(controller),
+          const SizedBox(height: 24),
+          _buildFooter(),
+        ],
       ),
     );
   }

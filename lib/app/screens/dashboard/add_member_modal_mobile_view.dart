@@ -1,0 +1,354 @@
+import 'package:flutter/material.dart';
+import 'package:get/get.dart';
+
+import '../authentication/widgets/auth_constants.dart';
+import '../authentication/widgets/auth_form_field_section.dart';
+import '../authentication/widgets/auth_text_field.dart';
+
+class AddMemberModalMobileView extends StatelessWidget {
+  const AddMemberModalMobileView({
+    super.key,
+    required this.fullNameController,
+    required this.phoneController,
+    required this.emailController,
+    required this.selectedPlan,
+    required this.startDate,
+    required this.whatsApp,
+    required this.email,
+    required this.onPickStartDate,
+    required this.onPlanChanged,
+    required this.onWhatsAppChanged,
+    required this.onEmailChanged,
+    required this.onCancel,
+    required this.onSave,
+  });
+
+  final TextEditingController fullNameController;
+  final TextEditingController phoneController;
+  final TextEditingController emailController;
+  final String? selectedPlan;
+  final DateTime? startDate;
+  final bool whatsApp;
+  final bool email;
+  final VoidCallback onPickStartDate;
+  final ValueChanged<String?> onPlanChanged;
+  final ValueChanged<bool> onWhatsAppChanged;
+  final ValueChanged<bool> onEmailChanged;
+  final VoidCallback onCancel;
+  final VoidCallback onSave;
+
+  @override
+  Widget build(BuildContext context) {
+    return Dialog(
+      backgroundColor: Colors.transparent,
+      insetPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
+      child: Container(
+        width: double.infinity,
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(24),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            _buildHeader(),
+            const Divider(thickness: 1, color: Color(0xFFCBD5E1), height: 1),
+            Flexible(
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.all(20),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    _buildSectionTitle('Member Details'),
+                    const SizedBox(height: 16),
+                    AuthFormFieldSection(
+                      label: 'Full Name*',
+                      spacingAfterLabel: 8,
+                      child: AuthTextField(
+                        controller: fullNameController,
+                        hint: 'E.g. John Doe',
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    AuthFormFieldSection(
+                      label: 'Phone Number',
+                      spacingAfterLabel: 8,
+                      child: Row(
+                        children: [
+                          Container(
+                            width: 50,
+                            height: AuthConstants.fieldHeight,
+                            alignment: Alignment.center,
+                            decoration: BoxDecoration(
+                              color: AuthConstants.fieldFillColor,
+                              borderRadius: BorderRadius.only(
+                                topLeft: Radius.circular(AuthConstants.fieldBorderRadius),
+                                bottomLeft: Radius.circular(AuthConstants.fieldBorderRadius),
+                              ),
+                              border: Border.all(color: AuthConstants.borderColor),
+                            ),
+                            child: Text(
+                              '+91',
+                              style: Get.theme.textTheme.labelMedium?.copyWith(
+                                color: AuthConstants.hintColor,
+                              ),
+                            ),
+                          ),
+                          Expanded(
+                            child: AuthTextField(
+                              controller: phoneController,
+                              hint: '00000 00000',
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    AuthFormFieldSection(
+                      label: 'Email Address*',
+                      spacingAfterLabel: 8,
+                      child: AuthTextField(
+                        controller: emailController,
+                        hint: 'E.g. John.doe@gmail.com',
+                      ),
+                    ),
+                    const SizedBox(height: 24),
+                    _buildSectionTitle('Subscription Details'),
+                    const SizedBox(height: 16),
+                    _requiredLabel('Plan'),
+                    const SizedBox(height: 8),
+                    _buildPlanDropdown(),
+                    const SizedBox(height: 16),
+                    _requiredLabel('Start Date'),
+                    const SizedBox(height: 8),
+                    _buildStartDatePicker(),
+                    const SizedBox(height: 16),
+                    Text(
+                      'Expiry Date',
+                      style: Get.theme.textTheme.labelMedium?.copyWith(
+                        color: AuthConstants.labelColor,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    _buildExpiryDisplay(),
+                    const SizedBox(height: 24),
+                    _buildSectionTitle('Reminder Channels'),
+                    const SizedBox(height: 16),
+                    _buildReminderChannels(),
+                  ],
+                ),
+              ),
+            ),
+            const Divider(thickness: 1, height: 1, color: Color(0xFFCBD5E1)),
+            Padding(
+              padding: const EdgeInsets.all(20),
+              child: _buildActions(),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildHeader() {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          const SizedBox(width: 40),
+          Text(
+            'Add Member',
+            style: Get.textTheme.titleMedium?.copyWith(
+              fontWeight: FontWeight.bold,
+              color: AuthConstants.labelColor,
+              fontSize: 18,
+            ),
+          ),
+          IconButton(
+            onPressed: onCancel,
+            icon: Container(
+              padding: const EdgeInsets.all(4),
+              decoration: const BoxDecoration(
+                color: Color(0xFFF1F5F9),
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(Icons.close, size: 18, color: AuthConstants.hintColor),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSectionTitle(String title) {
+    return Text(
+      title,
+      style: Get.textTheme.titleSmall?.copyWith(
+        fontWeight: FontWeight.bold,
+        color: AuthConstants.labelColor,
+        fontSize: 15,
+      ),
+    );
+  }
+
+  Widget _buildPlanDropdown() {
+    return SizedBox(
+      height: AuthConstants.fieldHeight,
+      child: DropdownButtonFormField<String>(
+        value: selectedPlan,
+        hint: Text(
+          'Choose a Plan',
+          style: Get.theme.textTheme.labelMedium?.copyWith(color: AuthConstants.hintColor),
+        ),
+        decoration: InputDecoration(
+          filled: true,
+          fillColor: AuthConstants.fieldFillColor,
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(AuthConstants.fieldBorderRadius),
+            borderSide: const BorderSide(color: AuthConstants.borderColor),
+          ),
+          enabledBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(AuthConstants.fieldBorderRadius),
+            borderSide: const BorderSide(color: AuthConstants.borderColor),
+          ),
+          contentPadding: const EdgeInsets.symmetric(horizontal: 12),
+        ),
+        items: ['Monthly', 'Quarterly', 'Yearly']
+            .map((p) => DropdownMenuItem(value: p, child: Text(p)))
+            .toList(),
+        onChanged: onPlanChanged,
+      ),
+    );
+  }
+
+  Widget _buildStartDatePicker() {
+    return SizedBox(
+      height: AuthConstants.fieldHeight,
+      child: InkWell(
+        onTap: onPickStartDate,
+        borderRadius: BorderRadius.circular(AuthConstants.fieldBorderRadius),
+        child: InputDecorator(
+          decoration: InputDecoration(
+            hintText: 'Select Date',
+            filled: true,
+            fillColor: AuthConstants.fieldFillColor,
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(AuthConstants.fieldBorderRadius),
+              borderSide: const BorderSide(color: AuthConstants.borderColor),
+            ),
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(AuthConstants.fieldBorderRadius),
+              borderSide: const BorderSide(color: AuthConstants.borderColor),
+            ),
+            contentPadding: const EdgeInsets.symmetric(horizontal: 12),
+            suffixIcon: const Icon(Icons.calendar_today_outlined, size: 18, color: AuthConstants.hintColor),
+          ),
+          child: Text(
+            startDate != null
+                ? '${startDate!.day}/${startDate!.month}/${startDate!.year}'
+                : 'Select Date',
+            style: Get.theme.textTheme.bodySmall?.copyWith(
+              color: startDate != null ? AuthConstants.textColor : AuthConstants.hintColor,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildExpiryDisplay() {
+    return Container(
+      width: double.infinity,
+      height: AuthConstants.fieldHeight,
+      padding: const EdgeInsets.symmetric(horizontal: 12),
+      alignment: Alignment.centerLeft,
+      decoration: BoxDecoration(
+        color: AuthConstants.cardBackground,
+        borderRadius: BorderRadius.circular(AuthConstants.fieldBorderRadius),
+        border: Border.all(color: AuthConstants.borderColor),
+      ),
+      child: Text(
+        '—',
+        style: Get.theme.textTheme.bodySmall?.copyWith(color: AuthConstants.hintColor),
+      ),
+    );
+  }
+
+  Widget _requiredLabel(String text) {
+    return RichText(
+      text: TextSpan(
+        style: Get.textTheme.bodySmall?.copyWith(color: AuthConstants.labelColor, fontSize: 14),
+        children: [
+          TextSpan(text: text),
+          const TextSpan(text: '*', style: TextStyle(color: Colors.red, fontSize: 14)),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildReminderChannels() {
+    return Column(
+      children: [
+        _buildCheckbox('WhatsApp', whatsApp, onWhatsAppChanged),
+        const SizedBox(height: 12),
+        _buildCheckbox('Email', email, onEmailChanged),
+      ],
+    );
+  }
+
+  Widget _buildCheckbox(String label, bool value, ValueChanged<bool> onChanged) {
+    return InkWell(
+      onTap: () => onChanged(!value),
+      child: Row(
+        children: [
+          SizedBox(
+            width: 24,
+            height: 24,
+            child: Checkbox(
+              value: value,
+              onChanged: (v) => onChanged(v ?? false),
+              activeColor: AuthConstants.buttonEnabledColor,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(4)),
+            ),
+          ),
+          const SizedBox(width: 12),
+          Text(label, style: Get.textTheme.bodyMedium?.copyWith(color: AuthConstants.labelColor)),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildActions() {
+    return Row(
+      children: [
+        Expanded(
+          child: OutlinedButton(
+            onPressed: onCancel,
+            style: OutlinedButton.styleFrom(
+              foregroundColor: AuthConstants.supportTextColor,
+              padding: const EdgeInsets.symmetric(vertical: 12),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(AuthConstants.fieldBorderRadius),
+              ),
+            ),
+            child: const Text('Cancel'),
+          ),
+        ),
+        const SizedBox(width: 12),
+        Expanded(
+          child: FilledButton(
+            onPressed: onSave,
+            style: FilledButton.styleFrom(
+              backgroundColor: AuthConstants.buttonEnabledColor,
+              padding: const EdgeInsets.symmetric(vertical: 12),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+            ),
+            child: const Text('Save Member'),
+          ),
+        ),
+      ],
+    );
+  }
+}

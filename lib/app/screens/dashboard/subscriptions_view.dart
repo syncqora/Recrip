@@ -5,22 +5,8 @@ import '../../../shared/widgets/success_toast.dart';
 import 'create_plan_modal.dart';
 import 'delete_plan_confirm_dialog.dart';
 import 'edit_plan_modal.dart';
-
-class _SubscriptionPlanRow {
-  final String planName;
-  final String duration;
-  final String price;
-  final String activeMembers;
-  final bool isActive;
-
-  _SubscriptionPlanRow({
-    required this.planName,
-    required this.duration,
-    required this.price,
-    required this.activeMembers,
-    this.isActive = true,
-  });
-}
+import 'subscriptions_mobile_view.dart';
+import 'subscriptions_tablet_view.dart';
 
 /// Subscriptions page content: header, plans table.
 /// Used inside the dashboard main content area when Subscriptions nav is selected.
@@ -34,25 +20,25 @@ class SubscriptionsView extends StatelessWidget {
   static const _iconCircleGreen = Color(0xFF16A34A);
 
   static final _tableData = [
-    _SubscriptionPlanRow(
+    SubscriptionPlanRow(
       planName: 'Monthly',
       duration: '30 Days',
       price: '₹1,499',
       activeMembers: '48',
     ),
-    _SubscriptionPlanRow(
+    SubscriptionPlanRow(
       planName: 'Quarterly',
       duration: '3 Months',
       price: '₹3,999',
       activeMembers: '12',
     ),
-    _SubscriptionPlanRow(
+    SubscriptionPlanRow(
       planName: 'Half Yearly',
       duration: '6 Months',
       price: '₹7,499',
       activeMembers: '06',
     ),
-    _SubscriptionPlanRow(
+    SubscriptionPlanRow(
       planName: 'Yearly',
       duration: '12 Months',
       price: '₹14,499',
@@ -62,54 +48,108 @@ class SubscriptionsView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final width = MediaQuery.sizeOf(context).width;
+    final isMobile = width < 600;
+    final isTablet = width >= 600 && width < 1024;
+
     return SingleChildScrollView(
+      padding: isMobile ? const EdgeInsets.all(16) : EdgeInsets.zero,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
-        children: [_buildHeader(), const SizedBox(height: 20), _buildTable(context)],
+        children: [
+          _buildHeader(isMobile),
+          const SizedBox(height: 20),
+          if (isMobile)
+            SubscriptionsMobileView(
+              tableData: _tableData,
+              onEdit: (plan) => _showEditPlanDialog(context, plan),
+              onDelete: (plan) => _showDeletePlanDialog(context),
+            )
+          else if (isTablet)
+            SubscriptionsTabletView(
+              tableData: _tableData,
+              onEdit: (plan) => _showEditPlanDialog(context, plan),
+              onDelete: (plan) => _showDeletePlanDialog(context),
+            )
+          else
+            _buildDesktopTable(context),
+        ],
       ),
     );
   }
 
-  Widget _buildHeader() {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      crossAxisAlignment: CrossAxisAlignment.start,
+  Widget _buildHeader(bool isMobile) {
+    return Column(
       children: [
-        Column(
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
           crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisSize: MainAxisSize.min,
           children: [
-            Text(
-              'Subscriptions',
-              style: Get.textTheme.headlineMedium?.copyWith(
-                fontWeight: FontWeight.bold,
-                color: _textDark,
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    'Subscriptions',
+                    style: (isMobile
+                            ? Get.textTheme.headlineSmall
+                            : Get.textTheme.headlineMedium)
+                        ?.copyWith(
+                      fontWeight: FontWeight.bold,
+                      color: _textDark,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    'Manage subscription plans and pricing',
+                    style: Get.textTheme.bodyMedium?.copyWith(
+                      color: _textMuted,
+                      fontSize: isMobile ? 13 : 14,
+                    ),
+                  ),
+                ],
               ),
             ),
-            const SizedBox(height: 4),
-            Text(
-              'Manage subscription plans and pricing',
-              style: Get.textTheme.bodyMedium?.copyWith(color: _textMuted),
-            ),
+            if (!isMobile)
+              FilledButton(
+                onPressed: () => Get.dialog(const CreatePlanModal()),
+                style: FilledButton.styleFrom(
+                  backgroundColor: _purple,
+                  foregroundColor: Colors.white,
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                ),
+                child: const Text('Create Plan'),
+              ),
           ],
         ),
-        FilledButton(
-          onPressed: () => Get.dialog(const CreatePlanModal()),
-          style: FilledButton.styleFrom(
-            backgroundColor: _purple,
-            foregroundColor: Colors.white,
-            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(8),
+        if (isMobile) ...[
+          const SizedBox(height: 16),
+          SizedBox(
+            width: double.infinity,
+            child: FilledButton(
+              onPressed: () => Get.dialog(const CreatePlanModal()),
+              style: FilledButton.styleFrom(
+                backgroundColor: _purple,
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(vertical: 12),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+              ),
+              child: const Text('Create Plan'),
             ),
           ),
-          child: const Text('Create Plan'),
-        ),
+        ],
       ],
     );
   }
 
-  Widget _buildTable(BuildContext context) {
+  Widget _buildDesktopTable(BuildContext context) {
     return Container(
       decoration: BoxDecoration(
         color: Colors.white,
@@ -127,7 +167,7 @@ class SubscriptionsView extends StatelessWidget {
         },
         children: [
           TableRow(
-            decoration: BoxDecoration(color: Color(0xFFF1F5F9)),
+            decoration: const BoxDecoration(color: Color(0xFFF1F5F9)),
             children: [
               _tableCell('Plan Name', isHeader: true),
               _tableCell('Duration', isHeader: true),
@@ -139,7 +179,7 @@ class SubscriptionsView extends StatelessWidget {
           ),
           ..._tableData.map(
             (row) => TableRow(
-              decoration: BoxDecoration(color: Colors.white),
+              decoration: const BoxDecoration(color: Colors.white),
               children: [
                 _tableCell(row.planName),
                 _tableCell(row.duration),
@@ -192,7 +232,7 @@ class SubscriptionsView extends StatelessWidget {
     );
   }
 
-  Widget _actionIcons(BuildContext context, _SubscriptionPlanRow row) {
+  Widget _actionIcons(BuildContext context, SubscriptionPlanRow row) {
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
@@ -208,7 +248,7 @@ class SubscriptionsView extends StatelessWidget {
     );
   }
 
-  void _showEditPlanDialog(BuildContext context, _SubscriptionPlanRow row) {
+  void _showEditPlanDialog(BuildContext context, SubscriptionPlanRow row) {
     Get.dialog(
       EditPlanModal(
         plan: EditPlanData(
@@ -230,10 +270,10 @@ class SubscriptionsView extends StatelessWidget {
           final overlayState = Overlay.of(ctx);
           Navigator.of(ctx).pop();
           SuccessToast.showWithOverlay(
-          overlayState,
-          title: 'Plan Deleted',
-          iconColor: SuccessToast.iconColorRed,
-        );
+            overlayState,
+            title: 'Plan Deleted',
+            iconColor: SuccessToast.iconColorRed,
+          );
         },
       ),
     );

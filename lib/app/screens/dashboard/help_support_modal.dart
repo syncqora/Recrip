@@ -4,6 +4,8 @@ import 'package:get/get.dart';
 import '../../../shared/widgets/success_toast.dart';
 import '../authentication/widgets/auth_constants.dart';
 import '../authentication/widgets/auth_form_field_section.dart';
+import 'help_support_modal_mobile_view.dart';
+import 'help_support_modal_tablet_view.dart';
 
 class HelpSupportModal extends StatefulWidget {
   const HelpSupportModal({super.key});
@@ -32,6 +34,24 @@ class _HelpSupportModalState extends State<HelpSupportModal> {
 
   @override
   Widget build(BuildContext context) {
+    final width = MediaQuery.sizeOf(context).width;
+
+    if (width < 600) {
+      return HelpSupportModalMobileView(
+        messageController: _messageController,
+        onCancel: () => Navigator.of(context).pop(),
+        onSend: () => _onSendPressed(context),
+      );
+    }
+
+    if (width < 1024) {
+      return HelpSupportModalTabletView(
+        messageController: _messageController,
+        onCancel: () => Navigator.of(context).pop(),
+        onSend: () => _onSendPressed(context),
+      );
+    }
+
     return Dialog(
       backgroundColor: Colors.transparent,
       insetPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 48),
@@ -205,3 +225,4 @@ class _HelpSupportModalState extends State<HelpSupportModal> {
     );
   }
 }
+

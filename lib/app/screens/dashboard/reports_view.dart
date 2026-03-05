@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
+import 'reports_mobile_view.dart';
+import 'reports_tablet_view.dart';
+
 class _RevenueRow {
   final String planName;
   final String totalMembers;
@@ -24,7 +27,6 @@ class _RevenueRow {
 class ReportsView extends StatelessWidget {
   const ReportsView({super.key});
 
-  static const _purple = Color(0xFF4F46E5);
   static const _textDark = Color(0xFF333333);
   static const _textMuted = Color(0xFF666666);
   static const _border = Color(0xFFE5E7EB);
@@ -69,21 +71,163 @@ class ReportsView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final width = MediaQuery.sizeOf(context).width;
+    final isMobile = width < 600;
+    final isTablet = width >= 600 && width < 1024;
+
     return SingleChildScrollView(
+      padding: isMobile ? const EdgeInsets.all(16) : (isTablet ? const EdgeInsets.all(24) : EdgeInsets.zero),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _buildHeader(),
+          _buildHeader(isMobile),
           const SizedBox(height: 24),
-          _buildKpiCards(),
-          const SizedBox(height: 24),
-          _buildRevenueSection(),
+          if (isMobile)
+            ReportsMobileView(
+              revenueData: _revenueData
+                  .map((e) => RevenueRow(
+                        planName: e.planName,
+                        totalMembers: e.totalMembers,
+                        renewals: e.renewals,
+                        missedRenewals: e.missedRenewals,
+                        renewalRate: e.renewalRate,
+                        revenue: e.revenue,
+                      ))
+                  .toList(),
+              kpiCards: [
+                _kpiCard(
+                  title: 'Total Renewals',
+                  value: '96',
+                  valueColor: _valueBlue,
+                  description: 'Successful renewals',
+                ),
+                _kpiCard(
+                  title: 'Missed Renewals',
+                  value: '12',
+                  valueColor: _valueRed,
+                  description: 'Not renewed after expiry',
+                ),
+                _kpiCard(
+                  title: 'Renewal Rate',
+                  value: '88%',
+                  valueColor: _textDark,
+                  description: 'Renewals + Expiring',
+                ),
+                _kpiCard(
+                  title: 'Revenue Recovered',
+                  value: '₹ 1,24,000/-',
+                  valueColor: _valueGreen,
+                  description: 'From renewed subscriptions',
+                ),
+              ],
+            )
+          else if (isTablet)
+            ReportsTabletView(
+              revenueData: _revenueData
+                  .map((e) => RevenueRow(
+                        planName: e.planName,
+                        totalMembers: e.totalMembers,
+                        renewals: e.renewals,
+                        missedRenewals: e.missedRenewals,
+                        renewalRate: e.renewalRate,
+                        revenue: e.revenue,
+                      ))
+                  .toList(),
+              kpiCards: [
+                _kpiCard(
+                  title: 'Total Renewals',
+                  value: '96',
+                  valueColor: _valueBlue,
+                  description: 'Successful renewals',
+                ),
+                _kpiCard(
+                  title: 'Missed Renewals',
+                  value: '12',
+                  valueColor: _valueRed,
+                  description: 'Not renewed after expiry',
+                ),
+                _kpiCard(
+                  title: 'Renewal Rate',
+                  value: '88%',
+                  valueColor: _textDark,
+                  description: 'Renewals + Expiring',
+                ),
+                _kpiCard(
+                  title: 'Revenue Recovered',
+                  value: '₹ 1,24,000/-',
+                  valueColor: _valueGreen,
+                  description: 'From renewed subscriptions',
+                ),
+              ],
+            )
+          else ...[
+            _buildKpiCards(),
+            const SizedBox(height: 24),
+            _buildRevenueSection(),
+          ],
         ],
       ),
     );
   }
 
-  Widget _buildHeader() {
+  Widget _buildHeader(bool isMobile) {
+    if (isMobile) {
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Reports',
+            style: Get.textTheme.headlineSmall?.copyWith(
+              fontWeight: FontWeight.bold,
+              color: _textDark,
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            'Analyze renewals, revenue, and performance',
+            style: Get.textTheme.bodySmall?.copyWith(color: _textMuted),
+          ),
+          const SizedBox(height: 16),
+          Row(
+            children: [
+              Expanded(
+                child: OutlinedButton.icon(
+                  onPressed: () {},
+                  icon: const Icon(Icons.download_outlined, size: 18),
+                  label: const Text('Export'),
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: _textDark,
+                    side: BorderSide(color: _border),
+                    backgroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: OutlinedButton.icon(
+                  onPressed: () {},
+                  icon: const Icon(Icons.calendar_today_outlined, size: 18),
+                  label: const Text('This Month'),
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: _textDark,
+                    side: BorderSide(color: _border),
+                    backgroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ],
+      );
+    }
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -143,6 +287,7 @@ class ReportsView extends StatelessWidget {
       ],
     );
   }
+
 
   Widget _buildKpiCards() {
     return Row(

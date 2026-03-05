@@ -1,19 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
-class _ReminderRuleRow {
-  final String trigger;
-  final String timing;
-  final String audience;
-  final bool isActive;
-
-  _ReminderRuleRow({
-    required this.trigger,
-    required this.timing,
-    required this.audience,
-    this.isActive = true,
-  });
-}
+import 'reminders_mobile_view.dart';
+import 'reminders_tablet_view.dart';
 
 /// Reminders page content: header, Reminder Rules table, Message Templates table.
 /// Used inside the dashboard main content area when Reminders nav is selected.
@@ -29,7 +18,7 @@ class RemindersView extends StatelessWidget {
   static const _emailBlue = Color(0xFF2196F3);
 
   static final _reminderRulesData = [
-    _ReminderRuleRow(
+    ReminderRuleRow(
       trigger: 'Before Expiry',
       timing: '7 Days before',
       audience: 'All Members',
@@ -37,7 +26,7 @@ class RemindersView extends StatelessWidget {
   ];
 
   static final _messageTemplatesData = [
-    _ReminderRuleRow(
+    ReminderRuleRow(
       trigger: 'Before Expiry',
       timing: '7 Days before',
       audience: 'All Members',
@@ -46,55 +35,104 @@ class RemindersView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final width = MediaQuery.sizeOf(context).width;
+    final isMobile = width < 600;
+    final isTablet = width >= 600 && width < 1024;
+
     return SingleChildScrollView(
+      padding: isMobile ? const EdgeInsets.all(16) : EdgeInsets.zero,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _buildHeader(),
+          _buildHeader(isMobile),
           const SizedBox(height: 24),
-          _buildReminderRulesSection(),
-          const SizedBox(height: 28),
-          _buildMessageTemplatesSection(),
+          if (isMobile)
+            RemindersMobileView(
+              rulesData: _reminderRulesData,
+              templatesData: _messageTemplatesData,
+            )
+          else if (isTablet)
+            RemindersTabletView(
+              rulesData: _reminderRulesData,
+              templatesData: _messageTemplatesData,
+            )
+          else ...[
+            _buildReminderRulesSection(),
+            const SizedBox(height: 28),
+            _buildMessageTemplatesSection(),
+          ],
         ],
       ),
     );
   }
 
-  Widget _buildHeader() {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      crossAxisAlignment: CrossAxisAlignment.start,
+  Widget _buildHeader(bool isMobile) {
+    return Column(
       children: [
-        Column(
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
           crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisSize: MainAxisSize.min,
           children: [
-            Text(
-              'Reminders',
-              style: Get.textTheme.headlineMedium?.copyWith(
-                fontWeight: FontWeight.bold,
-                color: _textDark,
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    'Reminders',
+                    style: (isMobile
+                            ? Get.textTheme.headlineSmall
+                            : Get.textTheme.headlineMedium)
+                        ?.copyWith(
+                      fontWeight: FontWeight.bold,
+                      color: _textDark,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    'Automate renewal reminders across WhatsApp and Email',
+                    style: Get.textTheme.bodyMedium?.copyWith(
+                      color: _textMuted,
+                      fontSize: isMobile ? 13 : 14,
+                    ),
+                  ),
+                ],
               ),
             ),
-            const SizedBox(height: 4),
-            Text(
-              'Automate renewal reminders across WhatsApp and Email',
-              style: Get.textTheme.bodyMedium?.copyWith(color: _textMuted),
-            ),
+            if (!isMobile)
+              FilledButton(
+                onPressed: () {},
+                style: FilledButton.styleFrom(
+                  backgroundColor: _purple,
+                  foregroundColor: Colors.white,
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                ),
+                child: const Text('Create Reminder Rule'),
+              ),
           ],
         ),
-        FilledButton(
-          onPressed: () {},
-          style: FilledButton.styleFrom(
-            backgroundColor: _purple,
-            foregroundColor: Colors.white,
-            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(8),
+        if (isMobile) ...[
+          const SizedBox(height: 16),
+          SizedBox(
+            width: double.infinity,
+            child: FilledButton(
+              onPressed: () {},
+              style: FilledButton.styleFrom(
+                backgroundColor: _purple,
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(vertical: 12),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+              ),
+              child: const Text('Create Reminder Rule'),
             ),
           ),
-          child: const Text('Create Reminder Rule'),
-        ),
+        ],
       ],
     );
   }
@@ -153,7 +191,7 @@ class RemindersView extends StatelessWidget {
               onPressed: () {},
               style: OutlinedButton.styleFrom(
                 foregroundColor: _textDark,
-                side: BorderSide(color: _border),
+                side: const BorderSide(color: Color(0xFFE5E7EB)),
                 backgroundColor: Colors.white,
                 padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                 shape: RoundedRectangleBorder(
@@ -170,12 +208,12 @@ class RemindersView extends StatelessWidget {
     );
   }
 
-  Widget _buildRulesTable(List<_ReminderRuleRow> rows) {
+  Widget _buildRulesTable(List<ReminderRuleRow> rows) {
     return Container(
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: _border),
+        border: Border.all(color: const Color(0xFFE5E7EB)),
       ),
       child: Table(
         columnWidths: const {
@@ -188,7 +226,7 @@ class RemindersView extends StatelessWidget {
         },
         children: [
           TableRow(
-            decoration: BoxDecoration(color: Color(0xFFF1F5F9)),
+            decoration: const BoxDecoration(color: Color(0xFFF1F5F9)),
             children: [
               _tableCell('Trigger', isHeader: true),
               _tableCell('Timing', isHeader: true),
@@ -200,7 +238,7 @@ class RemindersView extends StatelessWidget {
           ),
           ...rows.map(
             (row) => TableRow(
-              decoration: BoxDecoration(color: Colors.white),
+              decoration: const BoxDecoration(color: Colors.white),
               children: [
                 _tableCell(row.trigger),
                 _tableCell(row.timing),
@@ -220,9 +258,9 @@ class RemindersView extends StatelessWidget {
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        Icon(Icons.chat_bubble_outline, size: 20, color: _whatsAppGreen),
+        const Icon(Icons.chat_bubble_outline, size: 20, color: Color(0xFF25D366)),
         const SizedBox(width: 8),
-        Icon(Icons.email_outlined, size: 20, color: _emailBlue),
+        const Icon(Icons.email_outlined, size: 20, color: Color(0xFF2196F3)),
       ],
     );
   }
@@ -256,7 +294,7 @@ class RemindersView extends StatelessWidget {
       child: Text(
         'Active',
         style: Get.textTheme.bodySmall?.copyWith(
-          color: _iconCircleGreen,
+          color: const Color(0xFF16A34A),
           fontWeight: FontWeight.w500,
           fontSize: 12,
         ),
@@ -284,7 +322,7 @@ class RemindersView extends StatelessWidget {
           borderRadius: BorderRadius.circular(20),
           child: Container(
             padding: const EdgeInsets.all(6),
-            child: Icon(icon, size: 18, color: _textMuted),
+            child: Icon(icon, size: 18, color: const Color(0xFF666666)),
           ),
         ),
       ),
