@@ -63,14 +63,29 @@ class Login extends GetView<LoginController> {
               const SizedBox(height: AuthConstants.spacingAfterLabel),
               Align(
                 alignment: Alignment.centerRight,
-                child: TextButton(
-                  onPressed: controller.onForgotPassword,
-                  child: Text(
-                    'Forgot Password?',
-                    style: Get.theme.textTheme.labelMedium!.copyWith(
-                      color: AuthConstants.hintColor,
-                      decoration: TextDecoration.underline,
-                    ),
+                child: MouseRegion(
+                  onEnter: (_) => controller.setForgotPasswordHovered(true),
+                  onExit: (_) => controller.setForgotPasswordHovered(false),
+                  child: Obx(
+                    () {
+                      final hovered = controller.isForgotPasswordHovered.value;
+                      final color = hovered
+                          ? AuthConstants.titleColor
+                          : AuthConstants.hintColor;
+                      return TextButton(
+                        onPressed: controller.onForgotPassword,
+                        child: Text(
+                          'Forgot Password?',
+                          style: Get.theme.textTheme.labelMedium!.copyWith(
+                            color: color,
+                            fontWeight: hovered ? FontWeight.w400 : null,
+                            decoration: TextDecoration.underline,
+                            decorationColor: color,
+                            decorationThickness: 1.2,
+                          ),
+                        ),
+                      );
+                    },
                   ),
                 ),
               ),

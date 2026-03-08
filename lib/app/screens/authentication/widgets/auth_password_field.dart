@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:get/get.dart';
 
 import 'auth_constants.dart';
@@ -35,6 +36,7 @@ class AuthPasswordField extends StatelessWidget {
           hintText: hint,
           hintStyle: Get.theme.textTheme.labelMedium!.copyWith(
             color: AuthConstants.hintColor,
+            fontWeight: FontWeight.w400,
           ),
           filled: true,
           fillColor: AuthConstants.fieldFillColor,
@@ -65,13 +67,16 @@ class AuthPasswordField extends StatelessWidget {
           ),
           suffixIcon: IconButton(
             onPressed: onToggleVisibility,
-            icon: Image.asset(
+            icon: SvgPicture.asset(
               obscureText
-                  ? 'assets/icons/eye-close.png'
-                  : 'assets/icons/eye-open.png',
-              width: 22,
-              height: 22,
-              color: Colors.grey,
+                  ? 'assets/icons/eye-close.svg'
+                  : 'assets/icons/eye-open.svg',
+              width: 16,
+              height: 16,
+              colorFilter: const ColorFilter.mode(
+                Color(0xFF64748B),
+                BlendMode.srcIn,
+              ),
             ),
           ),
         ),

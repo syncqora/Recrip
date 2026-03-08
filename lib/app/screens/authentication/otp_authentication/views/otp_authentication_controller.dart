@@ -74,4 +74,8 @@ class OtpAuthenticationController extends GetxController {
   void onResendOtp() {
     // TODO: call API to resend OTP to emailOrPhone
   }
+
+  void onBack() {
+    Get.back();
+  }
 }

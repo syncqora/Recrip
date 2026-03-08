@@ -42,19 +42,34 @@ class LoginMobileView extends GetView<LoginController> {
               const SizedBox(height: 8),
               Align(
                 alignment: Alignment.centerRight,
-                child: TextButton(
-                  onPressed: controller.onForgotPassword,
-                  style: TextButton.styleFrom(
-                    padding: EdgeInsets.zero,
-                    minimumSize: Size.zero,
-                    tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                  ),
-                  child: Text(
-                    'Forgot Password?',
-                    style: Get.theme.textTheme.labelMedium!.copyWith(
-                      color: AuthConstants.hintColor,
-                      decoration: TextDecoration.underline,
-                    ),
+                child: MouseRegion(
+                  onEnter: (_) => controller.setForgotPasswordHovered(true),
+                  onExit: (_) => controller.setForgotPasswordHovered(false),
+                  child: Obx(
+                    () {
+                      final hovered = controller.isForgotPasswordHovered.value;
+                      final color = hovered
+                          ? AuthConstants.titleColor
+                          : AuthConstants.hintColor;
+                      return TextButton(
+                        onPressed: controller.onForgotPassword,
+                        style: TextButton.styleFrom(
+                          padding: EdgeInsets.zero,
+                          minimumSize: Size.zero,
+                          tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                        ),
+                        child: Text(
+                          'Forgot Password?',
+                          style: Get.theme.textTheme.labelMedium!.copyWith(
+                            color: color,
+                            fontWeight: hovered ? FontWeight.w400 : null,
+                            decoration: TextDecoration.underline,
+                            decorationColor: color,
+                            decorationThickness: 1.2,
+                          ),
+                        ),
+                      );
+                    },
                   ),
                 ),
               ),

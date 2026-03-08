@@ -44,6 +44,8 @@ class DashboardTabletView extends StatelessWidget {
     _RenewalRow(name: 'Ankith Rawat', plan: 'Yearly', expiry: '15/01/2026', status: 'Expiring', isExpired: false),
     _RenewalRow(name: 'Alex George', plan: 'Monthly', expiry: '15/01/2026', status: 'Expiring', isExpired: false),
     _RenewalRow(name: 'Mary Steenberg', plan: 'Yearly', expiry: '15/01/2026', status: 'Expiring', isExpired: false),
+    _RenewalRow(name: 'Mary Steenberg', plan: 'Monthly', expiry: '15/01/2026', status: 'Expiring', isExpired: false),
+    _RenewalRow(name: 'Mary Steenberg', plan: 'Quarterly', expiry: '15/01/2026', status: 'Expiring', isExpired: false),
   ];
 
   @override
@@ -337,19 +339,26 @@ class DashboardTabletView extends StatelessWidget {
               children: [
                 Text('AI Insights', style: Get.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600, color: _textDark)),
                 const SizedBox(height: 12),
-                Text(
-                  'You may lose ₹18,000 this week due to 6 memberships expiring. Sending reminders today could recover ₹12,500.',
-                  style: Get.textTheme.bodySmall?.copyWith(color: _textMuted),
+                RichText(
+                  text: TextSpan(
+                    style: Get.textTheme.bodySmall?.copyWith(color: _textMuted),
+                    children: [
+                      const TextSpan(text: 'You may lose '),
+                      TextSpan(text: '₹18,000', style: Get.textTheme.bodySmall?.copyWith(color: _textDark, fontWeight: FontWeight.w600)),
+                      const TextSpan(text: ' this week due to 6 memberships expiring. Sending reminders today could recover '),
+                      TextSpan(text: '₹12,500', style: Get.textTheme.bodySmall?.copyWith(color: _textDark, fontWeight: FontWeight.w600)),
+                      const TextSpan(text: '.'),
+                    ],
+                  ),
                 ),
                 const SizedBox(height: 20),
                 Align(
                   alignment: Alignment.centerRight,
-                  child: OutlinedButton(
+                  child: FilledButton(
                     onPressed: () => Get.find<DashboardController>().onSendRemindersNow(),
-                    style: OutlinedButton.styleFrom(
-                      foregroundColor: _purple,
-                      side: const BorderSide(color: _purple),
-                      backgroundColor: const Color(0xFFEEF2FF),
+                    style: FilledButton.styleFrom(
+                      backgroundColor: _purple,
+                      foregroundColor: Colors.white,
                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                     ),
                     child: const Text('Send Reminders Now'),
@@ -361,31 +370,7 @@ class DashboardTabletView extends StatelessWidget {
         ),
         const SizedBox(width: 20),
         Expanded(
-          child: Container(
-            padding: const EdgeInsets.all(20),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(14),
-              border: Border.all(color: _border),
-              boxShadow: [
-                BoxShadow(color: Colors.black.withValues(alpha: 0.06), blurRadius: 12, offset: const Offset(0, 2)),
-              ],
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text('Upcoming Reminders', style: Get.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600, color: _textDark)),
-                const SizedBox(height: 16),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text('John Doe', style: Get.textTheme.bodyMedium?.copyWith(color: _textDark)),
-                    Text('WhatsApp . 18:20:36', style: Get.textTheme.bodySmall?.copyWith(color: _textMuted)),
-                  ],
-                ),
-              ],
-            ),
-          ),
+          child: _buildRevenueInsightsCard(),
         ),
       ],
     );
@@ -422,7 +407,12 @@ class DashboardTabletView extends StatelessWidget {
                   onTap: controller.onViewAllRenewals,
                   child: Text(
                     'View All Renewals',
-                    style: Get.textTheme.labelMedium?.copyWith(color: _purple, fontWeight: FontWeight.w600),
+                    style: Get.textTheme.labelMedium?.copyWith(
+                      color: _purple,
+                      fontWeight: FontWeight.w500,
+                      decoration: TextDecoration.underline,
+                      decorationColor: _purple,
+                    ),
                   ),
                 ),
               ],
@@ -430,40 +420,34 @@ class DashboardTabletView extends StatelessWidget {
           ),
           LayoutBuilder(
             builder: (context, constraints) {
-              // When the table is placed inside a horizontal scroll view, its width becomes unbounded.
-              // Give it a bounded minimum width:
-              // - at least as wide as the available viewport (so it fills tablet portrait nicely)
-              // - but never smaller than a sensible minimum (so columns don't collapse in tighter layouts)
-              final minTableWidth = math.max(constraints.maxWidth, 640.0);
-              return SingleChildScrollView(
-                scrollDirection: Axis.horizontal,
-                child: ConstrainedBox(
-                  constraints: BoxConstraints(minWidth: minTableWidth),
-                  child: Table(
-                    columnWidths: const {
-                      0: FlexColumnWidth(2),
-                      1: FlexColumnWidth(1),
-                      2: FlexColumnWidth(1.2),
-                      3: FlexColumnWidth(1),
-                      4: FixedColumnWidth(120), // Action column: min width for three icons + padding (avoids overflow in landscape)
-                    },
-                    children: [
-              TableRow(
-                decoration: BoxDecoration(color: const Color(0xFFEEF2FF), border: Border(bottom: BorderSide(color: _border))),
+              return Table(
+                columnWidths: const {
+                  0: FlexColumnWidth(2),
+                  1: FlexColumnWidth(1),
+                  2: FlexColumnWidth(1.2),
+                  3: FlexColumnWidth(1),
+                  4: FixedColumnWidth(96),
+                },
                 children: [
-                  _tableCell('Name', isHeader: true),
-                  _tableCell('Plan', isHeader: true),
-                  _tableCell('Expiry', isHeader: true),
-                  _tableCell('Status', isHeader: true),
-                  _tableCell('Action', isHeader: true),
-                ],
-              ),
-              ..._renewalRows.asMap().entries.map(
-                    (e) => TableRow(
-                      decoration: BoxDecoration(
-                        color: e.key.isEven ? Colors.white : const Color(0xFFFAFAFA),
-                        border: Border(bottom: BorderSide(color: _border)),
-                      ),
+                  TableRow(
+                    decoration: const BoxDecoration(
+                      color: Color(0xFFF8FAFC),
+                      border: Border(bottom: BorderSide(color: Color(0xFFE5E7EB))),
+                    ),
+                    children: [
+                      _tableCell('Name', isHeader: true),
+                      _tableCell('Plan', isHeader: true),
+                      _tableCell('Expiry', isHeader: true),
+                      _tableCell('Status', isHeader: true),
+                      _tableCell('Action', isHeader: true),
+                    ],
+                  ),
+                  ..._renewalRows.asMap().entries.map(
+                    (e) =>                   TableRow(
+                    decoration: const BoxDecoration(
+                      color: Colors.white,
+                      border: Border(bottom: BorderSide(color: Color(0xFFE5E7EB))),
+                    ),
                       children: [
                         _tableCell(e.value.name),
                         _tableCell(e.value.plan),
@@ -473,9 +457,7 @@ class DashboardTabletView extends StatelessWidget {
                       ],
                     ),
                   ),
-                    ],
-                  ),
-                ),
+                ],
               );
             },
           ),
@@ -506,17 +488,16 @@ class DashboardTabletView extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
       child: Container(
-        width: 91,
-        height: 32,
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
         decoration: BoxDecoration(
-          color: isExpired ? _expiredBadge : _expiringBadge,
+          color: isExpired ? const Color(0xFFDC2626) : const Color(0xFFF59E0B),
           borderRadius: BorderRadius.circular(16),
         ),
         alignment: Alignment.center,
         child: Text(
           text,
           style: Get.textTheme.labelSmall?.copyWith(
-            color: isExpired ? const Color(0xFF991B1B) : const Color(0xFF92400E),
+            color: Colors.white,
             fontWeight: FontWeight.w500,
             fontSize: 12,
           ),
@@ -536,21 +517,93 @@ class DashboardTabletView extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             _actionIcon(Icons.notifications_outlined),
-            const SizedBox(width: 4),
+            const SizedBox(width: 8),
             _actionIcon(Icons.refresh),
-            const SizedBox(width: 4),
-            _actionIcon(Icons.visibility_outlined),
           ],
         ),
       ),
     );
   }
 
+  static const _revenueRecoveredBlue = Color(0xFF4F46E5);
+  static const _revenueLostRed = Color(0xFFDC2626);
+
+  Widget _buildRevenueInsightsCard() {
+    const chartSize = 100.0;
+    final recoveredFraction = 18624 / (18624 + 2540);
+    final lostFraction = 2540 / (18624 + 2540);
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: const Color(0xFFE2E8F0)),
+        boxShadow: [
+          BoxShadow(color: Colors.black.withValues(alpha: 0.06), blurRadius: 12, offset: const Offset(0, 2)),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text('Revenue Insights', style: Get.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600, color: _textDark)),
+          const SizedBox(height: 16),
+          Center(
+            child: SizedBox(
+              width: chartSize,
+              height: chartSize,
+              child: CustomPaint(
+                painter: _DonutChartPainter(
+                  segments: [(_revenueRecoveredBlue, recoveredFraction), (_revenueLostRed, lostFraction)],
+                  strokeWidth: 24,
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(height: 16),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              _revenueLegendItem(color: _revenueRecoveredBlue, label: 'Revenue Recovered', value: '₹18,624'),
+              const SizedBox(width: 16),
+              _revenueLegendItem(color: _revenueLostRed, label: 'Revenue Lost', value: '₹2,540'),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _revenueLegendItem({required Color color, required String label, required String value}) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Container(width: 10, height: 10, decoration: BoxDecoration(color: color, shape: BoxShape.circle)),
+        const SizedBox(width: 8),
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(value, style: Get.textTheme.labelMedium?.copyWith(fontWeight: FontWeight.w600, color: _textDark)),
+            Text(label, style: Get.textTheme.bodySmall?.copyWith(color: _textMuted, fontSize: 11)),
+          ],
+        ),
+      ],
+    );
+  }
+
   Widget _actionIcon(IconData icon) {
-    return CircleAvatar(
-      radius: 18,
-      backgroundColor: const Color(0xFFEEF2FF),
-      child: Icon(icon, size: 18, color: _textMuted),
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: () {},
+        borderRadius: BorderRadius.circular(20),
+        child: CircleAvatar(
+          radius: 18,
+          backgroundColor: const Color(0xFFE0E7FF),
+          child: Icon(icon, size: 18, color: _textDark),
+        ),
+      ),
     );
   }
 
@@ -582,4 +635,33 @@ class _RenewalRow {
   final String status;
   final bool isExpired;
   _RenewalRow({required this.name, required this.plan, required this.expiry, required this.status, required this.isExpired});
+}
+
+class _DonutChartPainter extends CustomPainter {
+  final List<(Color, double)> segments;
+  final double strokeWidth;
+  _DonutChartPainter({required this.segments, this.strokeWidth = 20});
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final center = Offset(size.width / 2, size.height / 2);
+    final radius = (size.shortestSide / 2) - strokeWidth / 2;
+    var startAngle = -math.pi / 2;
+    for (final (color, fraction) in segments) {
+      final sweepAngle = 2 * math.pi * fraction;
+      final rect = Rect.fromCircle(center: center, radius: radius);
+      final paint = Paint()
+        ..color = color
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = strokeWidth
+        ..strokeCap = StrokeCap.round;
+      canvas.drawArc(rect, startAngle, sweepAngle, false, paint);
+      startAngle += sweepAngle;
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant _DonutChartPainter oldDelegate) {
+    return oldDelegate.segments != segments || oldDelegate.strokeWidth != strokeWidth;
+  }
 }

@@ -39,7 +39,7 @@ class AppTextStyles {
 
   static const TextStyle b12 = TextStyle(
     fontSize: 12,
-    fontWeight: FontWeight.w500,
+    fontWeight: FontWeight.w400,
     color: AppColors.appPrimaryColorLight,
   );
 

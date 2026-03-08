@@ -1,3 +1,4 @@
+import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
@@ -11,7 +12,7 @@ import '../settings/settings_view.dart';
 import '../subscriptions/subscriptions_view.dart';
 
 /// Mobile layout: compact app bar + drawer, single-column scroll.
-/// Dashboard content: header, 2x2 KPI cards, AI Insights, Upcoming Reminders, renewals as list cards, footer.
+/// Dashboard content: header, 2x2 KPI cards, AI Insights, Revenue Insights, renewals as list cards, footer.
 class DashboardMobileView extends StatelessWidget {
   const DashboardMobileView({super.key});
 
@@ -42,6 +43,8 @@ class DashboardMobileView extends StatelessWidget {
     _RenewalRow(name: 'Ankith Rawat', plan: 'Yearly', expiry: '15/01/2026', status: 'Expiring', isExpired: false),
     _RenewalRow(name: 'Alex George', plan: 'Monthly', expiry: '15/01/2026', status: 'Expiring', isExpired: false),
     _RenewalRow(name: 'Mary Steenberg', plan: 'Yearly', expiry: '15/01/2026', status: 'Expiring', isExpired: false),
+    _RenewalRow(name: 'Mary Steenberg', plan: 'Monthly', expiry: '15/01/2026', status: 'Expiring', isExpired: false),
+    _RenewalRow(name: 'Mary Steenberg', plan: 'Quarterly', expiry: '15/01/2026', status: 'Expiring', isExpired: false),
   ];
 
   @override
@@ -110,7 +113,7 @@ class DashboardMobileView extends StatelessWidget {
           const SizedBox(height: 20),
           _buildInsightsCard(),
           const SizedBox(height: 16),
-          _buildUpcomingRemindersCard(),
+          _buildRevenueInsightsCard(),
           const SizedBox(height: 20),
           _buildRenewalsSection(controller),
           const SizedBox(height: 24),
@@ -347,19 +350,26 @@ class DashboardMobileView extends StatelessWidget {
         children: [
           Text('AI Insights', style: Get.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w600, color: _textDark)),
           const SizedBox(height: 10),
-          Text(
-            'You may lose ₹18,000 this week due to 6 memberships expiring. Sending reminders today could recover ₹12,500.',
-            style: Get.textTheme.bodySmall?.copyWith(color: _textMuted, fontSize: 13),
+          RichText(
+            text: TextSpan(
+              style: Get.textTheme.bodySmall?.copyWith(color: _textMuted, fontSize: 13),
+              children: [
+                const TextSpan(text: 'You may lose '),
+                TextSpan(text: '₹18,000', style: Get.textTheme.bodySmall?.copyWith(color: _textDark, fontWeight: FontWeight.w600, fontSize: 13)),
+                const TextSpan(text: ' this week due to 6 memberships expiring. Sending reminders today could recover '),
+                TextSpan(text: '₹12,500', style: Get.textTheme.bodySmall?.copyWith(color: _textDark, fontWeight: FontWeight.w600, fontSize: 13)),
+                const TextSpan(text: '.'),
+              ],
+            ),
           ),
           const SizedBox(height: 14),
           SizedBox(
             width: double.infinity,
-            child: OutlinedButton(
+            child: FilledButton(
               onPressed: () => Get.find<DashboardController>().onSendRemindersNow(),
-              style: OutlinedButton.styleFrom(
-                foregroundColor: _purple,
-                side: const BorderSide(color: _purple),
-                backgroundColor: const Color(0xFFEEF2FF),
+              style: FilledButton.styleFrom(
+                backgroundColor: _purple,
+                foregroundColor: Colors.white,
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
               ),
               child: const Text('Send Reminders Now'),
@@ -370,14 +380,20 @@ class DashboardMobileView extends StatelessWidget {
     );
   }
 
-  Widget _buildUpcomingRemindersCard() {
+  static const _revenueRecoveredBlue = Color(0xFF4F46E5);
+  static const _revenueLostRed = Color(0xFFDC2626);
+
+  Widget _buildRevenueInsightsCard() {
+    const chartSize = 100.0;
+    final recoveredFraction = 18624 / (18624 + 2540);
+    final lostFraction = 2540 / (18624 + 2540);
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: _border),
+        border: Border.all(color: const Color(0xFFE2E8F0)),
         boxShadow: [
           BoxShadow(color: Colors.black.withValues(alpha: 0.06), blurRadius: 8, offset: const Offset(0, 2)),
         ],
@@ -385,17 +401,49 @@ class DashboardMobileView extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('Upcoming Reminders', style: Get.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w600, color: _textDark)),
-          const SizedBox(height: 12),
+          Text('Revenue Insights', style: Get.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w600, color: _textDark)),
+          const SizedBox(height: 16),
+          Center(
+            child: SizedBox(
+              width: chartSize,
+              height: chartSize,
+              child: CustomPaint(
+                painter: _DonutChartPainter(
+                  segments: [(_revenueRecoveredBlue, recoveredFraction), (_revenueLostRed, lostFraction)],
+                  strokeWidth: 24,
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(height: 16),
           Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Text('John Doe', style: Get.textTheme.bodyMedium?.copyWith(color: _textDark, fontSize: 14)),
-              Text('WhatsApp . 18:20:36', style: Get.textTheme.bodySmall?.copyWith(color: _textMuted, fontSize: 12)),
+              _revenueLegendItem(color: _revenueRecoveredBlue, label: 'Revenue Recovered', value: '₹18,624'),
+              const SizedBox(width: 12),
+              _revenueLegendItem(color: _revenueLostRed, label: 'Revenue Lost', value: '₹2,540'),
             ],
           ),
         ],
       ),
+    );
+  }
+
+  Widget _revenueLegendItem({required Color color, required String label, required String value}) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Container(width: 10, height: 10, decoration: BoxDecoration(color: color, shape: BoxShape.circle)),
+        const SizedBox(width: 8),
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(value, style: Get.textTheme.labelMedium?.copyWith(fontWeight: FontWeight.w600, color: _textDark, fontSize: 12)),
+            Text(label, style: Get.textTheme.bodySmall?.copyWith(color: _textMuted, fontSize: 11)),
+          ],
+        ),
+      ],
     );
   }
 
@@ -426,8 +474,14 @@ class DashboardMobileView extends StatelessWidget {
                 GestureDetector(
                   onTap: controller.onViewAllRenewals,
                   child: Text(
-                    'View All',
-                    style: Get.textTheme.labelMedium?.copyWith(color: _purple, fontWeight: FontWeight.w600, fontSize: 13),
+                    'View All Renewals',
+                    style: Get.textTheme.labelMedium?.copyWith(
+                      color: _purple,
+                      fontWeight: FontWeight.w500,
+                      fontSize: 13,
+                      decoration: TextDecoration.underline,
+                      decorationColor: _purple,
+                    ),
                   ),
                 ),
               ],
@@ -458,13 +512,13 @@ class DashboardMobileView extends StatelessWidget {
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                   decoration: BoxDecoration(
-                    color: row.isExpired ? _expiredBadge : _expiringBadge,
-                    borderRadius: BorderRadius.circular(12),
+                    color: row.isExpired ? const Color(0xFFDC2626) : const Color(0xFFF59E0B),
+                    borderRadius: BorderRadius.circular(16),
                   ),
                   child: Text(
                     row.status,
                     style: Get.textTheme.labelSmall?.copyWith(
-                      color: row.isExpired ? const Color(0xFF991B1B) : const Color(0xFF92400E),
+                      color: Colors.white,
                       fontWeight: FontWeight.w500,
                       fontSize: 11,
                     ),
@@ -477,10 +531,8 @@ class DashboardMobileView extends StatelessWidget {
             mainAxisSize: MainAxisSize.min,
             children: [
               _actionIcon(Icons.notifications_outlined),
-              const SizedBox(width: 6),
+              const SizedBox(width: 8),
               _actionIcon(Icons.refresh),
-              const SizedBox(width: 6),
-              _actionIcon(Icons.visibility_outlined),
             ],
           ),
         ],
@@ -489,10 +541,17 @@ class DashboardMobileView extends StatelessWidget {
   }
 
   Widget _actionIcon(IconData icon) {
-    return CircleAvatar(
-      radius: 16,
-      backgroundColor: const Color(0xFFEEF2FF),
-      child: Icon(icon, size: 16, color: _textMuted),
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: () {},
+        borderRadius: BorderRadius.circular(20),
+        child: CircleAvatar(
+          radius: 16,
+          backgroundColor: const Color(0xFFE0E7FF),
+          child: Icon(icon, size: 16, color: _textDark),
+        ),
+      ),
     );
   }
 
@@ -524,4 +583,33 @@ class _RenewalRow {
   final String status;
   final bool isExpired;
   _RenewalRow({required this.name, required this.plan, required this.expiry, required this.status, required this.isExpired});
+}
+
+class _DonutChartPainter extends CustomPainter {
+  final List<(Color, double)> segments;
+  final double strokeWidth;
+  _DonutChartPainter({required this.segments, this.strokeWidth = 20});
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final center = Offset(size.width / 2, size.height / 2);
+    final radius = (size.shortestSide / 2) - strokeWidth / 2;
+    var startAngle = -math.pi / 2;
+    for (final (color, fraction) in segments) {
+      final sweepAngle = 2 * math.pi * fraction;
+      final rect = Rect.fromCircle(center: center, radius: radius);
+      final paint = Paint()
+        ..color = color
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = strokeWidth
+        ..strokeCap = StrokeCap.round;
+      canvas.drawArc(rect, startAngle, sweepAngle, false, paint);
+      startAngle += sweepAngle;
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant _DonutChartPainter oldDelegate) {
+    return oldDelegate.segments != segments || oldDelegate.strokeWidth != strokeWidth;
+  }
 }

@@ -43,6 +43,31 @@ class ForgotPasswordMobileView extends GetView<ForgotPasswordController> {
                   isEnabled: controller.isFormValid.value,
                 ),
               ),
+              const SizedBox(height: 16),
+              SizedBox(
+                height: AuthConstants.buttonHeight,
+                child: OutlinedButton(
+                  onPressed: controller.onBack,
+                  style: OutlinedButton.styleFrom(
+                    backgroundColor: Colors.transparent,
+                    foregroundColor: const Color(0xFF475569),
+                    side: const BorderSide(color: AuthConstants.borderColor),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(
+                        AuthConstants.fieldBorderRadius,
+                      ),
+                    ),
+                  ),
+                  child: Text(
+                    'Back',
+                    style: Get.theme.textTheme.bodyMedium?.copyWith(
+                      fontWeight: FontWeight.w500,
+                      fontSize: 16,
+                      color: const Color(0xFF475569),
+                    ),
+                  ),
+                ),
+              ),
             ],
           ),
         ),

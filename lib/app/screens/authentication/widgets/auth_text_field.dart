@@ -30,6 +30,7 @@ class AuthTextField extends StatelessWidget {
           hintText: hint,
           hintStyle: Get.theme.textTheme.labelMedium!.copyWith(
             color: AuthConstants.hintColor,
+            fontWeight: FontWeight.w400,
           ),
           filled: true,
           fillColor: AuthConstants.fieldFillColor,

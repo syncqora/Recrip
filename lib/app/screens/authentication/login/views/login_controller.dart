@@ -9,6 +9,7 @@ class LoginController extends GetxController {
   final isPasswordVisible = false.obs;
   final isUsernameHovered = false.obs;
   final isPasswordHovered = false.obs;
+  final isForgotPasswordHovered = false.obs;
 
   // Form data (for validation / submit)
   final usernameController = TextEditingController();
@@ -48,6 +49,10 @@ class LoginController extends GetxController {
 
   void setPasswordHovered(bool value) {
     isPasswordHovered.value = value;
+  }
+
+  void setForgotPasswordHovered(bool value) {
+    isForgotPasswordHovered.value = value;
   }
 
   void onLogin() {

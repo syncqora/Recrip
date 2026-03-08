@@ -1,5 +1,6 @@
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:get/get.dart';
 import 'dashboard_controller.dart';
 import '../../modals/add_member_modal.dart';
@@ -22,7 +23,7 @@ class Dashboard extends GetView<DashboardController> {
   // Design colors (exact from image)
   static const _purple = Color(0xFF4F46E5);
   static const _purpleLight = Color(0xFFEEEDFB); // Active nav background
-  static const _textDark = Color(0xFF333333);
+  static const _textDark = Color(0xFF0F172A);
   static const _textMuted = Color(0xFF666666);
   static const _border = Color(0xFFE5E7EB);
   static const _expiredBadge = Color(0xFFFEE2E2);
@@ -276,7 +277,7 @@ class Dashboard extends GetView<DashboardController> {
               if (index == 4) return const RemindersView();
               if (index == 5) return const ReportsView();
               if (index == 6) return const SettingsView();
-              return _buildDashboardBody();
+              return _buildDashboardBody(context);
             }),
           ),
         ),
@@ -285,34 +286,35 @@ class Dashboard extends GetView<DashboardController> {
     );
   }
 
-  Widget _buildDashboardBody() {
-    return SingleChildScrollView(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          _buildDashboardHeader(),
-          const SizedBox(height: 24),
-          _buildSummaryCards(),
-          const SizedBox(height: 33),
-            Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
+  Widget _buildDashboardBody(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _buildDashboardHeader(),
+        const SizedBox(height: 24),
+        _buildSummaryCards(),
+        const SizedBox(height: 33),
+        Expanded(
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              Expanded(flex: 2, child: _buildRenewalsSection()),
+              Expanded(flex: 2, child: _buildRenewalsSection(context)),
               const SizedBox(width: 24),
-              SizedBox(
-                width: 280,
+              Expanded(
+                flex: 1,
                 child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
                     _buildAiInsightsCard(),
                     const SizedBox(height: 16),
-                    _buildUpcomingRemindersCard(),
+                    _buildRevenueInsightsCard(),
                   ],
                 ),
               ),
             ],
           ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 
@@ -501,7 +503,7 @@ class Dashboard extends GetView<DashboardController> {
     );
   }
 
-  Widget _buildRenewalsSection() {
+  Widget _buildRenewalsSection(BuildContext context) {
     final rows = [
       _RenewalRow(
         name: 'Rahul Kamath',
@@ -538,13 +540,25 @@ class Dashboard extends GetView<DashboardController> {
         status: 'Expiring',
         isExpired: false,
       ),
+      _RenewalRow(
+        name: 'Mary Steenberg',
+        plan: 'Monthly',
+        expiry: '15/01/2026',
+        status: 'Expiring',
+        isExpired: false,
+      ),
+      _RenewalRow(
+        name: 'Mary Steenberg',
+        plan: 'Quarterly',
+        expiry: '15/01/2026',
+        status: 'Expiring',
+        isExpired: false,
+      ),
     ];
     return Container(
-      constraints: const BoxConstraints(minHeight: 401),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(width: 1, color: Color(0xFFE2E8F0)),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withValues(alpha: 0.06),
@@ -558,130 +572,115 @@ class Dashboard extends GetView<DashboardController> {
         mainAxisSize: MainAxisSize.min,
         children: [
           Padding(
-            padding: const EdgeInsets.all(20),
+            padding: const EdgeInsets.fromLTRB(20, 20, 20, 16),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              crossAxisAlignment: CrossAxisAlignment.center,
               children: [
-                Expanded(
-                  child: Text(
-                    'Action Required - Renewals',
-                    style: Get.textTheme.bodyMedium?.copyWith(
-                      color: Color(0xFF0F172A),
-                      fontWeight: FontWeight.w600,
-                    ),
-                    overflow: TextOverflow.ellipsis,
-                    maxLines: 1,
+                Text(
+                  'Action Required - Renewals',
+                  style: Get.textTheme.bodyMedium?.copyWith(
+                    color: _textDark,
+                    fontWeight: FontWeight.w500,
                   ),
+                  overflow: TextOverflow.ellipsis,
+                  maxLines: 1,
                 ),
-                const SizedBox(width: 12),
                 GestureDetector(
                   onTap: controller.onViewAllRenewals,
                   child: Text(
                     'View All Renewals',
                     style: Get.textTheme.labelMedium?.copyWith(
-                      color: Color(0xFF4F46E5),
+                      color: _purple,
                       fontWeight: FontWeight.w600,
+                      //decoration: TextDecoration.underline,
+                      decorationColor: _purple,
                     ),
                   ),
                 ),
               ],
             ),
           ),
-          SingleChildScrollView(
-            scrollDirection: Axis.horizontal,
-            child: ConstrainedBox(
-              constraints: const BoxConstraints(minWidth: 640),
-              child: Table(
-                columnWidths: const {
-                  0: FlexColumnWidth(2),
-                  1: FlexColumnWidth(1),
-                  2: FlexColumnWidth(1.2),
-                  3: FlexColumnWidth(1),
-                  4: FixedColumnWidth(96), // Action column: min width for two icons + padding (avoids overflow in landscape)
-                },
-                children: [
+          Table(
+            columnWidths: const {
+              0: FlexColumnWidth(2),
+              1: FlexColumnWidth(1),
+              2: FlexColumnWidth(1.2),
+              3: FlexColumnWidth(1),
+              4: FixedColumnWidth(120),
+            },
+            children: [
               TableRow(
-                decoration: BoxDecoration(
-                  color: Color(0xFFEEF2FF),
-                  border: Border.all(color: Color(0xFFE2E8F0)),
+                decoration: const BoxDecoration(
+                  color: Color(0xFFF8FAFC),
+                  border: Border(
+                    bottom: BorderSide(color: Color(0xFFE5E7EB), width: 1),
+                  ),
                 ),
                 children: [
                   _tableCell(
                     'Name',
                     isHeader: true,
-                    horizontalPadding: 24,
                     align: Alignment.centerLeft,
                   ),
-                  _tableCell(
-                    'Plan',
-                    isHeader: true,
-                    horizontalPadding: 24,
-                    align: Alignment.center,
-                  ),
-                  _tableCell(
-                    'Expiry',
-                    isHeader: true,
-                    horizontalPadding: 24,
-                    align: Alignment.center,
-                  ),
-                  _tableCell(
-                    'Status',
-                    isHeader: true,
-                    horizontalPadding: 24,
-                    align: Alignment.center,
-                  ),
-                  _tableCell(
-                    'Action',
-                    isHeader: true,
-                    horizontalPadding: 24,
-                    align: Alignment.center,
-                  ),
+                  _tableCell('Plan', isHeader: true, align: Alignment.center),
+                  _tableCell('Expiry', isHeader: true, align: Alignment.center),
+                  _tableCell('Status', isHeader: true, align: Alignment.center),
+                  _tableCell('Action', isHeader: true, align: Alignment.center),
                 ],
-              ),
-              ...rows.asMap().entries.map(
-                (e) => TableRow(
-                  decoration: BoxDecoration(
-                    color: e.key.isEven
-                        ? Colors.white
-                        : const Color(0xFFFAFAFA),
-                    border: Border.all(color: Color(0xFFE2E8F0)),
-                  ),
-                  children: [
-                    _tableCell(
-                      e.value.name,
-                      horizontalPadding: 24,
-                      align: Alignment.centerLeft,
-                    ),
-                    _tableCell(
-                      e.value.plan,
-                      horizontalPadding: 24,
-                      align: Alignment.center,
-                    ),
-                    _tableCell(
-                      e.value.expiry,
-                      horizontalPadding: 24,
-                      align: Alignment.center,
-                    ),
-                    _tableCell(
-                      e.value.status,
-                      isBadge: true,
-                      isExpired: e.value.isExpired,
-                      horizontalPadding: 24,
-                      align: Alignment.center,
-                    ),
-                    _tableCell(
-                      '',
-                      isActions: true,
-                      horizontalPadding: 24,
-                      align: Alignment.center,
-                    ),
-                  ],
-                ),
               ),
             ],
           ),
+          Expanded(
+            child: Scrollbar(
+              thickness: 4,
+              radius: const Radius.circular(2),
+              thumbVisibility: true,
+              child: SingleChildScrollView(
+                scrollDirection: Axis.vertical,
+                child: Table(
+                  columnWidths: const {
+                    0: FlexColumnWidth(2),
+                    1: FlexColumnWidth(1),
+                    2: FlexColumnWidth(1.2),
+                    3: FlexColumnWidth(1),
+                    4: FixedColumnWidth(120),
+                  },
+                  children: rows
+                      .map(
+                        (row) => TableRow(
+                          decoration: const BoxDecoration(
+                            color: Colors.white,
+                            border: Border(
+                              bottom: BorderSide(
+                                color: Color(0xFFE5E7EB),
+                                width: 1,
+                              ),
+                            ),
+                          ),
+                          children: [
+                            _tableCell(row.name, align: Alignment.centerLeft),
+                            _tableCell(row.plan, align: Alignment.center),
+                            _tableCell(row.expiry, align: Alignment.center),
+                            _tableCell(
+                              row.status,
+                              isBadge: true,
+                              isExpired: row.isExpired,
+                              align: Alignment.center,
+                            ),
+                            _tableCell(
+                              '',
+                              isActions: true,
+                              align: Alignment.center,
+                            ),
+                          ],
+                        ),
+                      )
+                      .toList(),
+                ),
+              ),
             ),
-            ),
+          ),
         ],
       ),
     );
@@ -693,70 +692,81 @@ class Dashboard extends GetView<DashboardController> {
     bool isBadge = false,
     bool isExpired = false,
     bool isActions = false,
-    double horizontalPadding = 16,
     Alignment align = Alignment.centerLeft,
   }) {
+    const horizontalPadding = 20.0;
+    const verticalPadding = 12.0;
+
     Widget content = isActions
         ? FittedBox(
             fit: BoxFit.scaleDown,
+            alignment: Alignment.center,
             child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
               mainAxisSize: MainAxisSize.min,
               children: [
-                _actionImage('assets/icons/bell-ring.png'),
+                _actionButton(iconPath: 'assets/icons/bell-ring.svg'),
                 const SizedBox(width: 8),
-                _actionImage('assets/icons/renew.png'),
+                _actionButton(iconPath: 'assets/icons/renew.svg'),
               ],
             ),
           )
         : isBadge
         ? Container(
-            width: 91,
-            height: 32,
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
             decoration: BoxDecoration(
-              color: isExpired ? _expiredBadge : _expiringBadge,
+              color: isExpired
+                  ? const Color(0xFFDC2626)
+                  : const Color(0xFFF59E0B),
               borderRadius: BorderRadius.circular(16),
             ),
-            child: Center(
-              child: Text(
-                text,
-                style: Get.textTheme.labelSmall?.copyWith(
-                  color: isExpired ? Color(0xFF991B1B) : Color(0xFF92400E),
-                  fontWeight: FontWeight.w500,
-                  fontSize: 12,
-                ),
-                overflow: TextOverflow.ellipsis,
-                maxLines: 1,
+            child: Text(
+              text,
+              style: Get.textTheme.labelMedium?.copyWith(
+                color: Colors.white,
+                fontWeight: FontWeight.w600,
+                fontSize: 12,
               ),
+              overflow: TextOverflow.ellipsis,
+              maxLines: 1,
             ),
           )
         : Text(
             text,
-            style: Get.textTheme.labelMedium?.copyWith(
-              color: isHeader ? Color(0xFF475569) : Color(0xFF0F172A),
+            style: Get.textTheme.bodyMedium?.copyWith(
+              color: isHeader
+                  ? const Color(0xFF475569)
+                  : const Color(0xFF0F172A),
               fontWeight: isHeader ? FontWeight.w600 : FontWeight.w400,
             ),
             overflow: TextOverflow.ellipsis,
             maxLines: 1,
           );
     return Padding(
-      padding: EdgeInsets.symmetric(
+      padding: const EdgeInsets.symmetric(
         horizontal: horizontalPadding,
-        vertical: 14,
+        vertical: verticalPadding,
       ),
       child: Align(alignment: align, child: content),
     );
   }
 
-  Widget _actionImage(String assetPath) {
-    return CircleAvatar(
-      backgroundColor: const Color(0xFFEEF2FF),
-      child: Image.asset(
-        assetPath,
-        width: 18,
-        height: 18,
-        color: _textMuted,
-        colorBlendMode: BlendMode.srcIn,
+  Widget _actionButton({required String iconPath}) {
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: () {},
+        borderRadius: BorderRadius.circular(20),
+        child: CircleAvatar(
+          radius: 18,
+          backgroundColor: const Color(0xFFE0E7FF),
+          child: SvgPicture.asset(
+            iconPath,
+            width: 18,
+            height: 18,
+            colorFilter: ColorFilter.mode(_textDark, BlendMode.srcIn),
+          ),
+        ),
       ),
     );
   }
@@ -764,12 +774,11 @@ class Dashboard extends GetView<DashboardController> {
   Widget _buildAiInsightsCard() {
     return Container(
       width: double.infinity,
-      constraints: const BoxConstraints(maxWidth: 280, minHeight: 140),
-      padding: const EdgeInsets.all(14),
+      padding: const EdgeInsets.fromLTRB(20, 20, 20, 20),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: Color(0xFFC7D2FE), width: 1),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: const Color(0xFFC7D2FE), width: 1),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withValues(alpha: 0.06),
@@ -780,67 +789,104 @@ class Dashboard extends GetView<DashboardController> {
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
         children: [
           Text(
             'AI Insights',
-            style: Get.textTheme.bodyMedium?.copyWith(
-              fontWeight: FontWeight.w600,
-              color: _textDark,
+            style: Get.textTheme.titleMedium?.copyWith(
+              fontWeight: FontWeight.bold,
+              color: Colors.black,
             ),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            'You may lose ₹18,000 this week due to 6 memberships expiring. Sending reminders today could recover ₹12,500.',
-            style: Get.textTheme.bodySmall?.copyWith(
-              color: _textMuted,
-              fontWeight: FontWeight.w400,
-            ),
-            overflow: TextOverflow.ellipsis,
-            maxLines: 3,
           ),
           const SizedBox(height: 12),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.end,
-            children: [
-              OutlinedButton(
-                onPressed: controller.onSendRemindersNow,
-                style: OutlinedButton.styleFrom(
-                  foregroundColor: _purple,
-                  side: const BorderSide(color: _purple),
-                  backgroundColor: Color(0xFFEEF2FF),
-                  //  padding: const EdgeInsets.symmetric(vertical: 12),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(10),
+          RichText(
+            text: TextSpan(
+              style: Get.textTheme.bodySmall?.copyWith(
+                color: _textMuted,
+                fontWeight: FontWeight.w400,
+              ),
+              children: [
+                const TextSpan(text: 'You may lose '),
+                TextSpan(
+                  text: '₹18,000',
+                  style: Get.textTheme.bodySmall?.copyWith(
+                    color: _textDark,
+                    fontWeight: FontWeight.w600,
                   ),
                 ),
-                child: Text(
-                  'Send Reminders Now',
-                  style: Get.theme.textTheme.bodyMedium?.copyWith(
+                const TextSpan(
+                  text:
+                      ' this week due to 6 memberships expiring. Sending reminders today could recover ',
+                ),
+                TextSpan(
+                  text: '₹12,500',
+                  style: Get.textTheme.bodySmall?.copyWith(
+                    color: _textDark,
                     fontWeight: FontWeight.w600,
-                    color: Color(0xFF4F46E5),
+                  ),
+                ),
+                const TextSpan(text: '.'),
+              ],
+            ),
+            maxLines: 3,
+            overflow: TextOverflow.ellipsis,
+          ),
+          const SizedBox(height: 20),
+          Align(
+            alignment: Alignment.centerRight,
+            child: Material(
+              color: Colors.transparent,
+              child: InkWell(
+                onTap: controller.onSendRemindersNow,
+                borderRadius: BorderRadius.circular(10),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 12,
+                  ),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFEEEDFB),
+                    borderRadius: BorderRadius.circular(10),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: 0.06),
+                        blurRadius: 4,
+                        offset: const Offset(0, 1),
+                      ),
+                    ],
+                  ),
+                  child: Text(
+                    'Send Reminders Now',
+                    style: Get.theme.textTheme.bodyMedium?.copyWith(
+                      fontWeight: FontWeight.w600,
+                      color: _purple,
+                    ),
                   ),
                 ),
               ),
-            ],
+            ),
           ),
         ],
       ),
     );
   }
 
-  static const _donutGreen = Color(0xFF9CAF88);
-  static const _donutSalmon = Color(0xFFE8A598);
-  static const _labelBlue = Color(0xFF4F46E5);
+  static const _revenueRecoveredBlue = Color(0xFF4DA5F2);
+  static const _revenueLostRed = Color(0xFFFF7373);
 
-  Widget _buildUpcomingRemindersCard() {
-    const chartSize = 100.0;
+  Widget _buildRevenueInsightsCard() {
+    const chartSize = 140.0;
+    // ₹18,624 recovered, ₹2,540 lost → blue ~88%, red ~12%
+    final recoveredFraction = 18624 / (18624 + 2540);
+    final lostFraction = 2540 / (18624 + 2540);
     return Container(
-      constraints: const BoxConstraints(minHeight: 180),
+      width: double.infinity,
+      constraints: const BoxConstraints(minHeight: 300),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: const Color(0xFFC7D2FE), width: 1),
+        border: Border.all(color: const Color(0xFFE2E8F0), width: 1),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withValues(alpha: 0.06),
@@ -860,39 +906,81 @@ class Dashboard extends GetView<DashboardController> {
               color: _textDark,
             ),
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: 30),
           Center(
             child: SizedBox(
               width: chartSize,
               height: chartSize,
               child: CustomPaint(
                 painter: _DonutChartPainter(
-                  segments: [(_donutGreen, 0.72), (_donutSalmon, 0.28)],
+                  segments: [
+                    (_revenueRecoveredBlue, recoveredFraction),
+                    (_revenueLostRed, lostFraction),
+                  ],
                   strokeWidth: 24,
                 ),
               ),
             ),
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 24),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.start,
+            children: [
+              _revenueLegendItem(
+                color: _revenueRecoveredBlue,
+                label: 'Revenue Recovered',
+                value: '₹18,624',
+              ),
+              const SizedBox(width: 34),
+              _revenueLegendItem(
+                color: _revenueLostRed,
+                label: 'Revenue Lost',
+                value: '₹2,540',
+              ),
+            ],
+          ),
         ],
       ),
     );
   }
 
-  Widget _buildChartLabel(String value, IconData icon) {
+  Widget _revenueLegendItem({
+    required Color color,
+    required String label,
+    required String value,
+  }) {
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        Text(
-          value,
-          style: Get.textTheme.bodyMedium?.copyWith(
-            color: _labelBlue,
-            fontWeight: FontWeight.w600,
-            fontSize: 16,
-          ),
+        Container(
+          width: 10,
+          height: 10,
+          decoration: BoxDecoration(color: color, shape: BoxShape.circle),
         ),
-        const SizedBox(width: 6),
-        Icon(icon, color: _labelBlue, size: 18),
+        const SizedBox(width: 8),
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              label,
+              style: Get.textTheme.bodySmall?.copyWith(
+                color: _textMuted,
+                fontSize: 11,
+                fontWeight: FontWeight.w400,
+              ),
+            ),
+            const SizedBox(height: 2),
+            Text(
+              value,
+              style: Get.textTheme.labelMedium?.copyWith(
+                fontWeight: FontWeight.bold,
+                color: Colors.black,
+                fontSize: 13,
+              ),
+            ),
+          ],
+        ),
       ],
     );
   }

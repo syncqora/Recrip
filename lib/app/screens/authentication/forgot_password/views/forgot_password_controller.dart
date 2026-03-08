@@ -35,4 +35,8 @@ class ForgotPasswordController extends GetxController {
     // TODO: call API to send OTP
     appNav.changePage(AppRoutes.otp, arguments: {'emailOrPhone': value});
   }
+
+  void onBack() {
+    Get.back();
+  }
 }

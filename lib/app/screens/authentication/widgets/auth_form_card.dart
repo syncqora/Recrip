@@ -49,6 +49,7 @@ class AuthFormCard extends StatelessWidget {
             title,
             textAlign: TextAlign.center,
             style: Get.theme.textTheme.bodyLarge?.copyWith(
+              fontWeight: FontWeight.w700,
               color: AuthConstants.titleColor,
             ),
           ),
