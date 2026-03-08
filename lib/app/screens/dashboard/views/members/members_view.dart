@@ -19,9 +19,9 @@ class _MembersViewState extends State<MembersView> {
   static const _purple = Color(0xFF4F46E5);
   static const _textDark = Color(0xFF333333);
   static const _textMuted = Color(0xFF666666);
-  static const _iconCircleOrange = Color(0xFFF59E0B);
-  static const _iconCircleRed = Color(0xFFDC2626);
-  static const _iconCircleGreen = Color(0xFF16A34A);
+  static const _iconCircleOrange = Color(0xFFFEF3C7);
+  static const _iconCircleRed = Color(0xFFFEE2E2);
+  static const _iconCircleGreen = Color(0xFFDCFCE7);
 
   final _planDropdownKey = GlobalKey();
   final _statusDropdownKey = GlobalKey();
@@ -71,7 +71,9 @@ class _MembersViewState extends State<MembersView> {
     final isTablet = width >= 600 && width < 1024;
 
     return SingleChildScrollView(
-      padding: isMobile ? const EdgeInsets.all(16) : (isTablet ? const EdgeInsets.all(24) : EdgeInsets.zero),
+      padding: isMobile
+          ? const EdgeInsets.all(16)
+          : (isTablet ? const EdgeInsets.all(24) : EdgeInsets.zero),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -113,13 +115,14 @@ class _MembersViewState extends State<MembersView> {
                 children: [
                   Text(
                     'Members',
-                    style: (isMobile
-                            ? Get.textTheme.headlineSmall
-                            : Get.textTheme.headlineMedium)
-                        ?.copyWith(
-                      fontWeight: FontWeight.bold,
-                      color: _textDark,
-                    ),
+                    style:
+                        (isMobile
+                                ? Get.textTheme.headlineSmall
+                                : Get.textTheme.headlineMedium)
+                            ?.copyWith(
+                              fontWeight: FontWeight.bold,
+                              color: _textDark,
+                            ),
                   ),
                   const SizedBox(height: 4),
                   Text(
@@ -138,8 +141,10 @@ class _MembersViewState extends State<MembersView> {
                 style: FilledButton.styleFrom(
                   backgroundColor: _purple,
                   foregroundColor: Colors.white,
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 20,
+                    vertical: 12,
+                  ),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(8),
                   ),
@@ -296,7 +301,12 @@ class _MembersViewState extends State<MembersView> {
     final box = key.currentContext?.findRenderObject() as RenderBox?;
     final size = MediaQuery.sizeOf(context);
     if (box == null || !box.hasSize) {
-      return RelativeRect.fromLTRB(24, 200, size.width - 200, size.height - 300);
+      return RelativeRect.fromLTRB(
+        24,
+        200,
+        size.width - 200,
+        size.height - 300,
+      );
     }
     final pos = box.localToGlobal(Offset.zero);
     final top = pos.dy + box.size.height + 4;
@@ -474,24 +484,25 @@ class _MembersViewState extends State<MembersView> {
             ],
           ),
           ..._tableData.asMap().entries.map(
-                (entry) => TableRow(
-                  decoration: BoxDecoration(
-                    color: entry.key.isEven
-                        ? Colors.white
-                        : const Color(0xFFFAFAFA),
-                    border: const Border(
-                        bottom: BorderSide(color: Color(0xFFE5E7EB), width: 1)),
-                  ),
-                  children: [
-                    _tapableCell(entry.value, entry.value.name),
-                    _tapableCell(entry.value, entry.value.phone),
-                    _tapableCell(entry.value, entry.value.email),
-                    _tapableCell(entry.value, entry.value.plan),
-                    _tapableCell(entry.value, entry.value.expiry),
-                    _tapableCell(entry.value, _statusPill(entry.value.status)),
-                  ],
+            (entry) => TableRow(
+              decoration: BoxDecoration(
+                color: entry.key.isEven
+                    ? Colors.white
+                    : const Color(0xFFFAFAFA),
+                border: const Border(
+                  bottom: BorderSide(color: Color(0xFFE5E7EB), width: 1),
                 ),
               ),
+              children: [
+                _tapableCell(entry.value, entry.value.name),
+                _tapableCell(entry.value, entry.value.phone),
+                _tapableCell(entry.value, entry.value.email),
+                _tapableCell(entry.value, entry.value.plan),
+                _tapableCell(entry.value, entry.value.expiry),
+                _tapableCell(entry.value, _statusPill(entry.value.status)),
+              ],
+            ),
+          ),
         ],
       ),
     );
@@ -601,7 +612,9 @@ class _MembersViewState extends State<MembersView> {
           decoration: BoxDecoration(
             color: isActive ? _purple : Colors.white,
             borderRadius: BorderRadius.circular(8),
-            border: isActive ? null : Border.all(color: const Color(0xFFE2E8F0)),
+            border: isActive
+                ? null
+                : Border.all(color: const Color(0xFFE2E8F0)),
           ),
           alignment: Alignment.center,
           child: Icon(

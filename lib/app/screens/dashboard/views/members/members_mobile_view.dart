@@ -24,7 +24,11 @@ class MemberRow {
 }
 
 class MembersMobileView extends StatelessWidget {
-  const MembersMobileView({super.key, required this.tableData, required this.onOpenViewMember});
+  const MembersMobileView({
+    super.key,
+    required this.tableData,
+    required this.onOpenViewMember,
+  });
 
   final List<MemberRow> tableData;
   final Function(MemberRow) onOpenViewMember;
@@ -52,6 +56,8 @@ class MembersMobileView extends StatelessWidget {
     };
 
     return Container(
+      width: 92,
+      height: 32,
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -83,8 +89,10 @@ class MembersMobileView extends StatelessWidget {
                   ),
                 ),
                 Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 10,
+                    vertical: 4,
+                  ),
                   decoration: BoxDecoration(
                     color: bg,
                     borderRadius: BorderRadius.circular(20),
@@ -119,21 +127,33 @@ class MembersMobileView extends StatelessWidget {
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text('Plan',
-                        style: TextStyle(color: _textMuted, fontSize: 11)),
-                    Text(member.plan,
-                        style: const TextStyle(
-                            fontWeight: FontWeight.w600, fontSize: 13)),
+                    const Text(
+                      'Plan',
+                      style: TextStyle(color: _textMuted, fontSize: 11),
+                    ),
+                    Text(
+                      member.plan,
+                      style: const TextStyle(
+                        fontWeight: FontWeight.w600,
+                        fontSize: 13,
+                      ),
+                    ),
                   ],
                 ),
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.end,
                   children: [
-                    const Text('Expiry Date',
-                        style: TextStyle(color: _textMuted, fontSize: 11)),
-                    Text(member.expiry,
-                        style: const TextStyle(
-                            fontWeight: FontWeight.w600, fontSize: 13)),
+                    const Text(
+                      'Expiry Date',
+                      style: TextStyle(color: _textMuted, fontSize: 11),
+                    ),
+                    Text(
+                      member.expiry,
+                      style: const TextStyle(
+                        fontWeight: FontWeight.w600,
+                        fontSize: 13,
+                      ),
+                    ),
                   ],
                 ),
               ],

@@ -83,13 +83,13 @@ class Dashboard extends GetView<DashboardController> {
   }
 
   static const _menuIcons = (
-    dashboard: 'assets/icons/dashboard.png',
-    members: 'assets/icons/users-round.png',
-    subscriptions: 'assets/icons/calendar-days.png',
-    renewals: 'assets/icons/calendar-sync.png',
-    reminders: 'assets/icons/bell-ring.png',
-    reports: 'assets/icons/chart-column-big.png',
-    settings: 'assets/icons/settings.png',
+    dashboard: 'assets/icons/dashboard.svg',
+    members: 'assets/icons/users-round.svg',
+    subscriptions: 'assets/icons/calendar-days.svg',
+    renewals: 'assets/icons/calendar-sync.svg',
+    reminders: 'assets/icons/bell-ring.svg',
+    reports: 'assets/icons/chart-column-big.svg',
+    settings: 'assets/icons/settings.svg',
   );
 
   Widget _buildSidebar(BuildContext context) {
@@ -192,7 +192,7 @@ class Dashboard extends GetView<DashboardController> {
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 17),
             child: Row(
               children: [
-                Image.asset(
+                SvgPicture.asset(
                   item.iconPath,
                   width: 24,
                   height: 24,
@@ -228,8 +228,8 @@ class Dashboard extends GetView<DashboardController> {
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 17),
             child: Row(
               children: [
-                Image.asset(
-                  'assets/icons/log-out.png',
+                SvgPicture.asset(
+                  'assets/icons/log-out.svg',
                   width: 24,
                   height: 24,
                   color: _textMuted,
@@ -579,9 +579,9 @@ class Dashboard extends GetView<DashboardController> {
               children: [
                 Text(
                   'Action Required - Renewals',
-                  style: Get.textTheme.bodyMedium?.copyWith(
+                  style: Get.textTheme.titleMedium?.copyWith(
                     color: _textDark,
-                    fontWeight: FontWeight.w500,
+                    fontWeight: FontWeight.bold,
                   ),
                   overflow: TextOverflow.ellipsis,
                   maxLines: 1,
@@ -633,10 +633,12 @@ class Dashboard extends GetView<DashboardController> {
           ),
           Expanded(
             child: Scrollbar(
+              controller: controller.renewalsScrollController,
               thickness: 4,
               radius: const Radius.circular(2),
               thumbVisibility: true,
               child: SingleChildScrollView(
+                controller: controller.renewalsScrollController,
                 scrollDirection: Axis.vertical,
                 child: Table(
                   columnWidths: const {
@@ -713,26 +715,35 @@ class Dashboard extends GetView<DashboardController> {
           )
         : isBadge
         ? Container(
+            width: 91,
+            height: 32,
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
             decoration: BoxDecoration(
               color: isExpired
-                  ? const Color(0xFFDC2626)
-                  : const Color(0xFFF59E0B),
+                  ? const Color(0xFFFEE2E2)
+                  : const Color(0xFFFEF3C7),
               borderRadius: BorderRadius.circular(16),
             ),
-            child: Text(
-              text,
-              style: Get.textTheme.labelMedium?.copyWith(
-                color: Colors.white,
-                fontWeight: FontWeight.w600,
-                fontSize: 12,
+            child: Center(
+              child: Text(
+                text,
+                style: Get.textTheme.labelMedium?.copyWith(
+                  color: isExpired ? Color(0xFF991B1B) : Color(0xFF92400E),
+                  fontWeight: FontWeight.w500,
+                  fontSize: 12,
+                ),
+                overflow: TextOverflow.ellipsis,
+                maxLines: 1,
               ),
-              overflow: TextOverflow.ellipsis,
-              maxLines: 1,
             ),
           )
         : Text(
             text,
+            textAlign: align == Alignment.centerLeft
+                ? TextAlign.left
+                : align == Alignment.centerRight
+                ? TextAlign.right
+                : TextAlign.center,
             style: Get.textTheme.bodyMedium?.copyWith(
               color: isHeader
                   ? const Color(0xFF475569)
@@ -747,7 +758,10 @@ class Dashboard extends GetView<DashboardController> {
         horizontal: horizontalPadding,
         vertical: verticalPadding,
       ),
-      child: Align(alignment: align, child: content),
+      child: SizedBox(
+        width: double.infinity,
+        child: Align(alignment: align, child: content),
+      ),
     );
   }
 

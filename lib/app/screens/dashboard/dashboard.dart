@@ -1,5 +1,6 @@
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:get/get.dart';
 import 'views/dashboard/dashboard_controller.dart';
 import 'modals/add_member_modal.dart';
@@ -35,6 +36,7 @@ class Dashboard extends GetView<DashboardController> {
 
   /// Breakpoint below which tablet layout (app bar + drawer) is used instead of web (sidebar).
   static const _tabletBreakpoint = 1024.0;
+
   /// Breakpoint below which mobile layout (compact app bar + single column) is used.
   static const _mobileBreakpoint = 600.0;
 
@@ -42,7 +44,8 @@ class Dashboard extends GetView<DashboardController> {
   Widget build(BuildContext context) {
     Get.put(DashboardController());
     final width = MediaQuery.sizeOf(context).width;
-    final isLandscape = MediaQuery.of(context).orientation == Orientation.landscape;
+    final isLandscape =
+        MediaQuery.of(context).orientation == Orientation.landscape;
 
     if (width < _mobileBreakpoint) {
       return const DashboardMobileView();
@@ -135,9 +138,7 @@ class Dashboard extends GetView<DashboardController> {
       ];
       return Container(
         width: _sidebarWidth,
-        decoration: const BoxDecoration(
-          color: Colors.white,
-        ),
+        decoration: const BoxDecoration(color: Colors.white),
         child: Column(
           children: [
             const SizedBox(height: 24),
@@ -172,10 +173,7 @@ class Dashboard extends GetView<DashboardController> {
               ),
             ),
             const Divider(thickness: 1, color: Color(0xFFCBD5E1)),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 16),
-              child: _buildLogoutTile(),
-            ),
+            _buildLogoutTile(),
           ],
         ),
       );
@@ -219,35 +217,32 @@ class Dashboard extends GetView<DashboardController> {
   }
 
   Widget _buildLogoutTile() {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 4),
-      child: Material(
-        color: Colors.transparent,
+    return Material(
+      color: Colors.transparent,
+      borderRadius: BorderRadius.circular(28),
+      child: InkWell(
+        onTap: controller.onLogout,
         borderRadius: BorderRadius.circular(28),
-        child: InkWell(
-          onTap: controller.onLogout,
-          borderRadius: BorderRadius.circular(28),
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 17),
-            child: Row(
-              children: [
-                Image.asset(
-                  'assets/icons/log-out.png',
-                  width: 24,
-                  height: 24,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 17),
+          child: Row(
+            children: [
+              SvgPicture.asset(
+                'assets/icons/log-out.svg',
+                width: 24,
+                height: 24,
+                color: _textMuted,
+                colorBlendMode: BlendMode.srcIn,
+              ),
+              const SizedBox(width: 16),
+              Text(
+                'Logout',
+                style: Get.textTheme.bodySmall?.copyWith(
+                  fontSize: 18,
                   color: _textMuted,
-                  colorBlendMode: BlendMode.srcIn,
                 ),
-                const SizedBox(width: 16),
-                Text(
-                  'Logout',
-                  style: Get.textTheme.bodySmall?.copyWith(
-                    fontSize: 18,
-                    color: _textMuted,
-                  ),
-                ),
-              ],
-            ),
+              ),
+            ],
           ),
         ),
       ),
@@ -331,8 +326,8 @@ class Dashboard extends GetView<DashboardController> {
             borderRadius: BorderRadius.circular(24),
             child: CircleAvatar(
               backgroundColor: const Color(0xFFEEF2FF),
-              child: Image.asset(
-                'assets/icons/headset.png',
+              child: SvgPicture.asset(
+                'assets/icons/headset.svg',
                 width: 24,
                 height: 24,
                 color: _textMuted,
@@ -604,46 +599,88 @@ class Dashboard extends GetView<DashboardController> {
                   4: FixedColumnWidth(96),
                 },
                 children: [
-              TableRow(
-                decoration: BoxDecoration(
-                  color: Color(0xFFEEF2FF),
-                  border: Border.all(color: Color(0xFFE2E8F0)),
-                ),
-                children: [
-                  _tableCell('Name', isHeader: true, horizontalPadding: 24, align: Alignment.centerLeft),
-                  _tableCell('Plan', isHeader: true, horizontalPadding: 24, align: Alignment.center),
-                  _tableCell('Expiry', isHeader: true, horizontalPadding: 24, align: Alignment.center),
-                  _tableCell('Status', isHeader: true, horizontalPadding: 24, align: Alignment.center),
-                  _tableCell('Action', isHeader: true, horizontalPadding: 24, align: Alignment.center),
+                  TableRow(
+                    decoration: BoxDecoration(
+                      color: Color(0xFFEEF2FF),
+                      border: Border.all(color: Color(0xFFE2E8F0)),
+                    ),
+                    children: [
+                      _tableCell(
+                        'Name',
+                        isHeader: true,
+                        horizontalPadding: 24,
+                        align: Alignment.centerLeft,
+                      ),
+                      _tableCell(
+                        'Plan',
+                        isHeader: true,
+                        horizontalPadding: 24,
+                        align: Alignment.center,
+                      ),
+                      _tableCell(
+                        'Expiry',
+                        isHeader: true,
+                        horizontalPadding: 24,
+                        align: Alignment.center,
+                      ),
+                      _tableCell(
+                        'Status',
+                        isHeader: true,
+                        horizontalPadding: 24,
+                        align: Alignment.center,
+                      ),
+                      _tableCell(
+                        'Action',
+                        isHeader: true,
+                        horizontalPadding: 24,
+                        align: Alignment.center,
+                      ),
+                    ],
+                  ),
+                  ...rows.asMap().entries.map(
+                    (e) => TableRow(
+                      decoration: BoxDecoration(
+                        color: e.key.isEven
+                            ? Colors.white
+                            : const Color(0xFFFAFAFA),
+                        border: Border.all(color: Color(0xFFE2E8F0)),
+                      ),
+                      children: [
+                        _tableCell(
+                          e.value.name,
+                          horizontalPadding: 24,
+                          align: Alignment.centerLeft,
+                        ),
+                        _tableCell(
+                          e.value.plan,
+                          horizontalPadding: 24,
+                          align: Alignment.center,
+                        ),
+                        _tableCell(
+                          e.value.expiry,
+                          horizontalPadding: 24,
+                          align: Alignment.center,
+                        ),
+                        _tableCell(
+                          e.value.status,
+                          isBadge: true,
+                          isExpired: e.value.isExpired,
+                          horizontalPadding: 24,
+                          align: Alignment.center,
+                        ),
+                        _tableCell(
+                          '',
+                          isActions: true,
+                          horizontalPadding: 24,
+                          align: Alignment.center,
+                        ),
+                      ],
+                    ),
+                  ),
                 ],
               ),
-              ...rows.asMap().entries.map(
-                (e) => TableRow(
-                  decoration: BoxDecoration(
-                    color: e.key.isEven
-                        ? Colors.white
-                        : const Color(0xFFFAFAFA),
-                    border: Border.all(color: Color(0xFFE2E8F0)),
-                  ),
-                  children: [
-                    _tableCell(e.value.name, horizontalPadding: 24, align: Alignment.centerLeft),
-                    _tableCell(e.value.plan, horizontalPadding: 24, align: Alignment.center),
-                    _tableCell(e.value.expiry, horizontalPadding: 24, align: Alignment.center),
-                    _tableCell(
-                      e.value.status,
-                      isBadge: true,
-                      isExpired: e.value.isExpired,
-                      horizontalPadding: 24,
-                      align: Alignment.center,
-                    ),
-                    _tableCell('', isActions: true, horizontalPadding: 24, align: Alignment.center),
-                  ],
-                ),
-              ),
-            ],
+            ),
           ),
-            ),
-            ),
         ],
       ),
     );
@@ -672,44 +709,41 @@ class Dashboard extends GetView<DashboardController> {
             ),
           )
         : isBadge
-            ? Container(
-                width: 91,
-                height: 32,
-                decoration: BoxDecoration(
-                  color: isExpired ? _expiredBadge : _expiringBadge,
-                  borderRadius: BorderRadius.circular(16),
-                ),
-                child: Center(
-                  child: Text(
-                    text,
-                    style: Get.textTheme.labelSmall?.copyWith(
-                      color: isExpired ? Color(0xFF991B1B) : Color(0xFF92400E),
-                      fontWeight: FontWeight.w500,
-                      fontSize: 12,
-                    ),
-                    overflow: TextOverflow.ellipsis,
-                    maxLines: 1,
-                  ),
-                ),
-              )
-            : Text(
+        ? Container(
+            width: 91,
+            height: 32,
+            decoration: BoxDecoration(
+              color: isExpired ? _expiredBadge : _expiringBadge,
+              borderRadius: BorderRadius.circular(16),
+            ),
+            child: Center(
+              child: Text(
                 text,
-                style: Get.textTheme.labelMedium?.copyWith(
-                  color: isHeader ? Color(0xFF475569) : Color(0xFF0F172A),
-                  fontWeight: isHeader ? FontWeight.w600 : FontWeight.w400,
+                style: Get.textTheme.labelSmall?.copyWith(
+                  color: isExpired ? Color(0xFF991B1B) : Color(0xFF92400E),
+                  fontWeight: FontWeight.w500,
+                  fontSize: 12,
                 ),
                 overflow: TextOverflow.ellipsis,
                 maxLines: 1,
-              );
+              ),
+            ),
+          )
+        : Text(
+            text,
+            style: Get.textTheme.labelMedium?.copyWith(
+              color: isHeader ? Color(0xFF475569) : Color(0xFF0F172A),
+              fontWeight: isHeader ? FontWeight.w600 : FontWeight.w400,
+            ),
+            overflow: TextOverflow.ellipsis,
+            maxLines: 1,
+          );
     return Padding(
       padding: EdgeInsets.symmetric(
         horizontal: horizontalPadding,
         vertical: 14,
       ),
-      child: Align(
-        alignment: align,
-        child: content,
-      ),
+      child: Align(alignment: align, child: content),
     );
   }
 
@@ -940,4 +974,3 @@ class _RenewalRow {
     required this.isExpired,
   });
 }
-
