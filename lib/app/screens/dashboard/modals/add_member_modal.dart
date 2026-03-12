@@ -1,12 +1,15 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:get/get.dart';
 
+import '../../../../shared/widgets/plan_dropdown.dart';
 import '../../../../shared/widgets/success_toast.dart';
 import '../../authentication/widgets/auth_constants.dart';
 import '../../authentication/widgets/auth_form_field_section.dart';
 import '../../authentication/widgets/auth_text_field.dart';
 import 'add_member_modal_mobile_view.dart';
 import 'add_member_modal_tablet_view.dart';
+import 'subscription_utils.dart';
 
 class AddMemberModal extends StatefulWidget {
   const AddMemberModal({super.key});
@@ -26,19 +29,159 @@ class _AddMemberModalState extends State<AddMemberModal> {
   bool _email = false;
 
   @override
+  void initState() {
+    super.initState();
+    _fullNameController.addListener(_onFormChanged);
+    _phoneController.addListener(_onFormChanged);
+    _emailController.addListener(_onFormChanged);
+  }
+
+  void _onFormChanged() => setState(() {});
+
+  @override
   void dispose() {
+    _fullNameController.removeListener(_onFormChanged);
+    _phoneController.removeListener(_onFormChanged);
+    _emailController.removeListener(_onFormChanged);
     _fullNameController.dispose();
     _phoneController.dispose();
     _emailController.dispose();
     super.dispose();
   }
 
+  bool get _isSaveEnabled =>
+      _fullNameController.text.trim().isNotEmpty &&
+      _emailController.text.trim().isNotEmpty &&
+      _selectedPlan != null &&
+      _startDate != null;
+
   Future<void> _pickStartDate() async {
     final date = await showDatePicker(
       context: context,
-      initialDate: DateTime.now(),
+      initialDate: _startDate ?? DateTime.now(),
       firstDate: DateTime(2020),
       lastDate: DateTime(2030),
+      helpText: 'Select start date',
+      initialEntryMode: DatePickerEntryMode.calendar,
+      builder: (context, child) {
+        return Theme(
+          data: Theme.of(context).copyWith(
+            colorScheme: ColorScheme.light(
+              primary: AuthConstants.buttonEnabledColor,
+              onPrimary: Colors.white,
+              surface: Colors.white,
+              onSurface: AuthConstants.labelColor,
+              surfaceContainerHighest: AuthConstants.cardBackground,
+            ),
+            dialogTheme: DialogThemeData(
+              elevation: 16,
+              shadowColor: Colors.black.withValues(alpha: 0.2),
+              surfaceTintColor: Colors.transparent,
+              backgroundColor: Colors.white,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(24),
+              ),
+            ),
+            datePickerTheme: DatePickerThemeData(
+              backgroundColor: Colors.white,
+              elevation: 0,
+              surfaceTintColor: Colors.transparent,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(24),
+              ),
+              headerBackgroundColor: AuthConstants.buttonEnabledColor,
+              headerForegroundColor: Colors.white,
+              headerHeadlineStyle: Get.textTheme.headlineMedium?.copyWith(
+                color: Colors.white,
+                fontWeight: FontWeight.w600,
+                fontFamily: 'Inter',
+              ),
+              headerHelpStyle: Get.textTheme.bodySmall?.copyWith(
+                color: Colors.white.withValues(alpha: 0.9),
+                fontFamily: 'Inter',
+              ),
+              weekdayStyle: Get.textTheme.bodySmall?.copyWith(
+                color: AuthConstants.supportTextColor,
+                fontWeight: FontWeight.w500,
+                fontFamily: 'Inter',
+              ),
+              dayStyle: Get.textTheme.bodyMedium?.copyWith(
+                color: AuthConstants.labelColor,
+                fontFamily: 'Inter',
+              ),
+              dayForegroundColor: WidgetStateProperty.resolveWith((states) {
+                if (states.contains(WidgetState.selected)) return Colors.white;
+                if (states.contains(WidgetState.disabled)) {
+                  return AuthConstants.hintColor;
+                }
+                return AuthConstants.labelColor;
+              }),
+              dayBackgroundColor: WidgetStateProperty.resolveWith((states) {
+                if (states.contains(WidgetState.selected)) {
+                  return AuthConstants.buttonEnabledColor;
+                }
+                return null;
+              }),
+              dayShape: WidgetStateProperty.all(
+                RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              ),
+              todayBorder: BorderSide(
+                color: AuthConstants.buttonEnabledColor,
+                width: 1.5,
+              ),
+              yearStyle: Get.textTheme.bodyLarge?.copyWith(
+                color: AuthConstants.labelColor,
+                fontFamily: 'Inter',
+              ),
+              yearForegroundColor: WidgetStateProperty.resolveWith((states) {
+                if (states.contains(WidgetState.selected)) return Colors.white;
+                return AuthConstants.labelColor;
+              }),
+              yearBackgroundColor: WidgetStateProperty.resolveWith((states) {
+                if (states.contains(WidgetState.selected)) {
+                  return AuthConstants.buttonEnabledColor;
+                }
+                return null;
+              }),
+              yearShape: WidgetStateProperty.all(
+                RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              ),
+              dividerColor: AuthConstants.borderColor,
+              cancelButtonStyle: TextButton.styleFrom(
+                foregroundColor: AuthConstants.supportTextColor,
+                textStyle: Get.textTheme.labelLarge?.copyWith(
+                  fontFamily: 'Inter',
+                  fontWeight: FontWeight.w600,
+                ),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 20,
+                  vertical: 12,
+                ),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10),
+                ),
+              ),
+              confirmButtonStyle: FilledButton.styleFrom(
+                backgroundColor: AuthConstants.buttonEnabledColor,
+                foregroundColor: Colors.white,
+                textStyle: Get.textTheme.labelLarge?.copyWith(
+                  color: Colors.white,
+                  fontFamily: 'Inter',
+                  fontWeight: FontWeight.w600,
+                ),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 20,
+                  vertical: 12,
+                ),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10),
+                ),
+              ),
+            ),
+          ),
+          child: child!,
+        );
+      },
     );
     if (date != null) setState(() => _startDate = date);
   }
@@ -86,6 +229,7 @@ class _AddMemberModalState extends State<AddMemberModal> {
         onEmailChanged: (v) => setState(() => _email = v),
         onCancel: () => Navigator.of(context).pop(),
         onSave: _onSave,
+        isSaveEnabled: _isSaveEnabled,
       );
     }
 
@@ -104,6 +248,7 @@ class _AddMemberModalState extends State<AddMemberModal> {
         onEmailChanged: (v) => setState(() => _email = v),
         onCancel: () => Navigator.of(context).pop(),
         onSave: _onSave,
+        isSaveEnabled: _isSaveEnabled,
       );
     }
 
@@ -174,7 +319,7 @@ class _AddMemberModalState extends State<AddMemberModal> {
                 'Add Member',
                 style: Get.textTheme.titleLarge?.copyWith(
                   fontWeight: FontWeight.bold,
-                  color: AuthConstants.labelColor,
+                  color: Colors.white,
                   fontSize: 20,
                 ),
               ),
@@ -182,16 +327,13 @@ class _AddMemberModalState extends State<AddMemberModal> {
           ),
           IconButton(
             onPressed: () => Navigator.of(context).pop(),
-            icon: Container(
-              padding: const EdgeInsets.all(6),
-              decoration: const BoxDecoration(
-                color: Color(0xFFF1F5F9),
-                shape: BoxShape.circle,
-              ),
-              child: Icon(
-                Icons.close,
-                size: 20,
-                color: AuthConstants.hintColor,
+            icon: SvgPicture.asset(
+              'assets/icons/close-button.svg',
+              width: 24,
+              height: 24,
+              colorFilter: ColorFilter.mode(
+                AuthConstants.hintColor,
+                BlendMode.srcIn,
               ),
             ),
           ),
@@ -230,36 +372,70 @@ class _AddMemberModalState extends State<AddMemberModal> {
           child: AuthFormFieldSection(
             label: 'Phone Number',
             spacingAfterLabel: 8,
-            child: Row(
-              children: [
-                Container(
-                  width: 56,
-                  height: AuthConstants.fieldHeight,
-                  alignment: Alignment.center,
-                  decoration: BoxDecoration(
-                    color: AuthConstants.fieldFillColor,
-                    borderRadius: BorderRadius.only(
-                      topLeft: Radius.circular(AuthConstants.fieldBorderRadius),
-                      bottomLeft: Radius.circular(
-                        AuthConstants.fieldBorderRadius,
+            child: SizedBox(
+              height: AuthConstants.fieldHeight,
+              child: TextField(
+                controller: _phoneController,
+                style: Get.theme.textTheme.bodySmall?.copyWith(
+                  color: AuthConstants.textColor,
+                ),
+                cursorColor: AuthConstants.textColor,
+                decoration: InputDecoration(
+                  prefixIcon: Padding(
+                    padding: const EdgeInsets.only(left: 12, right: 4),
+                    child: Align(
+                      widthFactor: 1.0,
+                      alignment: Alignment.centerLeft,
+                      child: Text(
+                        '+91 ',
+                        style: Get.theme.textTheme.labelMedium?.copyWith(
+                          color: AuthConstants.labelColor,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
                     ),
-                    border: Border.all(color: AuthConstants.borderColor),
                   ),
-                  child: Text(
-                    '+91',
-                    style: Get.theme.textTheme.labelMedium?.copyWith(
-                      color: AuthConstants.hintColor,
+                  prefixIconConstraints: const BoxConstraints(
+                    minWidth: 0,
+                    minHeight: 0,
+                  ),
+                  hintText: '00000 00000',
+                  hintStyle: Get.theme.textTheme.labelMedium?.copyWith(
+                    color: AuthConstants.hintColor,
+                    fontWeight: FontWeight.w400,
+                  ),
+                  filled: true,
+                  fillColor: AuthConstants.fieldFillColor,
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(
+                      AuthConstants.fieldBorderRadius,
+                    ),
+                    borderSide: const BorderSide(
+                      color: AuthConstants.borderColor,
                     ),
                   ),
-                ),
-                Expanded(
-                  child: AuthTextField(
-                    controller: _phoneController,
-                    hint: '00000 00000',
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(
+                      AuthConstants.fieldBorderRadius,
+                    ),
+                    borderSide: const BorderSide(
+                      color: AuthConstants.borderColor,
+                    ),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(
+                      AuthConstants.fieldBorderRadius,
+                    ),
+                    borderSide: const BorderSide(
+                      color: AuthConstants.focusedBorderColor,
+                    ),
+                  ),
+                  contentPadding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 10,
                   ),
                 ),
-              ],
+              ),
             ),
           ),
         ),
@@ -288,46 +464,10 @@ class _AddMemberModalState extends State<AddMemberModal> {
             children: [
               _requiredLabel('Plan'),
               const SizedBox(height: 8),
-              SizedBox(
-                height: AuthConstants.fieldHeight,
-                child: DropdownButtonFormField<String>(
-                  value: _selectedPlan,
-                  hint: Text(
-                    'Choose a Plan',
-                    style: Get.theme.textTheme.labelMedium?.copyWith(
-                      color: AuthConstants.hintColor,
-                    ),
-                  ),
-                  decoration: InputDecoration(
-                    filled: true,
-                    fillColor: AuthConstants.fieldFillColor,
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(
-                        AuthConstants.fieldBorderRadius,
-                      ),
-                      borderSide: const BorderSide(
-                        color: AuthConstants.borderColor,
-                      ),
-                    ),
-                    enabledBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(
-                        AuthConstants.fieldBorderRadius,
-                      ),
-                      borderSide: const BorderSide(
-                        color: AuthConstants.borderColor,
-                      ),
-                    ),
-                    contentPadding: const EdgeInsets.symmetric(
-                      horizontal: 12,
-                      vertical: 10,
-                    ),
-                  ),
-                  items: ['Monthly', 'Quarterly', 'Yearly']
-                      .map((p) => DropdownMenuItem(value: p, child: Text(p)))
-                      .toList(),
-                  onChanged: (v) => setState(() => _selectedPlan = v),
-                  validator: (v) => v == null ? 'Required' : null,
-                ),
+              PlanDropdown(
+                value: _selectedPlan,
+                onChanged: (v) => setState(() => _selectedPlan = v),
+                hint: 'Choose a Plan',
               ),
             ],
           ),
@@ -409,24 +549,33 @@ class _AddMemberModalState extends State<AddMemberModal> {
                 ),
               ),
               const SizedBox(height: 8),
-              Container(
-                width: double.infinity,
-                height: AuthConstants.fieldHeight,
-                padding: const EdgeInsets.symmetric(horizontal: 12),
-                alignment: Alignment.centerLeft,
-                decoration: BoxDecoration(
-                  color: AuthConstants.cardBackground,
-                  borderRadius: BorderRadius.circular(
-                    AuthConstants.fieldBorderRadius,
-                  ),
-                  border: Border.all(color: AuthConstants.borderColor),
-                ),
-                child: Text(
-                  '—',
-                  style: Get.theme.textTheme.bodySmall?.copyWith(
-                    color: AuthConstants.hintColor,
-                  ),
-                ),
+              Builder(
+                builder: (_) {
+                  final expiry = calculateExpiryDate(_selectedPlan, _startDate);
+                  return Container(
+                    width: double.infinity,
+                    height: AuthConstants.fieldHeight,
+                    padding: const EdgeInsets.symmetric(horizontal: 12),
+                    alignment: Alignment.centerLeft,
+                    decoration: BoxDecoration(
+                      color: AuthConstants.cardBackground,
+                      borderRadius: BorderRadius.circular(
+                        AuthConstants.fieldBorderRadius,
+                      ),
+                      border: Border.all(color: AuthConstants.borderColor),
+                    ),
+                    child: Text(
+                      expiry != null
+                          ? '${expiry.day}/${expiry.month}/${expiry.year}'
+                          : '—',
+                      style: Get.theme.textTheme.bodySmall?.copyWith(
+                        color: expiry != null
+                            ? AuthConstants.textColor
+                            : AuthConstants.hintColor,
+                      ),
+                    ),
+                  );
+                },
               ),
               const SizedBox(height: 4),
               Text(
@@ -515,56 +664,48 @@ class _AddMemberModalState extends State<AddMemberModal> {
     return Row(
       mainAxisAlignment: MainAxisAlignment.end,
       children: [
-        TextButton(
-          onPressed: () => Navigator.of(context).pop(),
-          style: TextButton.styleFrom(
-            foregroundColor: AuthConstants.supportTextColor,
-            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(
-                AuthConstants.fieldBorderRadius,
+        SizedBox(
+          width: 94,
+          height: 44,
+          child: TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            style: TextButton.styleFrom(
+              foregroundColor: AuthConstants.supportTextColor,
+              padding: const EdgeInsets.fromLTRB(20, 12, 20, 12),
+              minimumSize: const Size(94, 44),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(10),
+                side: const BorderSide(
+                  width: 1,
+                  color: AuthConstants.borderColor,
+                ),
               ),
             ),
+            child: const Text('Cancel'),
           ),
-          child: const Text('Cancel'),
         ),
         const SizedBox(width: 10),
         SizedBox(
           width: 146,
           height: 44,
           child: FilledButton(
-            onPressed: () {
-              if (_fullNameController.text.trim().isEmpty) {
-                Get.snackbar('Required', 'Please enter Full Name');
-                return;
-              }
-              if (_emailController.text.trim().isEmpty) {
-                Get.snackbar('Required', 'Please enter Email Address');
-                return;
-              }
-              if (_selectedPlan == null) {
-                Get.snackbar('Required', 'Please choose a Plan');
-                return;
-              }
-              if (_startDate == null) {
-                Get.snackbar('Required', 'Please select Start Date');
-                return;
-              }
-              SuccessToast.show(
-                context,
-                title: 'Member Added Successfully!',
-                popRoute: true,
-              );
-            },
+            onPressed: _isSaveEnabled ? _onSave : null,
             style: FilledButton.styleFrom(
-              backgroundColor: AuthConstants.buttonEnabledColor,
+              backgroundColor: _isSaveEnabled
+                  ? AuthConstants.buttonEnabledColor
+                  : AuthConstants.buttonDisabledColor,
+              disabledBackgroundColor: AuthConstants.buttonDisabledColor,
               foregroundColor: Colors.white,
               padding: const EdgeInsets.fromLTRB(20, 12, 20, 12),
+              minimumSize: const Size(146, 44),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(10),
               ),
             ),
-            child: const Text('Save Member'),
+            child: const Text(
+              'Save Member',
+              style: TextStyle(color: Colors.white),
+            ),
           ),
         ),
       ],

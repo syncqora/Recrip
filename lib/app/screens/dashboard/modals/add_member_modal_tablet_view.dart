@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:get/get.dart';
 
+import '../../../../shared/widgets/plan_dropdown.dart';
 import '../../authentication/widgets/auth_constants.dart';
+import 'subscription_utils.dart';
 import '../../authentication/widgets/auth_form_field_section.dart';
 import '../../authentication/widgets/auth_text_field.dart';
 
@@ -21,6 +24,7 @@ class AddMemberModalTabletView extends StatelessWidget {
     required this.onEmailChanged,
     required this.onCancel,
     required this.onSave,
+    required this.isSaveEnabled,
   });
 
   final TextEditingController fullNameController;
@@ -36,6 +40,7 @@ class AddMemberModalTabletView extends StatelessWidget {
   final ValueChanged<bool> onEmailChanged;
   final VoidCallback onCancel;
   final VoidCallback onSave;
+  final bool isSaveEnabled;
 
   @override
   Widget build(BuildContext context) {
@@ -98,7 +103,7 @@ class AddMemberModalTabletView extends StatelessWidget {
                 'Add Member',
                 style: Get.textTheme.titleLarge?.copyWith(
                   fontWeight: FontWeight.bold,
-                  color: AuthConstants.labelColor,
+                  color: Colors.white,
                   fontSize: 20,
                 ),
               ),
@@ -106,13 +111,14 @@ class AddMemberModalTabletView extends StatelessWidget {
           ),
           IconButton(
             onPressed: onCancel,
-            icon: Container(
-              padding: const EdgeInsets.all(6),
-              decoration: const BoxDecoration(
-                color: Color(0xFFF1F5F9),
-                shape: BoxShape.circle,
+            icon: SvgPicture.asset(
+              'assets/icons/close-button.svg',
+              width: 24,
+              height: 24,
+              colorFilter: ColorFilter.mode(
+                AuthConstants.hintColor,
+                BlendMode.srcIn,
               ),
-              child: const Icon(Icons.close, size: 20, color: AuthConstants.hintColor),
             ),
           ),
         ],
@@ -150,34 +156,70 @@ class AddMemberModalTabletView extends StatelessWidget {
           child: AuthFormFieldSection(
             label: 'Phone Number',
             spacingAfterLabel: 8,
-            child: Row(
-              children: [
-                Container(
-                  width: 56,
-                  height: AuthConstants.fieldHeight,
-                  alignment: Alignment.center,
-                  decoration: BoxDecoration(
-                    color: AuthConstants.fieldFillColor,
-                    borderRadius: BorderRadius.only(
-                      topLeft: Radius.circular(AuthConstants.fieldBorderRadius),
-                      bottomLeft: Radius.circular(AuthConstants.fieldBorderRadius),
+            child: SizedBox(
+              height: AuthConstants.fieldHeight,
+              child: TextField(
+                controller: phoneController,
+                style: Get.theme.textTheme.bodySmall?.copyWith(
+                  color: AuthConstants.textColor,
+                ),
+                cursorColor: AuthConstants.textColor,
+                decoration: InputDecoration(
+                  prefixIcon: Padding(
+                    padding: const EdgeInsets.only(left: 12, right: 4),
+                    child: Align(
+                      widthFactor: 1.0,
+                      alignment: Alignment.centerLeft,
+                      child: Text(
+                        '+91 ',
+                        style: Get.theme.textTheme.labelMedium?.copyWith(
+                          color: AuthConstants.labelColor,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
                     ),
-                    border: Border.all(color: AuthConstants.borderColor),
                   ),
-                  child: Text(
-                    '+91',
-                    style: Get.theme.textTheme.labelMedium?.copyWith(
-                      color: AuthConstants.hintColor,
+                  prefixIconConstraints: const BoxConstraints(
+                    minWidth: 0,
+                    minHeight: 0,
+                  ),
+                  hintText: '00000 00000',
+                  hintStyle: Get.theme.textTheme.labelMedium?.copyWith(
+                    color: AuthConstants.hintColor,
+                    fontWeight: FontWeight.w400,
+                  ),
+                  filled: true,
+                  fillColor: AuthConstants.fieldFillColor,
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(
+                      AuthConstants.fieldBorderRadius,
                     ),
+                    borderSide: const BorderSide(
+                      color: AuthConstants.borderColor,
+                    ),
+                  ),
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(
+                      AuthConstants.fieldBorderRadius,
+                    ),
+                    borderSide: const BorderSide(
+                      color: AuthConstants.borderColor,
+                    ),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(
+                      AuthConstants.fieldBorderRadius,
+                    ),
+                    borderSide: const BorderSide(
+                      color: AuthConstants.focusedBorderColor,
+                    ),
+                  ),
+                  contentPadding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 10,
                   ),
                 ),
-                Expanded(
-                  child: AuthTextField(
-                    controller: phoneController,
-                    hint: '00000 00000',
-                  ),
-                ),
-              ],
+              ),
             ),
           ),
         ),
@@ -206,32 +248,10 @@ class AddMemberModalTabletView extends StatelessWidget {
             children: [
               _requiredLabel('Plan'),
               const SizedBox(height: 8),
-              SizedBox(
-                height: AuthConstants.fieldHeight,
-                child: DropdownButtonFormField<String>(
-                  value: selectedPlan,
-                  hint: Text(
-                    'Choose a Plan',
-                    style: Get.theme.textTheme.labelMedium?.copyWith(color: AuthConstants.hintColor),
-                  ),
-                  decoration: InputDecoration(
-                    filled: true,
-                    fillColor: AuthConstants.fieldFillColor,
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(AuthConstants.fieldBorderRadius),
-                      borderSide: const BorderSide(color: AuthConstants.borderColor),
-                    ),
-                    enabledBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(AuthConstants.fieldBorderRadius),
-                      borderSide: const BorderSide(color: AuthConstants.borderColor),
-                    ),
-                    contentPadding: const EdgeInsets.symmetric(horizontal: 12),
-                  ),
-                  items: ['Monthly', 'Quarterly', 'Yearly']
-                      .map((p) => DropdownMenuItem(value: p, child: Text(p)))
-                      .toList(),
-                  onChanged: onPlanChanged,
-                ),
+              PlanDropdown(
+                value: selectedPlan,
+                onChanged: onPlanChanged,
+                hint: 'Choose a Plan',
               ),
             ],
           ),
@@ -247,29 +267,47 @@ class AddMemberModalTabletView extends StatelessWidget {
                 height: AuthConstants.fieldHeight,
                 child: InkWell(
                   onTap: onPickStartDate,
-                  borderRadius: BorderRadius.circular(AuthConstants.fieldBorderRadius),
+                  borderRadius: BorderRadius.circular(
+                    AuthConstants.fieldBorderRadius,
+                  ),
                   child: InputDecorator(
                     decoration: InputDecoration(
                       hintText: 'Select Date',
                       filled: true,
                       fillColor: AuthConstants.fieldFillColor,
                       border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(AuthConstants.fieldBorderRadius),
-                        borderSide: const BorderSide(color: AuthConstants.borderColor),
+                        borderRadius: BorderRadius.circular(
+                          AuthConstants.fieldBorderRadius,
+                        ),
+                        borderSide: const BorderSide(
+                          color: AuthConstants.borderColor,
+                        ),
                       ),
                       enabledBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(AuthConstants.fieldBorderRadius),
-                        borderSide: const BorderSide(color: AuthConstants.borderColor),
+                        borderRadius: BorderRadius.circular(
+                          AuthConstants.fieldBorderRadius,
+                        ),
+                        borderSide: const BorderSide(
+                          color: AuthConstants.borderColor,
+                        ),
                       ),
-                      contentPadding: const EdgeInsets.symmetric(horizontal: 12),
-                      suffixIcon: const Icon(Icons.calendar_today_outlined, size: 20, color: AuthConstants.hintColor),
+                      contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                      ),
+                      suffixIcon: const Icon(
+                        Icons.calendar_today_outlined,
+                        size: 20,
+                        color: AuthConstants.hintColor,
+                      ),
                     ),
                     child: Text(
                       startDate != null
                           ? '${startDate!.day}/${startDate!.month}/${startDate!.year}'
                           : 'Select Date',
                       style: Get.theme.textTheme.bodySmall?.copyWith(
-                        color: startDate != null ? AuthConstants.textColor : AuthConstants.hintColor,
+                        color: startDate != null
+                            ? AuthConstants.textColor
+                            : AuthConstants.hintColor,
                       ),
                     ),
                   ),
@@ -291,20 +329,33 @@ class AddMemberModalTabletView extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: 8),
-              Container(
-                width: double.infinity,
-                height: AuthConstants.fieldHeight,
-                padding: const EdgeInsets.symmetric(horizontal: 12),
-                alignment: Alignment.centerLeft,
-                decoration: BoxDecoration(
-                  color: AuthConstants.cardBackground,
-                  borderRadius: BorderRadius.circular(AuthConstants.fieldBorderRadius),
-                  border: Border.all(color: AuthConstants.borderColor),
-                ),
-                child: Text(
-                  '—',
-                  style: Get.theme.textTheme.bodySmall?.copyWith(color: AuthConstants.hintColor),
-                ),
+              Builder(
+                builder: (_) {
+                  final expiry = calculateExpiryDate(selectedPlan, startDate);
+                  return Container(
+                    width: double.infinity,
+                    height: AuthConstants.fieldHeight,
+                    padding: const EdgeInsets.symmetric(horizontal: 12),
+                    alignment: Alignment.centerLeft,
+                    decoration: BoxDecoration(
+                      color: AuthConstants.cardBackground,
+                      borderRadius: BorderRadius.circular(
+                        AuthConstants.fieldBorderRadius,
+                      ),
+                      border: Border.all(color: AuthConstants.borderColor),
+                    ),
+                    child: Text(
+                      expiry != null
+                          ? '${expiry.day}/${expiry.month}/${expiry.year}'
+                          : '—',
+                      style: Get.theme.textTheme.bodySmall?.copyWith(
+                        color: expiry != null
+                            ? AuthConstants.textColor
+                            : AuthConstants.hintColor,
+                      ),
+                    ),
+                  );
+                },
               ),
             ],
           ),
@@ -316,10 +367,16 @@ class AddMemberModalTabletView extends StatelessWidget {
   Widget _requiredLabel(String text) {
     return RichText(
       text: TextSpan(
-        style: Get.textTheme.bodySmall?.copyWith(color: AuthConstants.labelColor, fontSize: 14),
+        style: Get.textTheme.bodySmall?.copyWith(
+          color: AuthConstants.labelColor,
+          fontSize: 14,
+        ),
         children: [
           TextSpan(text: text),
-          const TextSpan(text: '*', style: TextStyle(color: Colors.red, fontSize: 14)),
+          const TextSpan(
+            text: '*',
+            style: TextStyle(color: Colors.red, fontSize: 14),
+          ),
         ],
       ),
     );
@@ -335,7 +392,11 @@ class AddMemberModalTabletView extends StatelessWidget {
     );
   }
 
-  Widget _buildCheckbox(String label, bool value, ValueChanged<bool> onChanged) {
+  Widget _buildCheckbox(
+    String label,
+    bool value,
+    ValueChanged<bool> onChanged,
+  ) {
     return InkWell(
       onTap: () => onChanged(!value),
       borderRadius: BorderRadius.circular(4),
@@ -349,11 +410,18 @@ class AddMemberModalTabletView extends StatelessWidget {
               value: value,
               onChanged: (v) => onChanged(v ?? false),
               activeColor: AuthConstants.buttonEnabledColor,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(4)),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(4),
+              ),
             ),
           ),
           const SizedBox(width: 10),
-          Text(label, style: Get.textTheme.bodyMedium?.copyWith(color: AuthConstants.labelColor)),
+          Text(
+            label,
+            style: Get.textTheme.bodyMedium?.copyWith(
+              color: AuthConstants.labelColor,
+            ),
+          ),
         ],
       ),
     );
@@ -369,7 +437,9 @@ class AddMemberModalTabletView extends StatelessWidget {
             foregroundColor: AuthConstants.supportTextColor,
             padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
             shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(AuthConstants.fieldBorderRadius),
+              borderRadius: BorderRadius.circular(
+                AuthConstants.fieldBorderRadius,
+              ),
             ),
           ),
           child: const Text('Cancel'),
@@ -379,13 +449,22 @@ class AddMemberModalTabletView extends StatelessWidget {
           width: 160,
           height: 44,
           child: FilledButton(
-            onPressed: onSave,
+            onPressed: isSaveEnabled ? onSave : null,
             style: FilledButton.styleFrom(
-              backgroundColor: AuthConstants.buttonEnabledColor,
+              backgroundColor: isSaveEnabled
+                  ? AuthConstants.buttonEnabledColor
+                  : AuthConstants.buttonDisabledColor,
+              disabledBackgroundColor: AuthConstants.buttonDisabledColor,
+              foregroundColor: Colors.white,
               padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(10),
+              ),
             ),
-            child: const Text('Save Member'),
+            child: const Text(
+              'Save Member',
+              style: TextStyle(color: Colors.white),
+            ),
           ),
         ),
       ],

@@ -3,38 +3,38 @@ import 'package:flutter/material.dart';
 import 'design.dart';
 
 class AppTheme {
-  static const _poppins = 'Poppins';
+  static const _inter = 'Inter';
 
   static TextTheme _lightTextTheme() {
     return TextTheme(
       headlineMedium: AppTextStyles.w50018.copyWith(
         color: Colors.black,
-        fontFamily: _poppins,
+        fontFamily: _inter,
       ),
       bodyLarge: AppTextStyles.b24.copyWith(
         color: const Color(0xFFFFFFFF),
-        fontFamily: _poppins,
+        fontFamily: _inter,
       ),
       bodyMedium: AppTextStyles.b16.copyWith(
         color: const Color(0xFFFFFFFF),
-        fontFamily: _poppins,
+        fontFamily: _inter,
       ),
       bodySmall: AppTextStyles.b14.copyWith(
         color: Colors.black,
-        fontFamily: _poppins,
+        fontFamily: _inter,
       ),
       labelLarge: AppTextStyles.w14.copyWith(
         color: Colors.black,
-        fontFamily: _poppins,
+        fontFamily: _inter,
       ),
       labelMedium: AppTextStyles.b12.copyWith(
         color: Colors.black,
-        fontFamily: _poppins,
+        fontFamily: _inter,
       ),
       labelSmall: AppTextStyles.b10.copyWith(
         color: Colors.black,
         letterSpacing: 0.0,
-        fontFamily: _poppins,
+        fontFamily: _inter,
       ),
     );
   }
@@ -43,39 +43,39 @@ class AppTheme {
     return TextTheme(
       headlineMedium: AppTextStyles.w50018.copyWith(
         color: Colors.white,
-        fontFamily: _poppins,
+        fontFamily: _inter,
       ),
       bodyLarge: AppTextStyles.b24.copyWith(
         color: Colors.white,
-        fontFamily: _poppins,
+        fontFamily: _inter,
       ),
       bodyMedium: AppTextStyles.b16.copyWith(
         color: Colors.white,
-        fontFamily: _poppins,
+        fontFamily: _inter,
       ),
       bodySmall: AppTextStyles.b14.copyWith(
         color: Colors.white,
-        fontFamily: _poppins,
+        fontFamily: _inter,
       ),
       labelLarge: AppTextStyles.w14.copyWith(
         color: Colors.white,
-        fontFamily: _poppins,
+        fontFamily: _inter,
       ),
       labelMedium: AppTextStyles.b12.copyWith(
         color: Colors.white,
-        fontFamily: _poppins,
+        fontFamily: _inter,
       ),
       labelSmall: AppTextStyles.b10.copyWith(
         color: Colors.white,
         letterSpacing: 0.0,
-        fontFamily: _poppins,
+        fontFamily: _inter,
       ),
     );
   }
 
   static final lightTheme = ThemeData(
     useMaterial3: true,
-    fontFamily: _poppins,
+    fontFamily: _inter,
     primaryColor: Colors.white,
     primaryColorLight: Colors.white,
     scaffoldBackgroundColor: Colors.white,
@@ -86,13 +86,13 @@ class AppTheme {
       seedColor: Colors.black,
     ),
     textTheme: Typography.material2021().black
-        .apply(fontFamily: _poppins)
+        .apply(fontFamily: _inter)
         .merge(_lightTextTheme()),
   );
 
   static final darkTheme = ThemeData(
     useMaterial3: true,
-    fontFamily: _poppins,
+    fontFamily: _inter,
     primaryColor: Colors.black,
     primaryColorDark: Colors.black,
     scaffoldBackgroundColor: Colors.black,
@@ -103,7 +103,7 @@ class AppTheme {
       seedColor: Colors.white,
     ),
     textTheme: Typography.material2021().white
-        .apply(fontFamily: _poppins)
+        .apply(fontFamily: _inter)
         .merge(_darkTextTheme()),
   );
 }

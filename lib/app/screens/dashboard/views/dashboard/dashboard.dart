@@ -2,6 +2,7 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:get/get.dart';
+import '../../../../../shared/widgets/success_toast.dart';
 import 'dashboard_controller.dart';
 import '../../modals/add_member_modal.dart';
 import '../../modals/help_support_modal.dart';
@@ -376,9 +377,10 @@ class Dashboard extends GetView<DashboardController> {
           style: FilledButton.styleFrom(
             backgroundColor: _purple,
             foregroundColor: Colors.white,
-            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+            fixedSize: const Size(140, 44),
+            padding: const EdgeInsets.fromLTRB(20, 12, 20, 12),
             shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(8),
+              borderRadius: BorderRadius.circular(10),
             ),
           ),
           child: const Text('Add Member'),
@@ -674,6 +676,7 @@ class Dashboard extends GetView<DashboardController> {
                               '',
                               isActions: true,
                               align: Alignment.center,
+                              context: context,
                             ),
                           ],
                         ),
@@ -695,6 +698,7 @@ class Dashboard extends GetView<DashboardController> {
     bool isExpired = false,
     bool isActions = false,
     Alignment align = Alignment.centerLeft,
+    BuildContext? context,
   }) {
     const horizontalPadding = 20.0;
     const verticalPadding = 12.0;
@@ -707,7 +711,13 @@ class Dashboard extends GetView<DashboardController> {
               mainAxisAlignment: MainAxisAlignment.center,
               mainAxisSize: MainAxisSize.min,
               children: [
-                _actionButton(iconPath: 'assets/icons/bell-ring.svg'),
+                _actionButton(
+                  iconPath: 'assets/icons/bell-ring.svg',
+                  onTap: context != null
+                      ? () =>
+                            SuccessToast.show(context, title: 'Reminders Sent')
+                      : null,
+                ),
                 const SizedBox(width: 8),
                 _actionButton(iconPath: 'assets/icons/renew.svg'),
               ],
@@ -765,11 +775,11 @@ class Dashboard extends GetView<DashboardController> {
     );
   }
 
-  Widget _actionButton({required String iconPath}) {
+  Widget _actionButton({required String iconPath, VoidCallback? onTap}) {
     return Material(
       color: Colors.transparent,
       child: InkWell(
-        onTap: () {},
+        onTap: onTap,
         borderRadius: BorderRadius.circular(20),
         child: CircleAvatar(
           radius: 18,

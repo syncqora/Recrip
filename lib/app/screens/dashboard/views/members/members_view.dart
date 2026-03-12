@@ -21,7 +21,7 @@ class _MembersViewState extends State<MembersView> {
   static const _textMuted = Color(0xFF666666);
   static const _iconCircleOrange = Color(0xFFFEF3C7);
   static const _iconCircleRed = Color(0xFFFEE2E2);
-  static const _iconCircleGreen = Color(0xFFDCFCE7);
+  static const   _iconCircleGreen = Color(0xFFDCFCE7);
 
   final _planDropdownKey = GlobalKey();
   final _statusDropdownKey = GlobalKey();
