@@ -25,7 +25,7 @@ class AuthTextField extends StatelessWidget {
         style: Get.theme.textTheme.bodySmall?.copyWith(
           color: AuthConstants.textColor,
         ),
-        cursorColor: AuthConstants.textColor,
+        cursorColor: Colors.black,
         decoration: InputDecoration(
           hintText: hint,
           hintStyle: Get.theme.textTheme.labelMedium!.copyWith(

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:get/get.dart';
-
 import '../../../../shared/widgets/success_toast.dart';
 import '../../authentication/widgets/auth_constants.dart';
 import '../../authentication/widgets/auth_form_field_section.dart';
@@ -22,13 +22,18 @@ class _CreatePlanModalState extends State<CreatePlanModal> {
 
   PlanDuration? _selectedDuration;
   DateTime? _customStartDate;
-  DateTime? _customEndDate;
   String? _selectedStatus;
 
   static const _inputBorderRadius = 10.0;
   static const _inputBorderColor = Color(0xFFE2E8F0);
   static const _labelColor = Color(0xFF0F172A);
   static const _hintColor = Color(0xFF94A3B8);
+  static const _statusMenuBorderRadius = 12.0;
+  static const _statusMenuElevation = 8.0;
+  static const EdgeInsets _statusItemPadding = EdgeInsets.symmetric(
+    horizontal: 16,
+    vertical: 16,
+  );
 
   @override
   void dispose() {
@@ -37,21 +42,193 @@ class _CreatePlanModalState extends State<CreatePlanModal> {
     super.dispose();
   }
 
-  Future<void> _pickCustomDates() async {
-    final range = await showDateRangePicker(
+  Future<void> _showStatusMenu(BuildContext context) async {
+    final box = context.findRenderObject() as RenderBox?;
+    if (box == null) return;
+    final pos = box.localToGlobal(Offset.zero);
+    final size = box.size;
+
+    final selected = await showMenu<String>(
       context: context,
+      position: RelativeRect.fromLTRB(
+        pos.dx,
+        pos.dy + size.height + 4,
+        pos.dx + size.width,
+        pos.dy + size.height + 8,
+      ),
+      constraints: BoxConstraints(
+        minWidth: size.width,
+        maxWidth: size.width,
+      ),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(_statusMenuBorderRadius),
+      ),
+      color: Colors.white,
+      elevation: _statusMenuElevation,
+      items: [
+        PopupMenuItem<String>(
+          value: 'Active',
+          padding: _statusItemPadding,
+          child: Text(
+            'Active',
+            style: Get.theme.textTheme.bodyMedium?.copyWith(
+              color: AuthConstants.labelColor,
+              fontSize: 14,
+            ),
+          ),
+        ),
+        const PopupMenuDivider(height: 1),
+        PopupMenuItem<String>(
+          value: 'Inactive',
+          padding: _statusItemPadding,
+          child: Text(
+            'Inactive',
+            style: Get.theme.textTheme.bodyMedium?.copyWith(
+              color: AuthConstants.labelColor,
+              fontSize: 14,
+            ),
+          ),
+        ),
+      ],
+    );
+    if (selected != null) {
+      setState(() => _selectedStatus = selected);
+    }
+  }
+
+  Future<void> _pickCustomDate() async {
+    final date = await showDatePicker(
+      context: context,
+      initialDate: _customStartDate ?? DateTime.now(),
       firstDate: DateTime(2020),
       lastDate: DateTime(2030),
-      initialDateRange: _customStartDate != null && _customEndDate != null
-          ? DateTimeRange(start: _customStartDate!, end: _customEndDate!)
-          : null,
+      helpText: 'Select custom date',
+      initialEntryMode: DatePickerEntryMode.calendar,
+      builder: (context, child) {
+        return Theme(
+          data: Theme.of(context).copyWith(
+            colorScheme: ColorScheme.light(
+              primary: AuthConstants.buttonEnabledColor,
+              onPrimary: Colors.white,
+              surface: Colors.white,
+              onSurface: AuthConstants.labelColor,
+              surfaceContainerHighest: AuthConstants.cardBackground,
+            ),
+            dialogTheme: DialogThemeData(
+              elevation: 16,
+              shadowColor: Colors.black.withValues(alpha: 0.2),
+              surfaceTintColor: Colors.transparent,
+              backgroundColor: Colors.white,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(24),
+              ),
+            ),
+            datePickerTheme: DatePickerThemeData(
+              backgroundColor: Colors.white,
+              elevation: 0,
+              surfaceTintColor: Colors.transparent,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(24),
+              ),
+              headerBackgroundColor: AuthConstants.buttonEnabledColor,
+              headerForegroundColor: Colors.white,
+              headerHeadlineStyle: Get.textTheme.headlineMedium?.copyWith(
+                color: Colors.white,
+                fontWeight: FontWeight.w600,
+                fontFamily: 'Inter',
+              ),
+              headerHelpStyle: Get.textTheme.bodySmall?.copyWith(
+                color: Colors.white.withValues(alpha: 0.9),
+                fontFamily: 'Inter',
+              ),
+              weekdayStyle: Get.textTheme.bodySmall?.copyWith(
+                color: AuthConstants.supportTextColor,
+                fontWeight: FontWeight.w500,
+                fontFamily: 'Inter',
+              ),
+              dayStyle: Get.textTheme.bodyMedium?.copyWith(
+                color: AuthConstants.labelColor,
+                fontFamily: 'Inter',
+              ),
+              dayForegroundColor: WidgetStateProperty.resolveWith((states) {
+                if (states.contains(WidgetState.selected)) return Colors.white;
+                if (states.contains(WidgetState.disabled)) {
+                  return AuthConstants.hintColor;
+                }
+                return AuthConstants.labelColor;
+              }),
+              dayBackgroundColor: WidgetStateProperty.resolveWith((states) {
+                if (states.contains(WidgetState.selected)) {
+                  return AuthConstants.buttonEnabledColor;
+                }
+                return null;
+              }),
+              dayShape: WidgetStateProperty.all(
+                RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
+              todayBorder: BorderSide(
+                color: AuthConstants.buttonEnabledColor,
+                width: 1.5,
+              ),
+              yearStyle: Get.textTheme.bodyLarge?.copyWith(
+                color: AuthConstants.labelColor,
+                fontFamily: 'Inter',
+              ),
+              yearForegroundColor: WidgetStateProperty.resolveWith((states) {
+                if (states.contains(WidgetState.selected)) return Colors.white;
+                return AuthConstants.labelColor;
+              }),
+              yearBackgroundColor: WidgetStateProperty.resolveWith((states) {
+                if (states.contains(WidgetState.selected)) {
+                  return AuthConstants.buttonEnabledColor;
+                }
+                return null;
+              }),
+              yearShape: WidgetStateProperty.all(
+                RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
+              dividerColor: AuthConstants.borderColor,
+              cancelButtonStyle: TextButton.styleFrom(
+                foregroundColor: AuthConstants.supportTextColor,
+                textStyle: Get.textTheme.labelLarge?.copyWith(
+                  fontFamily: 'Inter',
+                  fontWeight: FontWeight.w600,
+                ),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 20,
+                  vertical: 12,
+                ),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10),
+                ),
+              ),
+              confirmButtonStyle: FilledButton.styleFrom(
+                backgroundColor: AuthConstants.buttonEnabledColor,
+                foregroundColor: Colors.white,
+                textStyle: Get.textTheme.labelLarge?.copyWith(
+                  color: Colors.white,
+                  fontFamily: 'Inter',
+                  fontWeight: FontWeight.w600,
+                ),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 20,
+                  vertical: 12,
+                ),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10),
+                ),
+              ),
+            ),
+          ),
+          child: child!,
+        );
+      },
     );
-    if (range != null) {
-      setState(() {
-        _customStartDate = range.start;
-        _customEndDate = range.end;
-      });
-    }
+    if (date != null) setState(() => _customStartDate = date);
   }
 
   void _onCreate() {
@@ -73,9 +250,8 @@ class _CreatePlanModalState extends State<CreatePlanModal> {
         priceController: _priceController,
         selectedDuration: _selectedDuration,
         customStartDate: _customStartDate,
-        customEndDate: _customEndDate,
         selectedStatus: _selectedStatus,
-        onPickCustomDates: _pickCustomDates,
+        onPickCustomDates: _pickCustomDate,
         onDurationChanged: (v) => setState(() => _selectedDuration = v),
         onStatusTap: () {
           // Simple mock for status selection
@@ -92,9 +268,8 @@ class _CreatePlanModalState extends State<CreatePlanModal> {
         priceController: _priceController,
         selectedDuration: _selectedDuration,
         customStartDate: _customStartDate,
-        customEndDate: _customEndDate,
         selectedStatus: _selectedStatus,
-        onPickCustomDates: _pickCustomDates,
+        onPickCustomDates: _pickCustomDate,
         onDurationChanged: (v) => setState(() => _selectedDuration = v),
         onStatusTap: () {
           setState(() => _selectedStatus = _selectedStatus == 'Active' ? 'Inactive' : 'Active');
@@ -141,10 +316,18 @@ class _CreatePlanModalState extends State<CreatePlanModal> {
                     const SizedBox(height: 18),
                     _buildCustomDurationField(),
                     const SizedBox(height: 32),
-                    _buildActions(),
                   ],
                 ),
               ),
+            ),
+            const Divider(
+              thickness: 1,
+              height: 1,
+              color: Color(0xFFE2E8F0),
+            ),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(28, 16, 28, 24),
+              child: _buildActions(),
             ),
           ],
         ),
@@ -154,42 +337,32 @@ class _CreatePlanModalState extends State<CreatePlanModal> {
 
   Widget _buildHeader() {
     return Padding(
-      padding: const EdgeInsets.fromLTRB(28, 22, 12, 18),
-      child: Stack(
-        alignment: Alignment.center,
+      padding: const EdgeInsets.fromLTRB(32, 24, 32, 20),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Center(
-            child: Text(
-              'Create Plan',
-              style: Get.textTheme.titleLarge?.copyWith(
-                fontWeight: FontWeight.w700,
-                color: _labelColor,
-                fontSize: 20,
-                letterSpacing: -0.2,
+          const SizedBox(width: 48),
+          Expanded(
+            child: Center(
+              child: Text(
+                'Create Plan',
+                style: Get.textTheme.titleLarge?.copyWith(
+                  fontWeight: FontWeight.bold,
+                  color: const Color(0xFF0F172A),
+                  fontSize: 20,
+                ),
               ),
             ),
           ),
-          Positioned(
-            right: 0,
-            child: Material(
-              color: Colors.transparent,
-              child: InkWell(
-                onTap: () => Navigator.of(context).pop(),
-                borderRadius: BorderRadius.circular(20),
-                child: Container(
-                  width: 36,
-                  height: 36,
-                  decoration: const BoxDecoration(
-                    color: Color(0xFFF1F5F9),
-                    shape: BoxShape.circle,
-                  ),
-                  alignment: Alignment.center,
-                  child: const Icon(
-                    Icons.close,
-                    size: 18,
-                    color: Color(0xFF475569),
-                  ),
-                ),
+          IconButton(
+            onPressed: () => Navigator.of(context).pop(),
+            icon: SvgPicture.asset(
+              'assets/icons/close-button.svg',
+              width: 24,
+              height: 24,
+              colorFilter: const ColorFilter.mode(
+                AuthConstants.hintColor,
+                BlendMode.srcIn,
               ),
             ),
           ),
@@ -276,39 +449,45 @@ class _CreatePlanModalState extends State<CreatePlanModal> {
           child: AuthFormFieldSection(
             label: 'Status*',
             spacingAfterLabel: 8,
-            child: InkWell(
-              onTap: () {
-                setState(() => _selectedStatus = _selectedStatus == 'Active' ? 'Inactive' : 'Active');
-              },
-              child: Container(
-                height: 44,
-                padding: const EdgeInsets.symmetric(horizontal: 14),
-                decoration: BoxDecoration(
-                  color: Colors.white,
+            child: Builder(
+              builder: (context) {
+                return InkWell(
+                  onTap: () => _showStatusMenu(context),
                   borderRadius: BorderRadius.circular(_inputBorderRadius),
-                  border: Border.all(color: _inputBorderColor),
-                ),
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: Text(
-                        _selectedStatus ?? 'Select Plan Status',
-                        style: Get.theme.textTheme.bodyMedium?.copyWith(
-                          fontSize: 14,
-                          color: _selectedStatus != null
-                              ? _labelColor
-                              : _hintColor,
+                  child: Container(
+                    height: 44,
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 14,
+                      vertical: 10,
+                    ),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(_inputBorderRadius),
+                      border: Border.all(color: _inputBorderColor),
+                    ),
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: Text(
+                            _selectedStatus ?? 'Select Plan Status',
+                            style: Get.theme.textTheme.bodyMedium?.copyWith(
+                              fontSize: 14,
+                              color: _selectedStatus != null
+                                  ? _labelColor
+                                  : _hintColor,
+                            ),
+                          ),
                         ),
-                      ),
+                        Icon(
+                          Icons.keyboard_arrow_down_rounded,
+                          size: 20,
+                          color: _hintColor,
+                        ),
+                      ],
                     ),
-                    const Icon(
-                      Icons.keyboard_arrow_down,
-                      size: 20,
-                      color: Color(0xFF64748B),
-                    ),
-                  ],
-                ),
-              ),
+                  ),
+                );
+              },
             ),
           ),
         ),
@@ -385,18 +564,17 @@ class _CreatePlanModalState extends State<CreatePlanModal> {
   static const _customDurationFieldWidth = 240.0;
 
   Widget _buildCustomDurationField() {
-    final dateText = _customStartDate != null && _customEndDate != null
-        ? '${_formatDate(_customStartDate!)} - ${_formatDate(_customEndDate!)}'
-        : null;
+    final dateText =
+        _customStartDate != null ? _formatDate(_customStartDate!) : null;
     return SizedBox(
       width: _customDurationFieldWidth,
       child: AuthFormFieldSection(
-        label: 'Custom Duration*',
+        label: 'Custom Date*',
         spacingAfterLabel: 8,
         child: Material(
           color: Colors.transparent,
           child: InkWell(
-            onTap: _pickCustomDates,
+            onTap: _pickCustomDate,
             borderRadius: BorderRadius.circular(_inputBorderRadius),
             child: Container(
               height: 44,
@@ -410,7 +588,7 @@ class _CreatePlanModalState extends State<CreatePlanModal> {
                 children: [
                   Expanded(
                     child: Text(
-                      dateText ?? 'Select Dates',
+                      dateText ?? 'Select Date',
                       style: Get.theme.textTheme.bodyMedium?.copyWith(
                         fontSize: 14,
                         color: dateText != null ? _labelColor : _hintColor,
@@ -418,10 +596,14 @@ class _CreatePlanModalState extends State<CreatePlanModal> {
                       overflow: TextOverflow.ellipsis,
                     ),
                   ),
-                  const Icon(
-                    Icons.calendar_today_outlined,
-                    size: 20,
-                    color: Color(0xFF64748B),
+                  SvgPicture.asset(
+                    'assets/icons/calendar-days.svg',
+                    width: 20,
+                    height: 20,
+                    colorFilter: const ColorFilter.mode(
+                      Color(0xFF64748B),
+                      BlendMode.srcIn,
+                    ),
                   ),
                 ],
               ),
@@ -439,33 +621,46 @@ class _CreatePlanModalState extends State<CreatePlanModal> {
     return Row(
       mainAxisAlignment: MainAxisAlignment.end,
       children: [
-        OutlinedButton(
-          onPressed: () => Navigator.of(context).pop(),
-          style: OutlinedButton.styleFrom(
-            foregroundColor: const Color(0xFF334155),
-            side: const BorderSide(color: _inputBorderColor),
-            backgroundColor: Colors.white,
-            padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 12),
-            minimumSize: const Size(0, 44),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(_inputBorderRadius),
+        SizedBox(
+          width: 94,
+          height: 44,
+          child: TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            style: TextButton.styleFrom(
+              foregroundColor: AuthConstants.supportTextColor,
+              padding: const EdgeInsets.fromLTRB(20, 12, 20, 12),
+              minimumSize: const Size(94, 44),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(10),
+                side: const BorderSide(
+                  width: 1,
+                  color: AuthConstants.borderColor,
+                ),
+              ),
             ),
+            child: const Text('Cancel'),
           ),
-          child: const Text('Cancel'),
         ),
-        const SizedBox(width: 14),
-        FilledButton(
-          onPressed: _onCreate,
-          style: FilledButton.styleFrom(
-            backgroundColor: AuthConstants.buttonEnabledColor,
-            foregroundColor: Colors.white,
-            padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 12),
-            minimumSize: const Size(0, 44),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(_inputBorderRadius),
+        const SizedBox(width: 10),
+        SizedBox(
+          width: 146,
+          height: 44,
+          child: FilledButton(
+            onPressed: _onCreate,
+            style: FilledButton.styleFrom(
+              backgroundColor: AuthConstants.buttonEnabledColor,
+              foregroundColor: Colors.white,
+              padding: const EdgeInsets.fromLTRB(20, 12, 20, 12),
+              minimumSize: const Size(146, 44),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(10),
+              ),
+            ),
+            child: const Text(
+              'Create Plan',
+              style: TextStyle(color: Colors.white),
             ),
           ),
-          child: const Text('Create Plan'),
         ),
       ],
     );

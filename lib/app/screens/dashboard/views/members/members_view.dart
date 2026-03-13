@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:flutter_svg/flutter_svg.dart';
+import 'package:saas/shared/widgets/primary_action_button.dart';
 
 import '../../modals/add_member_modal.dart';
 import '../../modals/view_member_modal.dart';
@@ -21,7 +23,7 @@ class _MembersViewState extends State<MembersView> {
   static const _textMuted = Color(0xFF666666);
   static const _iconCircleOrange = Color(0xFFFEF3C7);
   static const _iconCircleRed = Color(0xFFFEE2E2);
-  static const   _iconCircleGreen = Color(0xFFDCFCE7);
+  static const _iconCircleGreen = Color(0xFFDCFCE7);
 
   final _planDropdownKey = GlobalKey();
   final _statusDropdownKey = GlobalKey();
@@ -32,9 +34,9 @@ class _MembersViewState extends State<MembersView> {
   static const _planOptions = ['Monthly', 'Quarterly', 'Yearly'];
   static const _statusOptions = ['Active', 'Expiring', 'Expired'];
   static const _statusColors = [
-    _iconCircleGreen, // Active
-    Color(0xFFB45309), // Expiring (orange-brown)
-    _iconCircleRed, // Expired
+    Color(0xFF166534), // Active text
+    Color(0xFF92400E), // Expiring text
+    Color(0xFF991B1B), // Expired text
   ];
 
   static final _tableData = [
@@ -127,8 +129,9 @@ class _MembersViewState extends State<MembersView> {
                   const SizedBox(height: 4),
                   Text(
                     'Manage all your members and their subscriptions',
-                    style: Get.textTheme.bodyMedium?.copyWith(
+                    style: Get.textTheme.bodySmall?.copyWith(
                       color: _textMuted,
+                      fontWeight: FontWeight.w600,
                       fontSize: isMobile ? 13 : 14,
                     ),
                   ),
@@ -136,20 +139,9 @@ class _MembersViewState extends State<MembersView> {
               ),
             ),
             if (!isMobile)
-              FilledButton(
+              PrimaryActionButton(
+                label: 'Add Member',
                 onPressed: () => Get.dialog(const AddMemberModal()),
-                style: FilledButton.styleFrom(
-                  backgroundColor: _purple,
-                  foregroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 20,
-                    vertical: 12,
-                  ),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                ),
-                child: const Text('Add Member'),
               ),
           ],
         ),
@@ -157,17 +149,10 @@ class _MembersViewState extends State<MembersView> {
           const SizedBox(height: 16),
           SizedBox(
             width: double.infinity,
-            child: FilledButton(
+            child: PrimaryActionButton(
+              label: 'Add Member',
               onPressed: () => Get.dialog(const AddMemberModal()),
-              style: FilledButton.styleFrom(
-                backgroundColor: _purple,
-                foregroundColor: Colors.white,
-                padding: const EdgeInsets.symmetric(vertical: 12),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(8),
-                ),
-              ),
-              child: const Text('Add Member'),
+              useFixedSize: false,
             ),
           ),
         ],
@@ -175,7 +160,7 @@ class _MembersViewState extends State<MembersView> {
     );
   }
 
-  static const _searchFieldWidth = 380.0;
+  static const _searchFieldWidth = 320.0;
 
   Widget _buildSearchRow(bool isMobile) {
     if (isMobile) {
@@ -185,17 +170,36 @@ class _MembersViewState extends State<MembersView> {
             height: 44,
             decoration: BoxDecoration(
               color: Colors.white,
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: const Color(0xFFE2E8F0)),
+              borderRadius: BorderRadius.circular(22),
+              border: Border.all(color: const Color(0xFFE2E8F0), width: 1),
             ),
-            child: const TextField(
-              style: TextStyle(fontSize: 14),
+            child: TextField(
+              style: const TextStyle(fontSize: 14, color: Colors.black),
+              cursorColor: Colors.black,
               decoration: InputDecoration(
                 hintText: 'Search by name or phone',
-                hintStyle: TextStyle(color: Color(0xFF94A3B8), fontSize: 13),
-                prefixIcon: Icon(Icons.search, size: 18),
+                hintStyle: const TextStyle(
+                  color: Color(0xFF94A3B8),
+                  fontSize: 13,
+                ),
+                prefixIcon: Padding(
+                  padding: const EdgeInsets.only(left: 12, right: 8),
+                  child: SvgPicture.asset(
+                    'assets/icons/search.svg',
+                    width: 18,
+                    height: 18,
+                    colorFilter: const ColorFilter.mode(
+                      Color(0xFF64748B),
+                      BlendMode.srcIn,
+                    ),
+                  ),
+                ),
+                prefixIconConstraints: const BoxConstraints(
+                  minWidth: 40,
+                  minHeight: 24,
+                ),
                 border: InputBorder.none,
-                contentPadding: EdgeInsets.symmetric(vertical: 11),
+                contentPadding: const EdgeInsets.symmetric(vertical: 11),
               ),
             ),
           ),
@@ -232,8 +236,8 @@ class _MembersViewState extends State<MembersView> {
             height: 44,
             decoration: BoxDecoration(
               color: Colors.white,
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: const Color(0xFFE2E8F0)),
+              borderRadius: BorderRadius.circular(22),
+              border: Border.all(color: const Color(0xFFE2E8F0), width: 1),
               boxShadow: [
                 BoxShadow(
                   color: Colors.black.withValues(alpha: 0.03),
@@ -243,6 +247,7 @@ class _MembersViewState extends State<MembersView> {
               ],
             ),
             child: TextField(
+              cursorColor: Colors.black,
               style: Get.textTheme.bodyMedium?.copyWith(
                 color: const Color(0xFF0F172A),
                 fontSize: 14,
@@ -253,9 +258,17 @@ class _MembersViewState extends State<MembersView> {
                   color: Color(0xFF94A3B8),
                   fontSize: 14,
                 ),
-                prefixIcon: const Padding(
-                  padding: EdgeInsets.only(left: 14, right: 10),
-                  child: Icon(Icons.search, size: 20, color: Color(0xFF64748B)),
+                prefixIcon: Padding(
+                  padding: const EdgeInsets.only(left: 14, right: 10),
+                  child: SvgPicture.asset(
+                    'assets/icons/search.svg',
+                    width: 20,
+                    height: 20,
+                    colorFilter: const ColorFilter.mode(
+                      Color(0xFF64748B),
+                      BlendMode.srcIn,
+                    ),
+                  ),
                 ),
                 prefixIconConstraints: const BoxConstraints(
                   minWidth: 44,
@@ -475,12 +488,24 @@ class _MembersViewState extends State<MembersView> {
               ),
             ),
             children: [
-              _tableCell('Name', isHeader: true),
-              _tableCell('Phone Number', isHeader: true),
-              _tableCell('Email Address', isHeader: true),
-              _tableCell('Plan', isHeader: true),
-              _tableCell('Expiry Date', isHeader: true),
-              _tableCell('Status', isHeader: true),
+              _tableCell('Name', isHeader: true, align: Alignment.centerLeft),
+              _tableCell(
+                'Phone Number',
+                isHeader: true,
+                align: Alignment.center,
+              ),
+              _tableCell(
+                'Email Address',
+                isHeader: true,
+                align: Alignment.center,
+              ),
+              _tableCell('Plan', isHeader: true, align: Alignment.center),
+              _tableCell(
+                'Expiry Date',
+                isHeader: true,
+                align: Alignment.center,
+              ),
+              _tableCell('Status', isHeader: true, align: Alignment.center),
             ],
           ),
           ..._tableData.asMap().entries.map(
@@ -494,12 +519,36 @@ class _MembersViewState extends State<MembersView> {
                 ),
               ),
               children: [
-                _tapableCell(entry.value, entry.value.name),
-                _tapableCell(entry.value, entry.value.phone),
-                _tapableCell(entry.value, entry.value.email),
-                _tapableCell(entry.value, entry.value.plan),
-                _tapableCell(entry.value, entry.value.expiry),
-                _tapableCell(entry.value, _statusPill(entry.value.status)),
+                _tapableCell(
+                  entry.value,
+                  entry.value.name,
+                  align: Alignment.centerLeft,
+                ),
+                _tapableCell(
+                  entry.value,
+                  entry.value.phone,
+                  align: Alignment.center,
+                ),
+                _tapableCell(
+                  entry.value,
+                  entry.value.email,
+                  align: Alignment.center,
+                ),
+                _tapableCell(
+                  entry.value,
+                  entry.value.plan,
+                  align: Alignment.center,
+                ),
+                _tapableCell(
+                  entry.value,
+                  entry.value.expiry,
+                  align: Alignment.center,
+                ),
+                _tapableCell(
+                  entry.value,
+                  _statusPill(entry.value.status),
+                  align: Alignment.center,
+                ),
               ],
             ),
           ),
@@ -529,21 +578,32 @@ class _MembersViewState extends State<MembersView> {
     );
   }
 
-  Widget _tapableCell(MemberRow row, dynamic content) {
+  Widget _tapableCell(
+    MemberRow row,
+    dynamic content, {
+    Alignment align = Alignment.centerLeft,
+  }) {
     return Material(
       color: Colors.transparent,
       child: InkWell(
         onTap: () => _openViewMember(row),
-        child: _tableCell(content),
+        hoverColor: Colors.transparent,
+        splashColor: Colors.transparent,
+        highlightColor: Colors.transparent,
+        child: _tableCell(content, align: align),
       ),
     );
   }
 
-  Widget _tableCell(dynamic content, {bool isHeader = false}) {
+  Widget _tableCell(
+    dynamic content, {
+    bool isHeader = false,
+    Alignment align = Alignment.centerLeft,
+  }) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
       child: Align(
-        alignment: Alignment.centerLeft,
+        alignment: align,
         child: content is String
             ? Text(
                 content as String,
@@ -559,21 +619,35 @@ class _MembersViewState extends State<MembersView> {
   }
 
   Widget _statusPill(MemberStatus status) {
-    final (String label, Color bg) = switch (status) {
-      MemberStatus.active => ('Active', _iconCircleGreen),
-      MemberStatus.expired => ('Expired', _iconCircleRed),
-      MemberStatus.expiring => ('Expiring', _iconCircleOrange),
+    final (String label, Color bg, Color textColor) = switch (status) {
+      MemberStatus.active => (
+        'Active',
+        _iconCircleGreen,
+        const Color(0xFF166534), // #166534
+      ),
+      MemberStatus.expired => (
+        'Expired',
+        _iconCircleRed,
+        const Color(0xFF991B1B), // #991B1B
+      ),
+      MemberStatus.expiring => (
+        'Expiring',
+        _iconCircleOrange,
+        const Color(0xFF92400E), // #92400E
+      ),
     };
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+      width: 92,
+      height: 32,
+      alignment: Alignment.center,
       decoration: BoxDecoration(
         color: bg,
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(32),
       ),
       child: Text(
         label,
         style: Get.textTheme.bodySmall?.copyWith(
-          color: Colors.white,
+          color: textColor,
           fontWeight: FontWeight.w500,
           fontSize: 12,
         ),

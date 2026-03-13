@@ -2,6 +2,7 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:get/get.dart';
+import 'package:saas/shared/widgets/primary_action_button.dart';
 import '../../../../../shared/widgets/success_toast.dart';
 import 'dashboard_controller.dart';
 import '../../modals/add_member_modal.dart';
@@ -330,8 +331,8 @@ class Dashboard extends GetView<DashboardController> {
             borderRadius: BorderRadius.circular(24),
             child: CircleAvatar(
               backgroundColor: const Color(0xFFEEF2FF),
-              child: Image.asset(
-                'assets/icons/headset.png',
+              child: SvgPicture.asset(
+                'assets/icons/headset.svg',
                 width: 24,
                 height: 24,
                 color: _textMuted,
@@ -368,22 +369,16 @@ class Dashboard extends GetView<DashboardController> {
             const SizedBox(height: 4),
             Text(
               'Manage everything here',
-              style: Get.textTheme.bodyMedium?.copyWith(color: _textMuted),
+              style: Get.textTheme.bodySmall?.copyWith(
+                color: _textMuted,
+                fontWeight: FontWeight.w600,
+              ),
             ),
           ],
         ),
-        FilledButton(
+        PrimaryActionButton(
+          label: 'Add Member',
           onPressed: () => Get.dialog(const AddMemberModal()),
-          style: FilledButton.styleFrom(
-            backgroundColor: _purple,
-            foregroundColor: Colors.white,
-            fixedSize: const Size(140, 44),
-            padding: const EdgeInsets.fromLTRB(20, 12, 20, 12),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(10),
-            ),
-          ),
-          child: const Text('Add Member'),
         ),
       ],
     );

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:get/get.dart';
-
 import '../../authentication/widgets/auth_constants.dart';
 import '../../authentication/widgets/auth_form_field_section.dart';
 import 'create_plan_modal.dart';
@@ -12,7 +12,6 @@ class CreatePlanModalMobileView extends StatelessWidget {
     required this.priceController,
     required this.selectedDuration,
     required this.customStartDate,
-    required this.customEndDate,
     required this.selectedStatus,
     required this.onPickCustomDates,
     required this.onDurationChanged,
@@ -25,7 +24,6 @@ class CreatePlanModalMobileView extends StatelessWidget {
   final TextEditingController priceController;
   final PlanDuration? selectedDuration;
   final DateTime? customStartDate;
-  final DateTime? customEndDate;
   final String? selectedStatus;
   final VoidCallback onPickCustomDates;
   final ValueChanged<PlanDuration> onDurationChanged;
@@ -246,11 +244,10 @@ class CreatePlanModalMobileView extends StatelessWidget {
   }
 
   Widget _buildCustomDurationField() {
-    final dateText = customStartDate != null && customEndDate != null
-        ? '${_formatDate(customStartDate!)} - ${_formatDate(customEndDate!)}'
-        : null;
+    final dateText =
+        customStartDate != null ? _formatDate(customStartDate!) : null;
     return AuthFormFieldSection(
-      label: 'Custom Duration*',
+      label: 'Custom Date*',
       spacingAfterLabel: 8,
       child: InkWell(
         onTap: onPickCustomDates,
@@ -266,14 +263,22 @@ class CreatePlanModalMobileView extends StatelessWidget {
             children: [
               Expanded(
                 child: Text(
-                  dateText ?? 'Select Dates',
+                  dateText ?? 'Select Date',
                   style: Get.theme.textTheme.bodyMedium?.copyWith(
                     fontSize: 14,
                     color: dateText != null ? _labelColor : _hintColor,
                   ),
                 ),
               ),
-              const Icon(Icons.calendar_today_outlined, size: 18, color: Color(0xFF64748B)),
+              SvgPicture.asset(
+                'assets/icons/calendar-days.svg',
+                width: 18,
+                height: 18,
+                colorFilter: const ColorFilter.mode(
+                  Color(0xFF64748B),
+                  BlendMode.srcIn,
+                ),
+              ),
             ],
           ),
         ),

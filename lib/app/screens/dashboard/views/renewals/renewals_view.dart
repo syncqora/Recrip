@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:get/get.dart';
-
 import 'renewals_mobile_view.dart';
 import 'renewals_tablet_view.dart';
 
@@ -355,13 +355,13 @@ class _RenewalsViewState extends State<RenewalsView> {
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        _actionIcon(Icons.refresh, onTap: () {}),
-        _actionIcon(Icons.notifications_outlined, onTap: () {}),
+        _actionIcon('assets/icons/renew.svg', onTap: () {}),
+        _actionIcon('assets/icons/bell-ring.svg', onTap: () {}),
       ],
     );
   }
 
-  Widget _actionIcon(IconData icon, {VoidCallback? onTap}) {
+  Widget _actionIcon(String assetPath, {VoidCallback? onTap}) {
     return Padding(
       padding: const EdgeInsets.only(right: 4),
       child: Material(
@@ -370,8 +370,19 @@ class _RenewalsViewState extends State<RenewalsView> {
           onTap: onTap,
           borderRadius: BorderRadius.circular(20),
           child: Container(
+            width: 32,
+            height: 32,
+            decoration: const BoxDecoration(
+              color: Color(0xFFEEF2FF),
+              shape: BoxShape.circle,
+            ),
             padding: const EdgeInsets.all(6),
-            child: Icon(icon, size: 18, color: _textMuted),
+            child: SvgPicture.asset(
+              assetPath,
+              width: 18,
+              height: 18,
+              colorFilter: const ColorFilter.mode(_textMuted, BlendMode.srcIn),
+            ),
           ),
         ),
       ),

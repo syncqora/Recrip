@@ -163,7 +163,7 @@ class AddMemberModalTabletView extends StatelessWidget {
                 style: Get.theme.textTheme.bodySmall?.copyWith(
                   color: AuthConstants.textColor,
                 ),
-                cursorColor: AuthConstants.textColor,
+                cursorColor: Colors.black,
                 decoration: InputDecoration(
                   prefixIcon: Padding(
                     padding: const EdgeInsets.only(left: 12, right: 4),

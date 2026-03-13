@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:flutter_svg/flutter_svg.dart';
+import 'package:saas/shared/widgets/primary_action_button.dart';
 
 import '../../../../../shared/widgets/success_toast.dart';
 import '../../dialogs/delete_plan_confirm_dialog.dart';
@@ -53,7 +55,9 @@ class SubscriptionsView extends StatelessWidget {
     final isTablet = width >= 600 && width < 1024;
 
     return SingleChildScrollView(
-      padding: isMobile ? const EdgeInsets.all(16) : (isTablet ? const EdgeInsets.all(24) : EdgeInsets.zero),
+      padding: isMobile
+          ? const EdgeInsets.all(16)
+          : (isTablet ? const EdgeInsets.all(24) : EdgeInsets.zero),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -92,13 +96,14 @@ class SubscriptionsView extends StatelessWidget {
                 children: [
                   Text(
                     'Subscriptions',
-                    style: (isMobile
-                            ? Get.textTheme.headlineSmall
-                            : Get.textTheme.headlineMedium)
-                        ?.copyWith(
-                      fontWeight: FontWeight.bold,
-                      color: _textDark,
-                    ),
+                    style:
+                        (isMobile
+                                ? Get.textTheme.headlineSmall
+                                : Get.textTheme.headlineMedium)
+                            ?.copyWith(
+                              fontWeight: FontWeight.bold,
+                              color: _textDark,
+                            ),
                   ),
                   const SizedBox(height: 4),
                   Text(
@@ -112,18 +117,9 @@ class SubscriptionsView extends StatelessWidget {
               ),
             ),
             if (!isMobile)
-              FilledButton(
+              PrimaryActionButton(
+                label: 'Create Plan',
                 onPressed: () => Get.dialog(const CreatePlanModal()),
-                style: FilledButton.styleFrom(
-                  backgroundColor: _purple,
-                  foregroundColor: Colors.white,
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                ),
-                child: const Text('Create Plan'),
               ),
           ],
         ),
@@ -131,17 +127,10 @@ class SubscriptionsView extends StatelessWidget {
           const SizedBox(height: 16),
           SizedBox(
             width: double.infinity,
-            child: FilledButton(
+            child: PrimaryActionButton(
+              label: 'Create Plan',
               onPressed: () => Get.dialog(const CreatePlanModal()),
-              style: FilledButton.styleFrom(
-                backgroundColor: _purple,
-                foregroundColor: Colors.white,
-                padding: const EdgeInsets.symmetric(vertical: 12),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(8),
-                ),
-              ),
-              child: const Text('Create Plan'),
+              useFixedSize: false,
             ),
           ),
         ],
@@ -169,24 +158,52 @@ class SubscriptionsView extends StatelessWidget {
           TableRow(
             decoration: const BoxDecoration(color: Color(0xFFF1F5F9)),
             children: [
-              _tableCell('Plan Name', isHeader: true),
-              _tableCell('Duration', isHeader: true),
-              _tableCell('Price', isHeader: true),
-              _tableCell('Active Members', isHeader: true),
-              _tableCell('Status', isHeader: true),
-              _tableCell('Action', isHeader: true),
+              _tableCell('Plan Name',
+                  isHeader: true, align: Alignment.centerLeft),
+              _tableCell('Duration', isHeader: true, align: Alignment.center),
+              _tableCell('Price', isHeader: true, align: Alignment.center),
+              _tableCell('Active Members',
+                  isHeader: true, align: Alignment.center),
+              _tableCell('Status', isHeader: true, align: Alignment.center),
+              _tableCell('Action', isHeader: true, align: Alignment.center),
             ],
           ),
           ..._tableData.map(
             (row) => TableRow(
-              decoration: const BoxDecoration(color: Colors.white),
+              decoration: const BoxDecoration(
+                color: Colors.white,
+                border: Border(
+                  bottom: BorderSide(
+                    color: Color(0xFFE2E8F0),
+                    width: 1,
+                  ),
+                ),
+              ),
               children: [
-                _tableCell(row.planName),
-                _tableCell(row.duration),
-                _tableCell(row.price),
-                _tableCell(row.activeMembers),
-                _tableCell(_statusPill(row.isActive)),
-                _tableCell(_actionIcons(context, row)),
+                _tableCell(
+                  row.planName,
+                  align: Alignment.centerLeft,
+                ),
+                _tableCell(
+                  row.duration,
+                  align: Alignment.center,
+                ),
+                _tableCell(
+                  row.price,
+                  align: Alignment.center,
+                ),
+                _tableCell(
+                  row.activeMembers,
+                  align: Alignment.center,
+                ),
+                _tableCell(
+                  _statusPill(row.isActive),
+                  align: Alignment.center,
+                ),
+                _tableCell(
+                  _actionIcons(context, row),
+                  align: Alignment.center,
+                ),
               ],
             ),
           ),
@@ -195,31 +212,40 @@ class SubscriptionsView extends StatelessWidget {
     );
   }
 
-  Widget _tableCell(dynamic content, {bool isHeader = false}) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
-      child: Align(
-        alignment: Alignment.centerLeft,
-        child: content is String
-            ? Text(
-                content as String,
-                style: Get.textTheme.bodySmall?.copyWith(
-                  fontWeight: isHeader ? FontWeight.w600 : FontWeight.normal,
-                  color: _textDark,
-                  fontSize: 14,
-                ),
-              )
-            : content as Widget,
+  Widget _tableCell(
+    dynamic content, {
+    bool isHeader = false,
+    Alignment align = Alignment.centerLeft,
+  }) {
+    return SizedBox(
+      height: 50,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 12),
+        child: Align(
+          alignment: align,
+          child: content is String
+              ? Text(
+                  content as String,
+                  style: Get.textTheme.bodySmall?.copyWith(
+                    fontWeight: isHeader ? FontWeight.w600 : FontWeight.normal,
+                    color: _textDark,
+                    fontSize: 14,
+                  ),
+                )
+              : content as Widget,
+        ),
       ),
     );
   }
 
   Widget _statusPill(bool isActive) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+      width: 92,
+      height: 32,
+      alignment: Alignment.center,
       decoration: BoxDecoration(
         color: _iconCircleGreen,
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(32),
       ),
       child: Text(
         'Active',
@@ -237,11 +263,11 @@ class SubscriptionsView extends StatelessWidget {
       mainAxisSize: MainAxisSize.min,
       children: [
         _actionIcon(
-          Icons.edit_outlined,
+          'assets/icons/edit.svg',
           onTap: () => _showEditPlanDialog(context, row),
         ),
         _actionIcon(
-          Icons.delete_outline,
+          'assets/icons/trash.svg',
           onTap: () => _showDeletePlanDialog(context),
         ),
       ],
@@ -279,7 +305,7 @@ class SubscriptionsView extends StatelessWidget {
     );
   }
 
-  Widget _actionIcon(IconData icon, {VoidCallback? onTap}) {
+  Widget _actionIcon(String assetPath, {VoidCallback? onTap}) {
     return Padding(
       padding: const EdgeInsets.only(right: 4),
       child: Material(
@@ -288,8 +314,19 @@ class SubscriptionsView extends StatelessWidget {
           onTap: onTap,
           borderRadius: BorderRadius.circular(20),
           child: Container(
+            width: 32,
+            height: 32,
+            decoration: const BoxDecoration(
+              color: Color(0xFFEEF2FF),
+              shape: BoxShape.circle,
+            ),
             padding: const EdgeInsets.all(6),
-            child: Icon(icon, size: 18, color: _textMuted),
+            child: SvgPicture.asset(
+              assetPath,
+              width: 18,
+              height: 18,
+              colorFilter: const ColorFilter.mode(_textMuted, BlendMode.srcIn),
+            ),
           ),
         ),
       ),
