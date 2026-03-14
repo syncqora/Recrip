@@ -87,6 +87,10 @@ dependencies:
   cached_network_image: ^3.4.1
   # Google Fonts (includes Inter).
   google_fonts: ^6.2.1
+  # PDF generation.
+  pdf: ^3.11.1
+  # Share and print PDF.
+  printing: ^5.13.4
 
 
 dev_dependencies:
@@ -126,6 +130,7 @@ flutter:
     - assets/images/
     - assets/icons/
     - assets/jsons/
+    - assets/fonts/
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images

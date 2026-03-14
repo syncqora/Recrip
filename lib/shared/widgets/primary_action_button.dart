@@ -14,35 +14,42 @@ class PrimaryActionButton extends StatelessWidget {
   final String label;
   final VoidCallback? onPressed;
 
-  /// When true, uses a fixed size of 140x44. When false, uses this as a
-  /// minimum size so the parent can expand the width (e.g. full-width on mobile).
+  /// When false, the parent can expand the button width (e.g. full-width on mobile).
   final bool useFixedSize;
+
+  static const _padding = EdgeInsets.fromLTRB(20, 12, 20, 12);
+  static const _height = 44.0;
+  static const _borderRadius = 10.0;
 
   @override
   Widget build(BuildContext context) {
-    final ButtonStyle baseStyle = FilledButton.styleFrom(
-      backgroundColor: AuthConstants.buttonEnabledColor,
-      foregroundColor: Colors.white,
-      padding: const EdgeInsets.fromLTRB(20, 12, 20, 12),
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(10),
+    final isEnabled = onPressed != null;
+
+    return Material(
+      color: isEnabled
+          ? AuthConstants.buttonEnabledColor
+          : AuthConstants.buttonEnabledColor.withValues(alpha: 0.5),
+      borderRadius: BorderRadius.circular(_borderRadius),
+      clipBehavior: Clip.antiAlias,
+      child: InkWell(
+        onTap: onPressed,
+        borderRadius: BorderRadius.circular(_borderRadius),
+        child: Container(
+          padding: _padding,
+          constraints: const BoxConstraints(
+            minHeight: _height,
+            maxHeight: _height,
+          ),
+          alignment: Alignment.center,
+          child: Text(
+            label,
+            style: const TextStyle(
+              color: Colors.white,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+        ),
       ),
-    );
-
-    final ButtonStyle style = useFixedSize
-        ? baseStyle.copyWith(
-            fixedSize:
-                MaterialStateProperty.all<Size>(const Size(140, 44)),
-          )
-        : baseStyle.copyWith(
-            minimumSize:
-                MaterialStateProperty.all<Size>(const Size(140, 44)),
-          );
-
-    return FilledButton(
-      onPressed: onPressed,
-      style: style,
-      child: Text(label),
     );
   }
 }

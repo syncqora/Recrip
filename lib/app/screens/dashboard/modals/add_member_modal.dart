@@ -12,7 +12,16 @@ import 'add_member_modal_tablet_view.dart';
 import 'subscription_utils.dart';
 
 class AddMemberModal extends StatefulWidget {
-  const AddMemberModal({super.key});
+  const AddMemberModal({
+    super.key,
+    this.initialFullName,
+    this.initialPhone,
+    this.initialPlan,
+  });
+
+  final String? initialFullName;
+  final String? initialPhone;
+  final String? initialPlan;
 
   @override
   State<AddMemberModal> createState() => _AddMemberModalState();
@@ -28,9 +37,18 @@ class _AddMemberModalState extends State<AddMemberModal> {
   bool _whatsApp = false;
   bool _email = false;
 
+  bool get isRenewMode =>
+      widget.initialFullName != null || widget.initialPhone != null;
+
   @override
   void initState() {
     super.initState();
+    if (isRenewMode) {
+      _fullNameController.text = widget.initialFullName ?? '';
+      _phoneController.text =
+          (widget.initialPhone ?? '').replaceFirst(RegExp(r'^\+91\s*'), '').trim();
+      _selectedPlan = widget.initialPlan;
+    }
     _fullNameController.addListener(_onFormChanged);
     _phoneController.addListener(_onFormChanged);
     _emailController.addListener(_onFormChanged);
@@ -230,6 +248,8 @@ class _AddMemberModalState extends State<AddMemberModal> {
         onCancel: () => Navigator.of(context).pop(),
         onSave: _onSave,
         isSaveEnabled: _isSaveEnabled,
+        title: isRenewMode ? 'Renew Member' : 'Add Member',
+        primaryButtonLabel: isRenewMode ? 'Renew' : 'Save Member',
       );
     }
 
@@ -249,6 +269,8 @@ class _AddMemberModalState extends State<AddMemberModal> {
         onCancel: () => Navigator.of(context).pop(),
         onSave: _onSave,
         isSaveEnabled: _isSaveEnabled,
+        title: isRenewMode ? 'Renew Member' : 'Add Member',
+        primaryButtonLabel: isRenewMode ? 'Renew' : 'Save Member',
       );
     }
 
@@ -316,7 +338,7 @@ class _AddMemberModalState extends State<AddMemberModal> {
           Expanded(
             child: Center(
               child: Text(
-                'Add Member',
+                isRenewMode ? 'Renew Member' : 'Add Member',
                 style: Get.textTheme.titleLarge?.copyWith(
                   fontWeight: FontWeight.bold,
                   color: Color(0xFF0F172A),
@@ -702,9 +724,9 @@ class _AddMemberModalState extends State<AddMemberModal> {
                 borderRadius: BorderRadius.circular(10),
               ),
             ),
-            child: const Text(
-              'Save Member',
-              style: TextStyle(color: Colors.white),
+            child: Text(
+              isRenewMode ? 'Renew' : 'Save Member',
+              style: const TextStyle(color: Colors.white),
             ),
           ),
         ),

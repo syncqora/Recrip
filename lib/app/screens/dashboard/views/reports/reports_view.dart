@@ -1,5 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:get/get.dart';
+import 'package:pdf/pdf.dart';
+import 'package:pdf/widgets.dart' as pw;
+import 'package:printing/printing.dart';
 
 import 'reports_mobile_view.dart';
 import 'reports_tablet_view.dart';
@@ -27,12 +32,13 @@ class _RevenueRow {
 class ReportsView extends StatelessWidget {
   const ReportsView({super.key});
 
-  static const _textDark = Color(0xFF333333);
-  static const _textMuted = Color(0xFF666666);
+  static const _textDark = Color(0xFF0F172A);
+  static const _textMuted = Color(0xFF475569);
   static const _border = Color(0xFFE5E7EB);
   static const _valueBlue = Color(0xFF4F46E5);
   static const _valueRed = Color(0xFFDC2626);
   static const _valueGreen = Color(0xFF16A34A);
+  static const _valueBlack = Color(0xFF0F172A);
 
   static final _revenueData = [
     _RevenueRow(
@@ -76,7 +82,9 @@ class ReportsView extends StatelessWidget {
     final isTablet = width >= 600 && width < 1024;
 
     return SingleChildScrollView(
-      padding: isMobile ? const EdgeInsets.all(16) : (isTablet ? const EdgeInsets.all(24) : EdgeInsets.zero),
+      padding: isMobile
+          ? const EdgeInsets.all(16)
+          : (isTablet ? const EdgeInsets.all(24) : EdgeInsets.zero),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -85,14 +93,16 @@ class ReportsView extends StatelessWidget {
           if (isMobile)
             ReportsMobileView(
               revenueData: _revenueData
-                  .map((e) => RevenueRow(
-                        planName: e.planName,
-                        totalMembers: e.totalMembers,
-                        renewals: e.renewals,
-                        missedRenewals: e.missedRenewals,
-                        renewalRate: e.renewalRate,
-                        revenue: e.revenue,
-                      ))
+                  .map(
+                    (e) => RevenueRow(
+                      planName: e.planName,
+                      totalMembers: e.totalMembers,
+                      renewals: e.renewals,
+                      missedRenewals: e.missedRenewals,
+                      renewalRate: e.renewalRate,
+                      revenue: e.revenue,
+                    ),
+                  )
                   .toList(),
               kpiCards: [
                 _kpiCard(
@@ -110,7 +120,7 @@ class ReportsView extends StatelessWidget {
                 _kpiCard(
                   title: 'Renewal Rate',
                   value: '88%',
-                  valueColor: _textDark,
+                  valueColor: _valueBlack,
                   description: 'Renewals + Expiring',
                 ),
                 _kpiCard(
@@ -124,14 +134,16 @@ class ReportsView extends StatelessWidget {
           else if (isTablet)
             ReportsTabletView(
               revenueData: _revenueData
-                  .map((e) => RevenueRow(
-                        planName: e.planName,
-                        totalMembers: e.totalMembers,
-                        renewals: e.renewals,
-                        missedRenewals: e.missedRenewals,
-                        renewalRate: e.renewalRate,
-                        revenue: e.revenue,
-                      ))
+                  .map(
+                    (e) => RevenueRow(
+                      planName: e.planName,
+                      totalMembers: e.totalMembers,
+                      renewals: e.renewals,
+                      missedRenewals: e.missedRenewals,
+                      renewalRate: e.renewalRate,
+                      revenue: e.revenue,
+                    ),
+                  )
                   .toList(),
               kpiCards: [
                 _kpiCard(
@@ -149,7 +161,7 @@ class ReportsView extends StatelessWidget {
                 _kpiCard(
                   title: 'Renewal Rate',
                   value: '88%',
-                  valueColor: _textDark,
+                  valueColor: _valueBlack,
                   description: 'Renewals + Expiring',
                 ),
                 _kpiCard(
@@ -177,53 +189,18 @@ class ReportsView extends StatelessWidget {
         children: [
           Text(
             'Reports',
-            style: Get.textTheme.headlineSmall?.copyWith(
+            style: Get.textTheme.bodyLarge?.copyWith(
               fontWeight: FontWeight.bold,
               color: _textDark,
             ),
           ),
-          const SizedBox(height: 4),
+          const SizedBox(height: 16),
           Text(
             'Analyze renewals, revenue, and performance',
-            style: Get.textTheme.bodySmall?.copyWith(color: _textMuted),
-          ),
-          const SizedBox(height: 16),
-          Row(
-            children: [
-              Expanded(
-                child: OutlinedButton.icon(
-                  onPressed: () {},
-                  icon: const Icon(Icons.download_outlined, size: 18),
-                  label: const Text('Export'),
-                  style: OutlinedButton.styleFrom(
-                    foregroundColor: _textDark,
-                    side: BorderSide(color: _border),
-                    backgroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(vertical: 12),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                  ),
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: OutlinedButton.icon(
-                  onPressed: () {},
-                  icon: const Icon(Icons.calendar_today_outlined, size: 18),
-                  label: const Text('This Month'),
-                  style: OutlinedButton.styleFrom(
-                    foregroundColor: _textDark,
-                    side: BorderSide(color: _border),
-                    backgroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(vertical: 12),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                  ),
-                ),
-              ),
-            ],
+            style: Get.textTheme.bodySmall?.copyWith(
+              color: _textMuted,
+              fontWeight: FontWeight.w600,
+            ),
           ),
         ],
       );
@@ -238,48 +215,17 @@ class ReportsView extends StatelessWidget {
           children: [
             Text(
               'Reports',
-              style: Get.textTheme.headlineMedium?.copyWith(
+              style: Get.textTheme.bodyLarge?.copyWith(
                 fontWeight: FontWeight.bold,
                 color: _textDark,
               ),
             ),
-            const SizedBox(height: 4),
+            const SizedBox(height: 16),
             Text(
               'Analyze renewals, revenue, and performance',
-              style: Get.textTheme.bodyMedium?.copyWith(color: _textMuted),
-            ),
-          ],
-        ),
-        Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            OutlinedButton.icon(
-              onPressed: () {},
-              icon: const Icon(Icons.download_outlined, size: 18),
-              label: const Text('Export'),
-              style: OutlinedButton.styleFrom(
-                foregroundColor: _textDark,
-                side: BorderSide(color: _border),
-                backgroundColor: Colors.white,
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(8),
-                ),
-              ),
-            ),
-            const SizedBox(width: 12),
-            OutlinedButton.icon(
-              onPressed: () {},
-              icon: const Icon(Icons.calendar_today_outlined, size: 18),
-              label: const Text('This Month'),
-              style: OutlinedButton.styleFrom(
-                foregroundColor: _textDark,
-                side: BorderSide(color: _border),
-                backgroundColor: Colors.white,
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(8),
-                ),
+              style: Get.textTheme.bodySmall?.copyWith(
+                color: _textMuted,
+                fontWeight: FontWeight.w600,
               ),
             ),
           ],
@@ -287,7 +233,6 @@ class ReportsView extends StatelessWidget {
       ],
     );
   }
-
 
   Widget _buildKpiCards() {
     return Row(
@@ -362,17 +307,15 @@ class ReportsView extends StatelessWidget {
               title,
               style: Get.textTheme.bodySmall?.copyWith(
                 color: _textMuted,
-                fontWeight: FontWeight.w500,
-                fontSize: 14,
+                fontWeight: FontWeight.w600,
               ),
             ),
             const SizedBox(height: 8),
             Text(
               value,
-              style: Get.textTheme.headlineSmall?.copyWith(
+              style: Get.textTheme.bodyLarge?.copyWith(
                 fontWeight: FontWeight.bold,
                 color: valueColor,
-                fontSize: 24,
               ),
             ),
             const SizedBox(height: 4),
@@ -389,51 +332,92 @@ class ReportsView extends StatelessWidget {
     );
   }
 
-  Widget _buildRevenueSection() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: [
-            Text(
-              'Revenue Analysis',
-              style: Get.textTheme.titleMedium?.copyWith(
-                fontWeight: FontWeight.bold,
-                color: _textDark,
-                fontSize: 18,
-              ),
-            ),
-            Container(
-              height: 40,
-              padding: const EdgeInsets.symmetric(horizontal: 12),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(8),
-                border: Border.all(color: _border),
-              ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(
-                    'Monthly',
-                    style: Get.textTheme.bodyMedium?.copyWith(color: _textDark),
-                  ),
-                  const SizedBox(width: 8),
-                  Icon(Icons.keyboard_arrow_down, size: 20, color: _textMuted),
-                ],
-              ),
-            ),
+  static const _headerRowColor = Color(0xFFEEF2FF);
+  static const _rowBorderColor = Color(0xFFE2E8F0);
+  static const _buttonBg = Color(0xFFF1F5F9);
+  static const _buttonBorder = Color(0xFFE2E8F0);
+
+  Future<void> _exportRevenueTableToPdf() async {
+    final fontData = await rootBundle.load('assets/fonts/Poppins-Regular.ttf');
+    final font = pw.Font.ttf(fontData);
+    final boldFontData = await rootBundle.load('assets/fonts/Poppins-Bold.ttf');
+    final boldFont = pw.Font.ttf(boldFontData);
+    final theme = pw.ThemeData.withFont(base: font, bold: boldFont);
+    final doc = pw.Document(theme: theme);
+
+    final headers = [
+      'Name',
+      'Total Members',
+      'Renewals',
+      'Missed Renewals',
+      'Renewal Rate',
+      'Revenue',
+    ];
+    final data = _revenueData
+        .map(
+          (r) => [
+            r.planName,
+            r.totalMembers,
+            r.renewals,
+            r.missedRenewals,
+            r.renewalRate,
+            r.revenue,
           ],
-        ),
-        const SizedBox(height: 16),
-        _buildRevenueTable(),
-      ],
+        )
+        .toList();
+
+    doc.addPage(
+      pw.Page(
+        pageFormat: PdfPageFormat.a4,
+        margin: const pw.EdgeInsets.all(24),
+        build: (pw.Context context) {
+          return pw.Center(
+            child: pw.Column(
+              mainAxisSize: pw.MainAxisSize.min,
+              children: [
+                pw.Text(
+                  'Revenue Analysis',
+                  style: pw.TextStyle(
+                    font: boldFont,
+                    fontSize: 18,
+                    fontWeight: pw.FontWeight.bold,
+                  ),
+                ),
+                pw.SizedBox(height: 16),
+                pw.TableHelper.fromTextArray(
+                  context: context,
+                  headers: headers,
+                  data: data,
+                  headerStyle: pw.TextStyle(
+                    font: boldFont,
+                    fontSize: 10,
+                    fontWeight: pw.FontWeight.bold,
+                  ),
+                  cellStyle: pw.TextStyle(font: font, fontSize: 10),
+                  cellAlignment: pw.Alignment.center,
+                  headerAlignment: pw.Alignment.center,
+                  cellPadding: const pw.EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 6,
+                  ),
+                  headerPadding: const pw.EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 6,
+                  ),
+                  border: pw.TableBorder.all(width: 0.5),
+                ),
+              ],
+            ),
+          );
+        },
+      ),
     );
+
+    final bytes = await doc.save();
+    await Printing.sharePdf(bytes: bytes, filename: 'Revenue-Analysis.pdf');
   }
 
-  Widget _buildRevenueTable() {
+  Widget _buildRevenueSection() {
     return Container(
       decoration: BoxDecoration(
         color: Colors.white,
@@ -447,56 +431,191 @@ class ReportsView extends StatelessWidget {
           ),
         ],
       ),
-      child: Table(
-        columnWidths: const {
-          0: FlexColumnWidth(1.2),
-          1: FlexColumnWidth(1),
-          2: FlexColumnWidth(1),
-          3: FlexColumnWidth(1.2),
-          4: FlexColumnWidth(1),
-          5: FlexColumnWidth(1),
-        },
-        children: [
-          TableRow(
-            decoration: BoxDecoration(color: Color(0xFFF1F5F9)),
-            children: [
-              _tableCell('Plan Name', isHeader: true),
-              _tableCell('Total Members', isHeader: true),
-              _tableCell('Renewals', isHeader: true),
-              _tableCell('Missed Renewals', isHeader: true),
-              _tableCell('Renewal Rate', isHeader: true),
-              _tableCell('Revenue', isHeader: true),
-            ],
-          ),
-          ..._revenueData.map(
-            (row) => TableRow(
-              decoration: BoxDecoration(color: Colors.white),
-              children: [
-                _tableCell(row.planName),
-                _tableCell(row.totalMembers),
-                _tableCell(row.renewals),
-                _tableCell(row.missedRenewals),
-                _tableCell(row.renewalRate),
-                _tableCell(row.revenue),
-              ],
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(12),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(24, 20, 24, 16),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  Text(
+                    'Revenue Analysis',
+                    style: Get.textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.bold,
+                      color: _textDark,
+                      fontSize: 18,
+                    ),
+                  ),
+                  Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      _outlineButton(
+                        label: 'Export',
+                        icon: SvgPicture.asset(
+                          'assets/icons/download.svg',
+                          width: 18,
+                          height: 18,
+                          colorFilter: ColorFilter.mode(
+                            _textMuted,
+                            BlendMode.srcIn,
+                          ),
+                        ),
+                        onPressed: () => _exportRevenueTableToPdf(),
+                      ),
+                      const SizedBox(width: 10),
+                      _outlineButton(
+                        label: 'This Month',
+                        icon: SvgPicture.asset(
+                          'assets/icons/dropdown_down.svg',
+                          width: 18,
+                          height: 18,
+                          colorFilter: ColorFilter.mode(
+                            _textMuted,
+                            BlendMode.srcIn,
+                          ),
+                        ),
+                        onPressed: () {},
+                      ),
+                    ],
+                  ),
+                ],
+              ),
             ),
-          ),
-        ],
+            _buildRevenueTable(),
+          ],
+        ),
       ),
     );
   }
 
-  Widget _tableCell(String text, {bool isHeader = false}) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
-      child: Align(
-        alignment: Alignment.centerLeft,
+  Widget _outlineButton({
+    required String label,
+    required Widget icon,
+    required VoidCallback onPressed,
+  }) {
+    return Material(
+      color: _buttonBg,
+      borderRadius: BorderRadius.circular(8),
+      child: InkWell(
+        onTap: onPressed,
+        borderRadius: BorderRadius.circular(8),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(8),
+            border: Border.all(color: _buttonBorder),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                label,
+                style: Get.textTheme.bodyMedium?.copyWith(
+                  color: _textDark,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+              const SizedBox(width: 8),
+              icon,
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildRevenueTable() {
+    return Table(
+      columnWidths: const {
+        0: FlexColumnWidth(1.2),
+        1: FlexColumnWidth(1),
+        2: FlexColumnWidth(1),
+        3: FlexColumnWidth(1.2),
+        4: FlexColumnWidth(1),
+        5: FlexColumnWidth(1),
+      },
+      children: [
+        TableRow(
+          decoration: const BoxDecoration(color: _headerRowColor),
+          children: [
+            _tableCell(
+              'Plan Name',
+              isHeader: true,
+              align: Alignment.centerLeft,
+              isNameColumn: true,
+            ),
+            _tableCell(
+              'Total Members',
+              isHeader: true,
+              align: Alignment.center,
+            ),
+            _tableCell('Renewals', isHeader: true, align: Alignment.center),
+            _tableCell(
+              'Missed Renewals',
+              isHeader: true,
+              align: Alignment.center,
+            ),
+            _tableCell('Renewal Rate', isHeader: true, align: Alignment.center),
+            _tableCell('Revenue', isHeader: true, align: Alignment.center),
+          ],
+        ),
+        ..._revenueData.map(
+          (row) => TableRow(
+            decoration: const BoxDecoration(
+              color: Colors.white,
+              border: Border(
+                bottom: BorderSide(color: _rowBorderColor, width: 1),
+              ),
+            ),
+            children: [
+              _tableCell(
+                row.planName,
+                align: Alignment.centerLeft,
+                isNameColumn: true,
+              ),
+              _tableCell(row.totalMembers, align: Alignment.center),
+              _tableCell(row.renewals, align: Alignment.center),
+              _tableCell(row.missedRenewals, align: Alignment.center),
+              _tableCell(row.renewalRate, align: Alignment.center),
+              _tableCell(row.revenue, align: Alignment.center),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  static const _cellPaddingHorizontal = 16.0;
+  static const _cellPaddingVertical = 14.0;
+  static const _nameColumnLeftPadding = 24.0;
+
+  Widget _tableCell(
+    String text, {
+    bool isHeader = false,
+    Alignment align = Alignment.center,
+    bool isNameColumn = false,
+  }) {
+    return TableCell(
+      verticalAlignment: TableCellVerticalAlignment.middle,
+      child: Container(
+        width: double.infinity,
+        padding: EdgeInsets.fromLTRB(
+          isNameColumn ? _nameColumnLeftPadding : _cellPaddingHorizontal,
+          _cellPaddingVertical,
+          _cellPaddingHorizontal,
+          _cellPaddingVertical,
+        ),
+        alignment: align,
         child: Text(
           text,
           style: Get.textTheme.bodySmall?.copyWith(
-            fontWeight: isHeader ? FontWeight.w600 : FontWeight.normal,
+            fontWeight: isHeader ? FontWeight.w600 : FontWeight.w400,
             color: _textDark,
-            fontSize: 14,
           ),
         ),
       ),

@@ -25,6 +25,8 @@ class AddMemberModalTabletView extends StatelessWidget {
     required this.onCancel,
     required this.onSave,
     required this.isSaveEnabled,
+    this.title = 'Add Member',
+    this.primaryButtonLabel = 'Save Member',
   });
 
   final TextEditingController fullNameController;
@@ -41,6 +43,8 @@ class AddMemberModalTabletView extends StatelessWidget {
   final VoidCallback onCancel;
   final VoidCallback onSave;
   final bool isSaveEnabled;
+  final String title;
+  final String primaryButtonLabel;
 
   @override
   Widget build(BuildContext context) {
@@ -100,7 +104,7 @@ class AddMemberModalTabletView extends StatelessWidget {
           Expanded(
             child: Center(
               child: Text(
-                'Add Member',
+                title,
                 style: Get.textTheme.titleLarge?.copyWith(
                   fontWeight: FontWeight.bold,
                   color: Colors.white,
@@ -461,9 +465,9 @@ class AddMemberModalTabletView extends StatelessWidget {
                 borderRadius: BorderRadius.circular(10),
               ),
             ),
-            child: const Text(
-              'Save Member',
-              style: TextStyle(color: Colors.white),
+            child: Text(
+              primaryButtonLabel,
+              style: const TextStyle(color: Colors.white),
             ),
           ),
         ),
