@@ -40,8 +40,10 @@ class _CreateRuleModalState extends State<CreateRuleModal> {
 
   static const double _menuBorderRadius = 12;
   static const double _menuElevation = 8;
-  static const EdgeInsets _itemPadding =
-      EdgeInsets.symmetric(horizontal: 16, vertical: 16);
+  static const EdgeInsets _itemPadding = EdgeInsets.symmetric(
+    horizontal: 16,
+    vertical: 16,
+  );
 
   Future<void> _showSelectMenu({
     required BuildContext context,
@@ -79,10 +81,7 @@ class _CreateRuleModalState extends State<CreateRuleModal> {
         pos.dx + size.width,
         pos.dy + size.height + 8,
       ),
-      constraints: BoxConstraints(
-        minWidth: size.width,
-        maxWidth: size.width,
-      ),
+      constraints: BoxConstraints(minWidth: size.width, maxWidth: size.width),
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(_menuBorderRadius),
       ),
@@ -107,15 +106,15 @@ class _CreateRuleModalState extends State<CreateRuleModal> {
             options: options,
             onSelected: onChanged,
           ),
-          borderRadius:
-              BorderRadius.circular(AuthConstants.fieldBorderRadius),
+          borderRadius: BorderRadius.circular(AuthConstants.fieldBorderRadius),
           child: Container(
             height: AuthConstants.fieldHeight,
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
             decoration: BoxDecoration(
               color: AuthConstants.fieldFillColor,
-              borderRadius:
-                  BorderRadius.circular(AuthConstants.fieldBorderRadius),
+              borderRadius: BorderRadius.circular(
+                AuthConstants.fieldBorderRadius,
+              ),
               border: Border.all(color: AuthConstants.borderColor),
             ),
             child: Row(
@@ -123,11 +122,15 @@ class _CreateRuleModalState extends State<CreateRuleModal> {
                 Expanded(
                   child: Text(
                     value ?? hint,
-                    style: Get.theme.textTheme.labelMedium?.copyWith(
-                      color: value != null
-                          ? AuthConstants.labelColor
-                          : AuthConstants.hintColor,
-                    ),
+                    style: value != null
+                        ? Get.theme.textTheme.bodySmall?.copyWith(
+                            color: AuthConstants.labelColor,
+                            fontWeight: FontWeight.w600,
+                          )
+                        : Get.theme.textTheme.labelMedium?.copyWith(
+                            color: AuthConstants.hintColor,
+                            fontWeight: FontWeight.w500,
+                          ),
                   ),
                 ),
                 Icon(
@@ -216,82 +219,105 @@ class _CreateRuleModalState extends State<CreateRuleModal> {
                   children: [
                     _buildSectionTitle('Reminder Rule Details'),
                     const SizedBox(height: AuthConstants.spacingAfterLabel),
-                    Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              _requiredLabel('Trigger'),
-                              const SizedBox(height: 8),
-                              _selectField(
-                                hint: 'Select Trigger',
-                                options: _triggerOptions,
-                                value: _selectedTrigger,
-                                onChanged: (v) =>
-                                    setState(() => _selectedTrigger = v),
-                              ),
-                            ],
-                          ),
-                        ),
-                        const SizedBox(width: 16),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              _requiredLabel('Timing'),
-                              const SizedBox(height: 8),
-                              _selectField(
-                                hint: 'Select Timing',
-                                options: _timingOptions,
-                                value: _selectedTiming,
-                                onChanged: (v) =>
-                                    setState(() => _selectedTiming = v),
-                              ),
-                            ],
-                          ),
-                        ),
-                        const SizedBox(width: 16),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              _requiredLabel('Audience'),
-                              const SizedBox(height: 8),
-                              _selectField(
-                                hint: 'Select Audience',
-                                options: _audienceOptions,
-                                value: _selectedAudience,
-                                onChanged: (v) =>
-                                    setState(() => _selectedAudience = v),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 16),
-                    Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              _requiredLabel('Status'),
-                              const SizedBox(height: 8),
-                              _selectField(
-                                hint: 'Select Status',
-                                options: _statusOptions,
-                                value: _selectedStatus,
-                                onChanged: (v) =>
-                                    setState(() => _selectedStatus = v),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
+                    LayoutBuilder(
+                      builder: (context, constraints) {
+                        const gap = 16.0;
+                        final columnWidth =
+                            (constraints.maxWidth - 2 * gap) / 3;
+                        return Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Row(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                SizedBox(
+                                  width: columnWidth,
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      _requiredLabel('Trigger'),
+                                      const SizedBox(height: 8),
+                                      _selectField(
+                                        hint: 'Select Trigger',
+                                        options: _triggerOptions,
+                                        value: _selectedTrigger,
+                                        onChanged: (v) => setState(
+                                          () => _selectedTrigger = v,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                                const SizedBox(width: gap),
+                                SizedBox(
+                                  width: columnWidth,
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      _requiredLabel('Timing'),
+                                      const SizedBox(height: 8),
+                                      _selectField(
+                                        hint: 'Select Timing',
+                                        options: _timingOptions,
+                                        value: _selectedTiming,
+                                        onChanged: (v) =>
+                                            setState(() => _selectedTiming = v),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                                const SizedBox(width: gap),
+                                SizedBox(
+                                  width: columnWidth,
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      _requiredLabel('Audience'),
+                                      const SizedBox(height: 8),
+                                      _selectField(
+                                        hint: 'Select Audience',
+                                        options: _audienceOptions,
+                                        value: _selectedAudience,
+                                        onChanged: (v) => setState(
+                                          () => _selectedAudience = v,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 16),
+                            Row(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                SizedBox(
+                                  width: columnWidth,
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      _requiredLabel('Status'),
+                                      const SizedBox(height: 8),
+                                      _selectField(
+                                        hint: 'Select Status',
+                                        options: _statusOptions,
+                                        value: _selectedStatus,
+                                        onChanged: (v) =>
+                                            setState(() => _selectedStatus = v),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
+                        );
+                      },
                     ),
                     const SizedBox(height: 24),
                     _buildSectionTitle('Reminder Channels'),
@@ -441,8 +467,9 @@ class _CreateRuleModalState extends State<CreateRuleModal> {
           const SizedBox(width: 10),
           Text(
             label,
-            style: Get.textTheme.bodyMedium?.copyWith(
+            style: Get.theme.textTheme.bodySmall?.copyWith(
               color: AuthConstants.labelColor,
+              fontWeight: FontWeight.w600,
             ),
           ),
         ],

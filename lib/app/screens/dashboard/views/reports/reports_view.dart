@@ -454,32 +454,17 @@ class ReportsView extends StatelessWidget {
                   Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      _outlineButton(
+                      _primaryStyleButton(
                         label: 'Export',
-                        icon: SvgPicture.asset(
-                          'assets/icons/download.svg',
-                          width: 18,
-                          height: 18,
-                          colorFilter: ColorFilter.mode(
-                            _textMuted,
-                            BlendMode.srcIn,
-                          ),
-                        ),
-                        onPressed: () => _exportRevenueTableToPdf(),
+                        iconAsset: 'assets/icons/download.svg',
+                        onPressed: _exportRevenueTableToPdf,
                       ),
                       const SizedBox(width: 10),
-                      _outlineButton(
+                      _primaryStyleButton(
                         label: 'This Month',
-                        icon: SvgPicture.asset(
-                          'assets/icons/dropdown_down.svg',
-                          width: 18,
-                          height: 18,
-                          colorFilter: ColorFilter.mode(
-                            _textMuted,
-                            BlendMode.srcIn,
-                          ),
-                        ),
+                        iconAsset: 'assets/icons/dropdown_down.svg',
                         onPressed: () {},
+                        width: 145,
                       ),
                     ],
                   ),
@@ -488,6 +473,57 @@ class ReportsView extends StatelessWidget {
             ),
             _buildRevenueTable(),
           ],
+        ),
+      ),
+    );
+  }
+
+  static const double _primaryButtonWidth = 122;
+  static const double _primaryButtonHeight = 44;
+  static const double _primaryButtonRadius = 10;
+  static const Color _primaryButtonBg = Color(0xFFFFFFFF);
+
+  Widget _primaryStyleButton({
+    required String label,
+    required String iconAsset,
+    required VoidCallback onPressed,
+    double? width,
+  }) {
+    return SizedBox(
+      width: width ?? _primaryButtonWidth,
+      height: _primaryButtonHeight,
+      child: Material(
+        color: _primaryButtonBg,
+        borderRadius: BorderRadius.circular(_primaryButtonRadius),
+        child: InkWell(
+          onTap: onPressed,
+          borderRadius: BorderRadius.circular(_primaryButtonRadius),
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(_primaryButtonRadius),
+              border: Border.all(width: 1, color: _buttonBorder),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  label,
+                  style: Get.textTheme.labelMedium?.copyWith(
+                    color: const Color(0xFF0F172A),
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+                const SizedBox(width: 8),
+                SvgPicture.asset(
+                  iconAsset,
+                  width: 24,
+                  height: 24,
+                ),
+              ],
+            ),
+          ),
         ),
       ),
     );

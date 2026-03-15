@@ -5,6 +5,7 @@ import 'package:get/get.dart';
 import 'package:saas/shared/widgets/primary_action_button.dart';
 
 import '../../modals/create_rule_modal.dart';
+import '../../modals/create_template_modal.dart';
 import 'reminders_mobile_view.dart';
 import 'reminders_tablet_view.dart';
 
@@ -225,7 +226,7 @@ class RemindersView extends StatelessWidget {
                     ],
                   ),
                   OutlinedButton(
-                    onPressed: () {},
+                    onPressed: () => Get.dialog(const CreateTemplateModal()),
                     style: OutlinedButton.styleFrom(
                       foregroundColor: _textDarkTable,
                       backgroundColor: Colors.white,
@@ -246,14 +247,15 @@ class RemindersView extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 16),
-            _buildRulesTable(_messageTemplatesData),
+            _buildRulesTable(_messageTemplatesData, isMessageTemplates: true),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildRulesTable(List<ReminderRuleRow> rows) {
+  Widget _buildRulesTable(List<ReminderRuleRow> rows,
+      {bool isMessageTemplates = false}) {
     return Table(
       columnWidths: const {
         0: FlexColumnWidth(1.2),
@@ -289,7 +291,10 @@ class RemindersView extends StatelessWidget {
               _tableCell(_channelIcons(), align: Alignment.center),
               _tableCell(row.audience, align: Alignment.center),
               _tableCell(_statusPill(row.isActive), align: Alignment.center),
-              _tableCell(_actionIcons(), align: Alignment.center),
+              _tableCell(
+                _actionIcons(row, isMessageTemplates),
+                align: Alignment.center,
+              ),
             ],
           ),
         ),
@@ -399,42 +404,52 @@ class RemindersView extends StatelessWidget {
   static const _actionIconColor = Color(0xFF64748B);
   static const _actionIconBgColor = Color(0xFFEEF2FF);
 
-  Widget _actionIcons() {
+  Widget _actionIcons(ReminderRuleRow row, bool isMessageTemplates) {
     return Row(
       mainAxisSize: MainAxisSize.min,
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        _actionIcon('assets/icons/edit.svg'),
+        _actionIcon(
+          'assets/icons/edit.svg',
+          onTap: () {
+            Get.dialog(
+              CreateTemplateModal(
+                title: 'Edit Template',
+                initialTrigger: row.trigger,
+                initialTiming: row.timing,
+                initialAudience: row.audience,
+                initialStatus: row.isActive ? 'Active' : 'Inactive',
+              ),
+            );
+          },
+        ),
         _actionIcon('assets/icons/trash.svg'),
       ],
     );
   }
 
-  Widget _actionIcon(String assetPath) {
+  Widget _actionIcon(String assetPath, {VoidCallback? onTap}) {
     return Padding(
       padding: const EdgeInsets.only(right: 4),
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
-          onTap: () {},
-          borderRadius: BorderRadius.circular(20),
-          child: Container(
-            width: 32,
-            height: 32,
-            decoration: const BoxDecoration(
-              color: _actionIconBgColor,
-              shape: BoxShape.circle,
-            ),
-            alignment: Alignment.center,
-            padding: const EdgeInsets.all(6),
-            child: SvgPicture.asset(
-              assetPath,
-              width: 18,
-              height: 18,
-              colorFilter: const ColorFilter.mode(
-                _actionIconColor,
-                BlendMode.srcIn,
-              ),
+      child: GestureDetector(
+        onTap: onTap,
+        behavior: HitTestBehavior.opaque,
+        child: Container(
+          width: 32,
+          height: 32,
+          decoration: const BoxDecoration(
+            color: _actionIconBgColor,
+            shape: BoxShape.circle,
+          ),
+          alignment: Alignment.center,
+          padding: const EdgeInsets.all(6),
+          child: SvgPicture.asset(
+            assetPath,
+            width: 18,
+            height: 18,
+            colorFilter: const ColorFilter.mode(
+              _actionIconColor,
+              BlendMode.srcIn,
             ),
           ),
         ),
