@@ -306,13 +306,15 @@ class Dashboard extends GetView<DashboardController> {
               const SizedBox(width: 24),
               Expanded(
                 flex: 1,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    _buildAiInsightsCard(),
-                    const SizedBox(height: 16),
-                    _buildRevenueInsightsCard(),
-                  ],
+                child: SingleChildScrollView(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      _buildAiInsightsCard(),
+                      const SizedBox(height: 16),
+                      _buildRevenueInsightsCard(),
+                    ],
+                  ),
                 ),
               ),
             ],

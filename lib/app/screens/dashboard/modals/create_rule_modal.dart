@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/flutter_svg.dart';
+import 'package:flutter_svg/svg.dart';
 import 'package:get/get.dart';
 
 import '../../../../shared/widgets/success_toast.dart';
 import '../../authentication/widgets/auth_constants.dart';
+import 'create_rule_modal_mobile_view.dart';
+import 'create_rule_modal_tablet_view.dart';
 
 class CreateRuleModal extends StatefulWidget {
   const CreateRuleModal({super.key, this.onCreate});
@@ -92,78 +94,6 @@ class _CreateRuleModalState extends State<CreateRuleModal> {
     if (selected != null) onSelected(selected);
   }
 
-  Widget _selectField({
-    required String hint,
-    required List<String> options,
-    required String? value,
-    required ValueChanged<String?> onChanged,
-  }) {
-    return Builder(
-      builder: (fieldContext) {
-        return InkWell(
-          onTap: () => _showSelectMenu(
-            context: fieldContext,
-            options: options,
-            onSelected: onChanged,
-          ),
-          borderRadius: BorderRadius.circular(AuthConstants.fieldBorderRadius),
-          child: Container(
-            height: AuthConstants.fieldHeight,
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-            decoration: BoxDecoration(
-              color: AuthConstants.fieldFillColor,
-              borderRadius: BorderRadius.circular(
-                AuthConstants.fieldBorderRadius,
-              ),
-              border: Border.all(color: AuthConstants.borderColor),
-            ),
-            child: Row(
-              children: [
-                Expanded(
-                  child: Text(
-                    value ?? hint,
-                    style: value != null
-                        ? Get.theme.textTheme.bodySmall?.copyWith(
-                            color: AuthConstants.labelColor,
-                            fontWeight: FontWeight.w600,
-                          )
-                        : Get.theme.textTheme.labelMedium?.copyWith(
-                            color: AuthConstants.hintColor,
-                            fontWeight: FontWeight.w500,
-                          ),
-                  ),
-                ),
-                Icon(
-                  Icons.keyboard_arrow_down_rounded,
-                  size: 20,
-                  color: AuthConstants.hintColor,
-                ),
-              ],
-            ),
-          ),
-        );
-      },
-    );
-  }
-
-  Widget _requiredLabel(String text) {
-    return RichText(
-      text: TextSpan(
-        style: Get.textTheme.bodySmall?.copyWith(
-          color: AuthConstants.labelColor,
-          fontSize: 14,
-        ),
-        children: [
-          TextSpan(text: text),
-          const TextSpan(
-            text: '*',
-            style: TextStyle(color: Colors.red, fontSize: 14),
-          ),
-        ],
-      ),
-    );
-  }
-
   void _onCreate() {
     if (widget.onCreate != null) {
       widget.onCreate!();
@@ -176,19 +106,83 @@ class _CreateRuleModalState extends State<CreateRuleModal> {
     }
   }
 
-  Widget _buildSectionTitle(String title) {
-    return Text(
-      title,
-      style: Get.textTheme.titleSmall?.copyWith(
-        fontWeight: FontWeight.bold,
-        color: AuthConstants.labelColor,
-        fontSize: 16,
-      ),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
+    final width = MediaQuery.sizeOf(context).width;
+
+    if (width < 600) {
+      return CreateRuleModalMobileView(
+        selectedTrigger: _selectedTrigger,
+        selectedTiming: _selectedTiming,
+        selectedAudience: _selectedAudience,
+        selectedStatus: _selectedStatus,
+        whatsApp: _whatsApp,
+        email: _email,
+        onTriggerTap: () => _showSelectMenu(
+          context: context,
+          options: _triggerOptions,
+          onSelected: (v) => setState(() => _selectedTrigger = v),
+        ),
+        onTimingTap: () => _showSelectMenu(
+          context: context,
+          options: _timingOptions,
+          onSelected: (v) => setState(() => _selectedTiming = v),
+        ),
+        onAudienceTap: () => _showSelectMenu(
+          context: context,
+          options: _audienceOptions,
+          onSelected: (v) => setState(() => _selectedAudience = v),
+        ),
+        onStatusTap: () => _showSelectMenu(
+          context: context,
+          options: _statusOptions,
+          onSelected: (v) => setState(() => _selectedStatus = v),
+        ),
+        onWhatsAppChanged: (v) => setState(() => _whatsApp = v),
+        onEmailChanged: (v) => setState(() => _email = v),
+        onCancel: () => Navigator.of(context).pop(),
+        onCreate: _onCreate,
+        isCreateEnabled: _isCreateEnabled,
+      );
+    }
+
+    if (width < 1024) {
+      return CreateRuleModalTabletView(
+        selectedTrigger: _selectedTrigger,
+        selectedTiming: _selectedTiming,
+        selectedAudience: _selectedAudience,
+        selectedStatus: _selectedStatus,
+        whatsApp: _whatsApp,
+        email: _email,
+        onTriggerTap: () => _showSelectMenu(
+          context: context,
+          options: _triggerOptions,
+          onSelected: (v) => setState(() => _selectedTrigger = v),
+        ),
+        onTimingTap: () => _showSelectMenu(
+          context: context,
+          options: _timingOptions,
+          onSelected: (v) => setState(() => _selectedTiming = v),
+        ),
+        onAudienceTap: () => _showSelectMenu(
+          context: context,
+          options: _audienceOptions,
+          onSelected: (v) => setState(() => _selectedAudience = v),
+        ),
+        onStatusTap: () => _showSelectMenu(
+          context: context,
+          options: _statusOptions,
+          onSelected: (v) => setState(() => _selectedStatus = v),
+        ),
+        onWhatsAppChanged: (v) => setState(() => _whatsApp = v),
+        onEmailChanged: (v) => setState(() => _email = v),
+        onCancel: () => Navigator.of(context).pop(),
+        onCreate: _onCreate,
+        isCreateEnabled: _isCreateEnabled,
+      );
+    }
+
+    // Desktop view (keeping existing logic but passing necessary state/callbacks if it was extracted)
     return Dialog(
       backgroundColor: Colors.transparent,
       insetPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 48),
@@ -440,6 +434,89 @@ class _CreateRuleModalState extends State<CreateRuleModal> {
     );
   }
 
+  Widget _buildSectionTitle(String title) {
+    return Text(
+      title,
+      style: Get.textTheme.titleSmall?.copyWith(
+        fontWeight: FontWeight.bold,
+        color: AuthConstants.labelColor,
+        fontSize: 16,
+      ),
+    );
+  }
+
+  Widget _requiredLabel(String text) {
+    return RichText(
+      text: TextSpan(
+        style: Get.textTheme.bodySmall?.copyWith(
+          color: AuthConstants.labelColor,
+          fontSize: 14,
+        ),
+        children: [
+          TextSpan(text: text),
+          const TextSpan(
+            text: '*',
+            style: TextStyle(color: Colors.red, fontSize: 14),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _selectField({
+    required String hint,
+    required List<String> options,
+    required String? value,
+    required ValueChanged<String?> onChanged,
+  }) {
+    return Builder(
+      builder: (fieldContext) {
+        return InkWell(
+          onTap: () => _showSelectMenu(
+            context: fieldContext,
+            options: options,
+            onSelected: onChanged,
+          ),
+          borderRadius: BorderRadius.circular(AuthConstants.fieldBorderRadius),
+          child: Container(
+            height: AuthConstants.fieldHeight,
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+            decoration: BoxDecoration(
+              color: AuthConstants.fieldFillColor,
+              borderRadius: BorderRadius.circular(
+                AuthConstants.fieldBorderRadius,
+              ),
+              border: Border.all(color: AuthConstants.borderColor),
+            ),
+            child: Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    value ?? hint,
+                    style: value != null
+                        ? Get.theme.textTheme.bodySmall?.copyWith(
+                            color: AuthConstants.labelColor,
+                            fontWeight: FontWeight.w600,
+                          )
+                        : Get.theme.textTheme.labelMedium?.copyWith(
+                            color: AuthConstants.hintColor,
+                            fontWeight: FontWeight.w500,
+                          ),
+                  ),
+                ),
+                Icon(
+                  Icons.keyboard_arrow_down_rounded,
+                  size: 20,
+                  color: AuthConstants.hintColor,
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
   Widget _buildCheckbox(
     String label,
     bool value,
@@ -459,7 +536,7 @@ class _CreateRuleModalState extends State<CreateRuleModal> {
               onChanged: (v) => onChanged(v ?? false),
               fillColor: WidgetStateProperty.resolveWith((states) {
                 if (states.contains(WidgetState.selected)) {
-                  return Colors.transparent; // no solid fill, only border + tick
+                  return Colors.transparent;
                 }
                 return null;
               }),

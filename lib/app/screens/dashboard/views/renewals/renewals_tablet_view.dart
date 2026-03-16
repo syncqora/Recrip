@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:get/get.dart';
+import '../../../authentication/widgets/auth_constants.dart';
 import 'renewals_mobile_view.dart';
 
 class RenewalsTabletView extends StatelessWidget {
@@ -8,10 +9,12 @@ class RenewalsTabletView extends StatelessWidget {
 
   final List<RenewalRow> tableData;
 
-  static const _textDark = Color(0xFF0F172A);
-  static const _textMuted = Color(0xFF666666);
-  static const _border = Color(0xFFE5E7EB);
-  static const _headerBg = Color(0xFFF1F5F9);
+  // Design colors from AuthConstants and reference
+  static const _textDark = AuthConstants.textColor;
+  static const _textMuted = AuthConstants.supportTextColor;
+  static const _border = AuthConstants.borderColor;
+  static const _dividerColor = Color(0xFFCBD5E1);
+
   static const _expiringBadge = Color(0xFFFEF3C7);
   static const _expiredBadge = Color(0xFFFEE2E2);
   static const _expiredTextRed = Color(0xFFDC2626);
@@ -20,79 +23,116 @@ class RenewalsTabletView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    return GridView.builder(
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      itemCount: tableData.length,
+      gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
+        maxCrossAxisExtent: 500, // Two columns on standard tablets
+        mainAxisSpacing: 20,
+        crossAxisSpacing: 20,
+        mainAxisExtent: 280, // Consistent height for grid items
+      ),
+      itemBuilder: (context, index) => _buildRenewalCard(tableData[index]),
+    );
+  }
+
+  Widget _buildRenewalCard(RenewalRow row) {
     return Container(
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: _border),
-      ),
-      child: Table(
-        columnWidths: const {
-          0: FlexColumnWidth(1.2),
-          1: FlexColumnWidth(1.3),
-          2: FlexColumnWidth(1),
-          3: FlexColumnWidth(0.8),
-          4: FlexColumnWidth(0.9),
-          5: FlexColumnWidth(1),
-          6: FlexColumnWidth(0.9),
-        },
-        children: [
-          TableRow(
-            decoration: const BoxDecoration(color: _headerBg),
-            children: [
-              _tableCell('Name', isHeader: true),
-              _tableCell('Phone Number', isHeader: true),
-              _tableCell('Expiry Date', isHeader: true),
-              _tableCell('Days Left', isHeader: true),
-              _tableCell('Plan', isHeader: true),
-              _tableCell('Status', isHeader: true),
-              _tableCell('Action', isHeader: true),
-            ],
-          ),
-          ...tableData.map(
-            (row) => TableRow(
-              decoration: const BoxDecoration(color: Colors.white),
-              children: [
-                _tableCell(row.name),
-                _tableCell(row.phone),
-                _tableCell(row.expiryDate),
-                _tableCell(
-                  Text(
-                    row.daysLeft == 0 ? '0' : row.daysLeft.toString().padLeft(2, '0'),
-                    style: Get.textTheme.bodySmall?.copyWith(
-                      color: row.daysLeft == 0 ? _expiredTextRed : _textDark,
-                      fontWeight: row.daysLeft == 0 ? FontWeight.w600 : null,
-                      fontSize: 14,
-                    ),
-                  ),
-                ),
-                _tableCell(row.plan),
-                _tableCell(_statusPill(row.status)),
-                _tableCell(_actionIcons()),
-              ],
-            ),
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: _border, width: 1),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.04),
+            blurRadius: 12,
+            offset: const Offset(0, 4),
           ),
         ],
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Expanded(
+                  child: Text(
+                    row.name,
+                    style: Get.textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.bold,
+                      color: _textDark,
+                      fontSize: 18,
+                    ),
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+                _statusPill(row.status),
+              ],
+            ),
+            const SizedBox(height: 12),
+            Text(
+              row.phone,
+              style: Get.textTheme.bodySmall?.copyWith(
+                color: _textMuted,
+                fontSize: 14,
+              ),
+            ),
+            const Spacer(),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                _infoColumn('Expiry Date', row.expiryDate),
+                _infoColumn(
+                  'Days Left',
+                  row.daysLeft == 0 ? '0' : row.daysLeft.toString().padLeft(2, '0'),
+                  isAlert: row.daysLeft == 0,
+                ),
+                _infoColumn('Plan', row.plan, alignRight: true),
+              ],
+            ),
+            const SizedBox(height: 16),
+            const Divider(height: 1, thickness: 1, color: _dividerColor),
+            const SizedBox(height: 16),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.end,
+              children: [
+                _actionIcon('assets/icons/renew.svg'),
+                const SizedBox(width: 12),
+                _actionIcon('assets/icons/bell-ring.svg'),
+              ],
+            ),
+          ],
+        ),
       ),
     );
   }
 
-  Widget _tableCell(dynamic content, {bool isHeader = false}) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
-      child: Align(
-        alignment: Alignment.centerLeft,
-        child: content is String
-            ? Text(
-                content as String,
-                style: Get.textTheme.bodySmall?.copyWith(
-                  fontWeight: isHeader ? FontWeight.w600 : FontWeight.normal,
-                  color: _textDark,
-                  fontSize: 14,
-                ),
-              )
-            : content as Widget,
-      ),
+  Widget _infoColumn(String label, String value, {bool alignRight = false, bool isAlert = false}) {
+    return Column(
+      crossAxisAlignment: alignRight ? CrossAxisAlignment.end : CrossAxisAlignment.start,
+      children: [
+        Text(
+          label,
+          style: Get.textTheme.labelSmall?.copyWith(
+            color: _textMuted,
+            fontSize: 12,
+            fontWeight: FontWeight.w500,
+          ),
+        ),
+        const SizedBox(height: 6),
+        Text(
+          value,
+          style: Get.textTheme.bodySmall?.copyWith(
+            fontWeight: FontWeight.w700,
+            color: isAlert ? _expiredTextRed : _textDark,
+            fontSize: 14,
+          ),
+        ),
+      ],
     );
   }
 
@@ -103,30 +143,19 @@ class RenewalsTabletView extends StatelessWidget {
       RenewalStatus.renewed => ('Renewed', _renewedBadge, _renewedText),
     };
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
       decoration: BoxDecoration(
         color: bg,
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(16),
       ),
       child: Text(
         label,
-        style: Get.textTheme.bodySmall?.copyWith(
+        style: Get.textTheme.labelMedium?.copyWith(
           color: textColor,
-          fontWeight: FontWeight.w500,
+          fontWeight: FontWeight.w600,
           fontSize: 12,
         ),
       ),
-    );
-  }
-
-  Widget _actionIcons() {
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        _actionIcon('assets/icons/renew.svg'),
-        const SizedBox(width: 4),
-        _actionIcon('assets/icons/bell-ring.svg'),
-      ],
     );
   }
 
@@ -137,18 +166,18 @@ class RenewalsTabletView extends StatelessWidget {
         onTap: () {},
         borderRadius: BorderRadius.circular(20),
         child: Container(
-          width: 32,
-          height: 32,
+          width: 36,
+          height: 36,
           decoration: const BoxDecoration(
             color: Color(0xFFEEF2FF),
             shape: BoxShape.circle,
           ),
-          padding: const EdgeInsets.all(6),
+          padding: const EdgeInsets.all(8),
           child: SvgPicture.asset(
             assetPath,
-            width: 18,
-            height: 18,
-            colorFilter: ColorFilter.mode(_textMuted, BlendMode.srcIn),
+            width: 20,
+            height: 20,
+            colorFilter: const ColorFilter.mode(_textMuted, BlendMode.srcIn),
           ),
         ),
       ),

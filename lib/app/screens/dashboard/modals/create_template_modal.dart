@@ -1,47 +1,11 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/flutter_svg.dart';
+import 'package:flutter_svg/svg.dart';
 import 'package:get/get.dart';
 
 import '../../../../shared/widgets/success_toast.dart';
 import '../../authentication/widgets/auth_constants.dart';
-
-/// Exact layout dimensions for Create Template modal (matches design spec).
-abstract final class _CreateTemplateLayout {
-  _CreateTemplateLayout._();
-
-  // Content area padding (inside the white card)
-  static const double contentPaddingLeft = 32;
-  static const double contentPaddingRight = 32;
-  static const double contentPaddingTop = 8;
-  static const double contentPaddingBottom = 32;
-
-  // Spacing: section title → content, label → field, between sections
-  static const double spacingAfterSectionTitle = 16;
-  static const double spacingLabelToField = 8;
-  static const double spacingBetweenRows = 16;
-  static const double spacingBetweenColumns = 16;
-  static const double spacingBeforeChannels = 0;
-
-  // Field sizes
-  static const double dropdownHeight = 44;
-  static const double dropdownPaddingHorizontal = 12;
-  static const double dropdownPaddingVertical = 10;
-  static const double fieldBorderRadius = 10;
-
-  // Message Content text area
-  static const double messageContentHeight = 120;
-  static const double messageContentPadding = 12;
-
-  // Attachment upload area
-  static const double uploadAreaHeight = 120;
-  static const double uploadAreaBorderRadius = 10;
-
-  // Footer
-  static const double footerPaddingLeft = 32;
-  static const double footerPaddingRight = 32;
-  static const double footerPaddingTop = 16;
-  static const double footerPaddingBottom = 24;
-}
+import 'create_template_modal_mobile_view.dart';
+import 'create_template_modal_tablet_view.dart';
 
 class CreateTemplateModal extends StatefulWidget {
   const CreateTemplateModal({
@@ -170,93 +134,6 @@ class _CreateTemplateModalState extends State<CreateTemplateModal> {
     if (selected != null) onSelected(selected);
   }
 
-  Widget _selectField({
-    required String hint,
-    required List<String> options,
-    required String? value,
-    required ValueChanged<String?> onChanged,
-  }) {
-    return Builder(
-      builder: (fieldContext) {
-        return InkWell(
-          onTap: () => _showSelectMenu(
-            context: fieldContext,
-            options: options,
-            onSelected: onChanged,
-          ),
-          borderRadius: BorderRadius.circular(
-            _CreateTemplateLayout.fieldBorderRadius,
-          ),
-          child: Container(
-            height: _CreateTemplateLayout.dropdownHeight,
-            padding: const EdgeInsets.symmetric(
-              horizontal: _CreateTemplateLayout.dropdownPaddingHorizontal,
-              vertical: _CreateTemplateLayout.dropdownPaddingVertical,
-            ),
-            decoration: BoxDecoration(
-              color: AuthConstants.fieldFillColor,
-              borderRadius: BorderRadius.circular(
-                _CreateTemplateLayout.fieldBorderRadius,
-              ),
-              border: Border.all(color: AuthConstants.borderColor),
-            ),
-            child: Row(
-              children: [
-                Expanded(
-                  child: Text(
-                    value ?? hint,
-                    style: value != null
-                        ? Get.theme.textTheme.bodySmall?.copyWith(
-                            color: AuthConstants.labelColor,
-                            fontWeight: FontWeight.w600,
-                          )
-                        : Get.theme.textTheme.labelMedium?.copyWith(
-                            color: AuthConstants.hintColor,
-                            fontWeight: FontWeight.w500,
-                          ),
-                  ),
-                ),
-                Icon(
-                  Icons.keyboard_arrow_down_rounded,
-                  size: 20,
-                  color: AuthConstants.hintColor,
-                ),
-              ],
-            ),
-          ),
-        );
-      },
-    );
-  }
-
-  Widget _requiredLabel(String text) {
-    return RichText(
-      text: TextSpan(
-        style: Get.textTheme.bodySmall?.copyWith(
-          color: AuthConstants.labelColor,
-          fontSize: 14,
-        ),
-        children: [
-          TextSpan(text: text),
-          const TextSpan(
-            text: '*',
-            style: TextStyle(color: Colors.red, fontSize: 14),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildSectionTitle(String title) {
-    return Text(
-      title,
-      style: Get.textTheme.labelMedium?.copyWith(
-        color: AuthConstants.labelColor,
-        fontWeight: FontWeight.w600,
-      ),
-    );
-  }
-
   void _onCreate() {
     if (widget.onCreate != null) {
       widget.onCreate!();
@@ -277,6 +154,86 @@ class _CreateTemplateModalState extends State<CreateTemplateModal> {
 
   @override
   Widget build(BuildContext context) {
+    final width = MediaQuery.sizeOf(context).width;
+
+    if (width < 600) {
+      return CreateTemplateModalMobileView(
+        title: widget.title,
+        selectedTrigger: _selectedTrigger,
+        selectedTiming: _selectedTiming,
+        selectedAudience: _selectedAudience,
+        selectedStatus: _selectedStatus,
+        messageController: _messageController,
+        whatsApp: _whatsApp,
+        email: _email,
+        onTriggerTap: () => _showSelectMenu(
+          context: context,
+          options: _triggerOptions,
+          onSelected: (v) => setState(() => _selectedTrigger = v),
+        ),
+        onTimingTap: () => _showSelectMenu(
+          context: context,
+          options: _timingOptions,
+          onSelected: (v) => setState(() => _selectedTiming = v),
+        ),
+        onAudienceTap: () => _showSelectMenu(
+          context: context,
+          options: _audienceOptions,
+          onSelected: (v) => setState(() => _selectedAudience = v),
+        ),
+        onStatusTap: () => _showSelectMenu(
+          context: context,
+          options: _statusOptions,
+          onSelected: (v) => setState(() => _selectedStatus = v),
+        ),
+        onUploadAttachment: _onUploadAttachment,
+        onWhatsAppChanged: (v) => setState(() => _whatsApp = v),
+        onEmailChanged: (v) => setState(() => _email = v),
+        onCancel: () => Navigator.of(context).pop(),
+        onCreate: _onCreate,
+        isCreateEnabled: _isCreateEnabled,
+      );
+    }
+
+    if (width < 1024) {
+      return CreateTemplateModalTabletView(
+        title: widget.title,
+        selectedTrigger: _selectedTrigger,
+        selectedTiming: _selectedTiming,
+        selectedAudience: _selectedAudience,
+        selectedStatus: _selectedStatus,
+        messageController: _messageController,
+        whatsApp: _whatsApp,
+        email: _email,
+        onTriggerTap: () => _showSelectMenu(
+          context: context,
+          options: _triggerOptions,
+          onSelected: (v) => setState(() => _selectedTrigger = v),
+        ),
+        onTimingTap: () => _showSelectMenu(
+          context: context,
+          options: _timingOptions,
+          onSelected: (v) => setState(() => _selectedTiming = v),
+        ),
+        onAudienceTap: () => _showSelectMenu(
+          context: context,
+          options: _audienceOptions,
+          onSelected: (v) => setState(() => _selectedAudience = v),
+        ),
+        onStatusTap: () => _showSelectMenu(
+          context: context,
+          options: _statusOptions,
+          onSelected: (v) => setState(() => _selectedStatus = v),
+        ),
+        onUploadAttachment: _onUploadAttachment,
+        onWhatsAppChanged: (v) => setState(() => _whatsApp = v),
+        onEmailChanged: (v) => setState(() => _email = v),
+        onCancel: () => Navigator.of(context).pop(),
+        onCreate: _onCreate,
+        isCreateEnabled: _isCreateEnabled,
+      );
+    }
+
     return Dialog(
       backgroundColor: Colors.transparent,
       insetPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 48),
@@ -301,28 +258,20 @@ class _CreateTemplateModalState extends State<CreateTemplateModal> {
             const Divider(thickness: 1, color: Color(0xFFCBD5E1)),
             Flexible(
               child: SingleChildScrollView(
-                padding: const EdgeInsets.fromLTRB(
-                  _CreateTemplateLayout.contentPaddingLeft,
-                  _CreateTemplateLayout.contentPaddingTop,
-                  _CreateTemplateLayout.contentPaddingRight,
-                  _CreateTemplateLayout.contentPaddingBottom,
-                ),
+                padding: const EdgeInsets.fromLTRB(32, 8, 32, 32),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     _buildSectionTitle('Message Rule Details'),
-                    const SizedBox(
-                      height: _CreateTemplateLayout.spacingAfterSectionTitle,
-                    ),
+                    const SizedBox(height: 16),
                     LayoutBuilder(
                       builder: (context, constraints) {
-                        const gap = _CreateTemplateLayout.spacingBetweenColumns;
+                        const gap = 16.0;
                         final columnWidth =
                             (constraints.maxWidth - 2 * gap) / 3;
                         return Row(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            // Left column: Trigger, Status, Reminder Channels
                             SizedBox(
                               width: columnWidth,
                               child: Column(
@@ -330,10 +279,7 @@ class _CreateTemplateModalState extends State<CreateTemplateModal> {
                                 mainAxisSize: MainAxisSize.min,
                                 children: [
                                   _requiredLabel('Trigger'),
-                                  const SizedBox(
-                                    height: _CreateTemplateLayout
-                                        .spacingLabelToField,
-                                  ),
+                                  const SizedBox(height: 8),
                                   _selectField(
                                     hint: 'Select Trigger',
                                     options: _triggerOptions,
@@ -341,15 +287,9 @@ class _CreateTemplateModalState extends State<CreateTemplateModal> {
                                     onChanged: (v) =>
                                         setState(() => _selectedTrigger = v),
                                   ),
-                                  const SizedBox(
-                                    height: _CreateTemplateLayout
-                                        .spacingBetweenRows,
-                                  ),
+                                  const SizedBox(height: 16),
                                   _requiredLabel('Status'),
-                                  const SizedBox(
-                                    height: _CreateTemplateLayout
-                                        .spacingLabelToField,
-                                  ),
+                                  const SizedBox(height: 8),
                                   _selectField(
                                     hint: 'Select Status',
                                     options: _statusOptions,
@@ -357,15 +297,9 @@ class _CreateTemplateModalState extends State<CreateTemplateModal> {
                                     onChanged: (v) =>
                                         setState(() => _selectedStatus = v),
                                   ),
-                                  const SizedBox(
-                                    height: _CreateTemplateLayout
-                                        .spacingBetweenRows,
-                                  ),
+                                  const SizedBox(height: 16),
                                   _buildSectionTitle('Reminder Channels'),
-                                  const SizedBox(
-                                    height: _CreateTemplateLayout
-                                        .spacingAfterSectionTitle,
-                                  ),
+                                  const SizedBox(height: 16),
                                   Row(
                                     children: [
                                       _buildCheckbox(
@@ -385,7 +319,6 @@ class _CreateTemplateModalState extends State<CreateTemplateModal> {
                               ),
                             ),
                             const SizedBox(width: gap),
-                            // Right: Timing & Audience, then Attachment & Message Content
                             SizedBox(
                               width: 2 * columnWidth + gap,
                               child: Column(
@@ -403,10 +336,7 @@ class _CreateTemplateModalState extends State<CreateTemplateModal> {
                                               CrossAxisAlignment.start,
                                           children: [
                                             _requiredLabel('Timing'),
-                                            const SizedBox(
-                                              height: _CreateTemplateLayout
-                                                  .spacingLabelToField,
-                                            ),
+                                            const SizedBox(height: 8),
                                             _selectField(
                                               hint: 'Select Timing',
                                               options: _timingOptions,
@@ -426,10 +356,7 @@ class _CreateTemplateModalState extends State<CreateTemplateModal> {
                                               CrossAxisAlignment.start,
                                           children: [
                                             _requiredLabel('Audience'),
-                                            const SizedBox(
-                                              height: _CreateTemplateLayout
-                                                  .spacingLabelToField,
-                                            ),
+                                            const SizedBox(height: 8),
                                             _selectField(
                                               hint: 'Select Audience',
                                               options: _audienceOptions,
@@ -443,10 +370,7 @@ class _CreateTemplateModalState extends State<CreateTemplateModal> {
                                       ),
                                     ],
                                   ),
-                                  const SizedBox(
-                                    height: _CreateTemplateLayout
-                                        .spacingBetweenRows,
-                                  ),
+                                  const SizedBox(height: 16),
                                   Row(
                                     crossAxisAlignment:
                                         CrossAxisAlignment.start,
@@ -458,80 +382,58 @@ class _CreateTemplateModalState extends State<CreateTemplateModal> {
                                               CrossAxisAlignment.start,
                                           children: [
                                             _buildSectionTitle('Attachment'),
-                                            const SizedBox(
-                                              height: _CreateTemplateLayout
-                                                  .spacingLabelToField,
-                                            ),
+                                            const SizedBox(height: 8),
                                             InkWell(
                                               onTap: _onUploadAttachment,
                                               borderRadius:
-                                                  BorderRadius.circular(
-                                                    _CreateTemplateLayout
-                                                        .uploadAreaBorderRadius,
-                                                  ),
+                                                  BorderRadius.circular(10),
                                               child: Container(
                                                 width: double.infinity,
-                                                height: _CreateTemplateLayout
-                                                    .uploadAreaHeight,
+                                                height: 120,
                                                 decoration: BoxDecoration(
                                                   color: AuthConstants
                                                       .fieldFillColor,
                                                   borderRadius:
-                                                      BorderRadius.circular(
-                                                        _CreateTemplateLayout
-                                                            .uploadAreaBorderRadius,
-                                                      ),
+                                                      BorderRadius.circular(10),
                                                 ),
-                                                child: Stack(
-                                                  alignment: Alignment.center,
-                                                  clipBehavior: Clip.none,
-                                                  children: [
-                                                    Positioned.fill(
-                                                      child: CustomPaint(
-                                                        painter: _DashedBorderPainter(
-                                                          color: AuthConstants
-                                                              .borderColor,
-                                                          borderRadius:
-                                                              _CreateTemplateLayout
-                                                                  .uploadAreaBorderRadius,
+                                                child: CustomPaint(
+                                                  painter: _DashedBorderPainter(
+                                                    color: AuthConstants
+                                                        .borderColor,
+                                                    borderRadius: 10,
+                                                  ),
+                                                  child: Column(
+                                                    mainAxisAlignment:
+                                                        MainAxisAlignment.center,
+                                                    children: [
+                                                      SvgPicture.asset(
+                                                        'assets/icons/upload.svg',
+                                                        width: 32,
+                                                        height: 32,
+                                                        colorFilter:
+                                                            ColorFilter.mode(
+                                                          AuthConstants
+                                                              .hintColor,
+                                                          BlendMode.srcIn,
                                                         ),
                                                       ),
-                                                    ),
-                                                    Column(
-                                                      mainAxisSize:
-                                                          MainAxisSize.min,
-                                                      children: [
-                                                        SvgPicture.asset(
-                                                          'assets/icons/upload.svg',
-                                                          width: 32,
-                                                          height: 32,
-                                                          colorFilter:
-                                                              ColorFilter.mode(
-                                                                AuthConstants
-                                                                    .hintColor,
-                                                                BlendMode.srcIn,
-                                                              ),
-                                                        ),
-                                                        const SizedBox(
-                                                          height: 8,
-                                                        ),
-                                                        Text(
-                                                          'Upload Attachment',
-                                                          style: Get
-                                                              .theme
-                                                              .textTheme
-                                                              .labelMedium
-                                                              ?.copyWith(
-                                                                color: AuthConstants
-                                                                    .hintColor,
-                                                                fontWeight:
-                                                                    FontWeight
-                                                                        .w500,
-                                                              ),
-                                                        ),
-                                                      ],
-                                                    ),
-                                                  ],
+                                                      const SizedBox(height: 8),
+                                                      Text(
+                                                        'Upload Attachment',
+                                                        style: Get
+                                                            .theme
+                                                            .textTheme
+                                                            .labelMedium
+                                                            ?.copyWith(
+                                                              color: AuthConstants
+                                                                  .hintColor,
+                                                              fontWeight:
+                                                                  FontWeight
+                                                                      .w500,
+                                                            ),
+                                                      ),
+                                                    ],
+                                                  ),
                                                 ),
                                               ),
                                             ),
@@ -548,21 +450,14 @@ class _CreateTemplateModalState extends State<CreateTemplateModal> {
                                             _buildSectionTitle(
                                               'Message Content',
                                             ),
-                                            const SizedBox(
-                                              height: _CreateTemplateLayout
-                                                  .spacingLabelToField,
-                                            ),
+                                            const SizedBox(height: 8),
                                             Container(
-                                              height: _CreateTemplateLayout
-                                                  .messageContentHeight,
+                                              height: 120,
                                               decoration: BoxDecoration(
                                                 color: AuthConstants
                                                     .fieldFillColor,
                                                 borderRadius:
-                                                    BorderRadius.circular(
-                                                      _CreateTemplateLayout
-                                                          .fieldBorderRadius,
-                                                    ),
+                                                    BorderRadius.circular(10),
                                                 border: Border.all(
                                                   color:
                                                       AuthConstants.borderColor,
@@ -579,25 +474,17 @@ class _CreateTemplateModalState extends State<CreateTemplateModal> {
                                                       color: AuthConstants
                                                           .textColor,
                                                     ),
-                                                decoration: InputDecoration(
+                                                decoration: const InputDecoration(
                                                   hintText:
                                                       'Type your message here....',
-                                                  hintStyle: Get
-                                                      .theme
-                                                      .textTheme
-                                                      .labelMedium
-                                                      ?.copyWith(
-                                                        color: AuthConstants
-                                                            .hintColor,
-                                                        fontWeight:
-                                                            FontWeight.w500,
-                                                      ),
+                                                  hintStyle: TextStyle(
+                                                    color:
+                                                        AuthConstants.hintColor,
+                                                    fontSize: 14,
+                                                  ),
                                                   border: InputBorder.none,
                                                   contentPadding:
-                                                      const EdgeInsets.all(
-                                                        _CreateTemplateLayout
-                                                            .messageContentPadding,
-                                                      ),
+                                                      EdgeInsets.all(12),
                                                 ),
                                               ),
                                             ),
@@ -619,12 +506,7 @@ class _CreateTemplateModalState extends State<CreateTemplateModal> {
             ),
             const Divider(thickness: 1, height: 1, color: Color(0xFFCBD5E1)),
             Padding(
-              padding: const EdgeInsets.fromLTRB(
-                _CreateTemplateLayout.footerPaddingLeft,
-                _CreateTemplateLayout.footerPaddingTop,
-                _CreateTemplateLayout.footerPaddingRight,
-                _CreateTemplateLayout.footerPaddingBottom,
-              ),
+              padding: const EdgeInsets.fromLTRB(32, 16, 32, 24),
               child: _buildActions(),
             ),
           ],
@@ -695,7 +577,7 @@ class _CreateTemplateModalState extends State<CreateTemplateModal> {
         ),
         const SizedBox(width: 10),
         SizedBox(
-          width: 146,
+          width: 180,
           height: 44,
           child: FilledButton(
             onPressed: _isCreateEnabled ? _onCreate : null,
@@ -706,18 +588,101 @@ class _CreateTemplateModalState extends State<CreateTemplateModal> {
               disabledBackgroundColor: AuthConstants.buttonDisabledColor,
               foregroundColor: Colors.white,
               padding: const EdgeInsets.fromLTRB(20, 12, 20, 12),
-              minimumSize: const Size(146, 44),
+              minimumSize: const Size(180, 44),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(10),
               ),
             ),
             child: Text(
-              _isEditMode ? 'Update Rule' : 'Create Rule',
+              _isEditMode ? 'Update Template' : 'Create Template',
               style: const TextStyle(color: Colors.white),
             ),
           ),
         ),
       ],
+    );
+  }
+
+  Widget _buildSectionTitle(String title) {
+    return Text(
+      title,
+      style: Get.textTheme.labelMedium?.copyWith(
+        color: AuthConstants.labelColor,
+        fontWeight: FontWeight.w600,
+      ),
+    );
+  }
+
+  Widget _requiredLabel(String text) {
+    return RichText(
+      text: TextSpan(
+        style: Get.textTheme.bodySmall?.copyWith(
+          color: AuthConstants.labelColor,
+          fontSize: 14,
+        ),
+        children: [
+          TextSpan(text: text),
+          const TextSpan(
+            text: '*',
+            style: TextStyle(color: Colors.red, fontSize: 14),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _selectField({
+    required String hint,
+    required List<String> options,
+    required String? value,
+    required ValueChanged<String?> onChanged,
+  }) {
+    return Builder(
+      builder: (fieldContext) {
+        return InkWell(
+          onTap: () => _showSelectMenu(
+            context: fieldContext,
+            options: options,
+            onSelected: onChanged,
+          ),
+          borderRadius: BorderRadius.circular(10),
+          child: Container(
+            height: 44,
+            padding: const EdgeInsets.symmetric(
+              horizontal: 12,
+              vertical: 10,
+            ),
+            decoration: BoxDecoration(
+              color: AuthConstants.fieldFillColor,
+              borderRadius: BorderRadius.circular(10),
+              border: Border.all(color: AuthConstants.borderColor),
+            ),
+            child: Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    value ?? hint,
+                    style: value != null
+                        ? Get.theme.textTheme.bodySmall?.copyWith(
+                            color: AuthConstants.labelColor,
+                            fontWeight: FontWeight.w600,
+                          )
+                        : Get.theme.textTheme.labelMedium?.copyWith(
+                            color: AuthConstants.hintColor,
+                            fontWeight: FontWeight.w500,
+                          ),
+                  ),
+                ),
+                Icon(
+                  Icons.keyboard_arrow_down_rounded,
+                  size: 20,
+                  color: AuthConstants.hintColor,
+                ),
+              ],
+            ),
+          ),
+        );
+      },
     );
   }
 
@@ -770,39 +735,26 @@ class _CreateTemplateModalState extends State<CreateTemplateModal> {
   }
 }
 
-/// Paints a dashed border inside the given size (for upload area).
 class _DashedBorderPainter extends CustomPainter {
   _DashedBorderPainter({required this.color, required this.borderRadius});
-
   final Color color;
   final double borderRadius;
-
   @override
   void paint(Canvas canvas, Size size) {
-    final paint = Paint()
-      ..color = color
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 1.5;
+    final paint = Paint()..color = color..style = PaintingStyle.stroke..strokeWidth = 1.5;
     const dashWidth = 6.0;
     const dashSpace = 4.0;
-
-    final rrect = RRect.fromRectAndRadius(
-      Rect.fromLTWH(1, 1, size.width - 2, size.height - 2),
-      Radius.circular(borderRadius - 1),
-    );
+    final rrect = RRect.fromRectAndRadius(Rect.fromLTWH(1, 1, size.width - 2, size.height - 2), Radius.circular(borderRadius - 1));
     final path = Path()..addRRect(rrect);
-
-    double distance = 0;
-    path.computeMetrics().forEach((metric) {
+    for (final metric in path.computeMetrics()) {
+      double distance = 0;
       while (distance < metric.length) {
         final end = (distance + dashWidth).clamp(0.0, metric.length);
-        final extractPath = metric.extractPath(distance, end);
-        canvas.drawPath(extractPath, paint);
+        canvas.drawPath(metric.extractPath(distance, end), paint);
         distance = end + dashSpace;
       }
-    });
+    }
   }
-
   @override
   bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }

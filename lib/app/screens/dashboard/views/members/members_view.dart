@@ -84,7 +84,7 @@ class _MembersViewState extends State<MembersView> {
         children: [
           _buildHeader(isMobile),
           const SizedBox(height: 32),
-          _buildSearchRow(isMobile),
+          _buildSearchRow(isMobile, isTablet: isTablet),
           const SizedBox(height: 16),
           if (isMobile)
             MembersMobileView(
@@ -157,8 +157,9 @@ class _MembersViewState extends State<MembersView> {
   }
 
   static const _searchFieldWidth = 320.0;
+  static const _searchFieldWidthTablet = 480.0;
 
-  Widget _buildSearchRow(bool isMobile) {
+  Widget _buildSearchRow(bool isMobile, {bool isTablet = false}) {
     if (isMobile) {
       return Column(
         children: [
@@ -228,53 +229,57 @@ class _MembersViewState extends State<MembersView> {
     }
     return Row(
       children: [
-        SizedBox(
-          width: _searchFieldWidth,
-          child: Container(
-            height: 44,
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(22),
-              border: Border.all(color: const Color(0xFFE2E8F0), width: 1),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.03),
-                  blurRadius: 4,
-                  offset: const Offset(0, 1),
-                ),
-              ],
+        Flexible(
+          child: ConstrainedBox(
+            constraints: BoxConstraints(
+              maxWidth: isTablet ? _searchFieldWidthTablet : _searchFieldWidth,
             ),
-            child: TextField(
-              cursorColor: Colors.black,
-              style: Get.textTheme.bodyMedium?.copyWith(
-                color: const Color(0xFF0F172A),
-                fontSize: 14,
+            child: Container(
+              height: 44,
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(22),
+                border: Border.all(color: const Color(0xFFE2E8F0), width: 1),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.03),
+                    blurRadius: 4,
+                    offset: const Offset(0, 1),
+                  ),
+                ],
               ),
-              decoration: InputDecoration(
-                hintText: 'Search by name or phone number',
-                hintStyle: const TextStyle(
-                  color: Color(0xFF94A3B8),
+              child: TextField(
+                cursorColor: Colors.black,
+                style: Get.textTheme.bodyMedium?.copyWith(
+                  color: const Color(0xFF0F172A),
                   fontSize: 14,
                 ),
-                prefixIcon: Padding(
-                  padding: const EdgeInsets.only(left: 14, right: 10),
-                  child: SvgPicture.asset(
-                    'assets/icons/search.svg',
-                    width: 20,
-                    height: 20,
-                    colorFilter: const ColorFilter.mode(
-                      Color(0xFF64748B),
-                      BlendMode.srcIn,
+                decoration: InputDecoration(
+                  hintText: 'Search by name or phone number',
+                  hintStyle: const TextStyle(
+                    color: Color(0xFF94A3B8),
+                    fontSize: 14,
+                  ),
+                  prefixIcon: Padding(
+                    padding: const EdgeInsets.only(left: 14, right: 10),
+                    child: SvgPicture.asset(
+                      'assets/icons/search.svg',
+                      width: 20,
+                      height: 20,
+                      colorFilter: const ColorFilter.mode(
+                        Color(0xFF64748B),
+                        BlendMode.srcIn,
+                      ),
                     ),
                   ),
+                  prefixIconConstraints: const BoxConstraints(
+                    minWidth: 44,
+                    minHeight: 24,
+                  ),
+                  border: InputBorder.none,
+                  contentPadding: const EdgeInsets.fromLTRB(0, 14, 16, 14),
+                  isDense: true,
                 ),
-                prefixIconConstraints: const BoxConstraints(
-                  minWidth: 44,
-                  minHeight: 24,
-                ),
-                border: InputBorder.none,
-                contentPadding: const EdgeInsets.fromLTRB(0, 14, 16, 14),
-                isDense: true,
               ),
             ),
           ),

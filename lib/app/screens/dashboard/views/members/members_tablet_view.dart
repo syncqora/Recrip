@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import '../../../authentication/widgets/auth_constants.dart';
 import 'members_mobile_view.dart'; // For MemberRow and MemberStatus
 
 class MembersTabletView extends StatelessWidget {
@@ -12,118 +13,141 @@ class MembersTabletView extends StatelessWidget {
   final List<MemberRow> tableData;
   final Function(MemberRow) onOpenViewMember;
 
-  static const _textDark = Color(0xFF0F172A);
-  static const _textMuted = Color(0xFF666666);
-  static const _border = Color(0xFFE5E7EB);
-  static const _expiredBadge = Color(0xFFFEE2E2);
-  static const _expiringBadge = Color(0xFFFEF3C7);
+  // Design colors from AuthConstants and Mobile reference
+  static const _textDark = AuthConstants.textColor;
+  static const _border = AuthConstants.borderColor;
+  static const _dividerColor = Color(0xFFCBD5E1);
+
+  // Status Badge Colors
   static const _activeBadge = Color(0xFFDCFCE7);
-  static const _iconCircleOrange = Color(0xFFF59E0B);
-  static const _iconCircleRed = Color(0xFFDC2626);
-  static const _iconCircleGreen = Color(0xFF16A34A);
+  static const _activeText = Color(0xFF166534);
+  static const _expiredBadge = Color(0xFFFEE2E2);
+  static const _expiredText = Color(0xFF991B1B);
+  static const _expiringBadge = Color(0xFFFEF3C7);
+  static const _expiringText = Color(0xFF92400E);
 
   @override
   Widget build(BuildContext context) {
+    return GridView.builder(
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      itemCount: tableData.length,
+      gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
+        maxCrossAxisExtent: 500, // Responsive grid: 2 columns on most tablets
+        mainAxisSpacing: 20,
+        crossAxisSpacing: 20,
+        mainAxisExtent: 240, // Fixed height for grid symmetry
+      ),
+      itemBuilder: (context, index) => _buildMemberCard(tableData[index]),
+    );
+  }
+
+  Widget _buildMemberCard(MemberRow member) {
     return Container(
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: _border),
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: _border, width: 1),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withValues(alpha: 0.04),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
+            blurRadius: 12,
+            offset: const Offset(0, 4),
           ),
         ],
       ),
-      child: Table(
-        columnWidths: const {
-          0: FlexColumnWidth(1.5),
-          1: FlexColumnWidth(1.4),
-          2: FlexColumnWidth(1.8),
-          3: FlexColumnWidth(0.9),
-          4: FlexColumnWidth(1.1),
-          5: FlexColumnWidth(1),
-        },
-        children: [
-          TableRow(
-            decoration: const BoxDecoration(
-              color: Color(0xFFEEF2FF),
-              border: Border(
-                bottom: BorderSide(color: Color(0xFFE2E8F0), width: 1),
-              ),
-            ),
-            children: [
-              _tableCell('Name', isHeader: true),
-              _tableCell('Phone Number', isHeader: true),
-              _tableCell('Email Address', isHeader: true),
-              _tableCell('Plan', isHeader: true),
-              _tableCell('Expiry Date', isHeader: true),
-              _tableCell('Status', isHeader: true),
-            ],
-          ),
-          ...tableData.asMap().entries.map(
-                (entry) => TableRow(
-                  decoration: BoxDecoration(
-                    color: entry.key.isEven
-                        ? Colors.white
-                        : const Color(0xFFFAFAFA),
-                    border:
-                        Border(bottom: BorderSide(color: _border, width: 1)),
-                  ),
-                  children: [
-                    _tapableCell(entry.value, entry.value.name),
-                    _tapableCell(entry.value, entry.value.phone),
-                    _tapableCell(entry.value, entry.value.email),
-                    _tapableCell(entry.value, entry.value.plan),
-                    _tapableCell(entry.value, entry.value.expiry),
-                    _tapableCell(entry.value, _statusPill(entry.value.status)),
-                  ],
-                ),
-              ),
-        ],
-      ),
-    );
-  }
-
-  Widget _tapableCell(MemberRow row, dynamic content) {
-    return Material(
-      color: Colors.transparent,
       child: InkWell(
-        onTap: () => onOpenViewMember(row),
-        child: _tableCell(content),
-      ),
-    );
-  }
-
-  Widget _tableCell(dynamic content, {bool isHeader = false}) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-      child: Align(
-        alignment: Alignment.centerLeft,
-        child: content is String
-            ? Text(
-                content as String,
+        onTap: () => onOpenViewMember(member),
+        borderRadius: BorderRadius.circular(24),
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Expanded(
+                    child: Text(
+                      member.name,
+                      style: Get.textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.bold,
+                        color: _textDark,
+                        fontSize: 18,
+                      ),
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                  _statusPill(member.status),
+                ],
+              ),
+              const SizedBox(height: 12),
+              Text(
+                member.phone,
                 style: Get.textTheme.bodySmall?.copyWith(
-                  fontWeight: isHeader ? FontWeight.w600 : FontWeight.normal,
-                  color: isHeader ? const Color(0xFF475569) : _textDark,
+                  color: AuthConstants.supportTextColor,
                   fontSize: 14,
                 ),
-              )
-            : content as Widget,
+              ),
+              const SizedBox(height: 4),
+              Text(
+                member.email,
+                style: Get.textTheme.bodySmall?.copyWith(
+                  color: AuthConstants.supportTextColor,
+                  fontSize: 14,
+                ),
+              ),
+              const Spacer(),
+              const Divider(height: 1, thickness: 1, color: _dividerColor),
+              const SizedBox(height: 16),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  _infoColumn('Plan', member.plan),
+                  _infoColumn('Expiry Date', member.expiry, alignRight: true),
+                ],
+              ),
+            ],
+          ),
+        ),
       ),
+    );
+  }
+
+  Widget _infoColumn(String label, String value, {bool alignRight = false}) {
+    return Column(
+      crossAxisAlignment:
+          alignRight ? CrossAxisAlignment.end : CrossAxisAlignment.start,
+      children: [
+        Text(
+          label,
+          style: Get.textTheme.labelSmall?.copyWith(
+            color: AuthConstants.supportTextColor,
+            fontSize: 12,
+            fontWeight: FontWeight.w500,
+          ),
+        ),
+        const SizedBox(height: 6),
+        Text(
+          value,
+          style: Get.textTheme.bodySmall?.copyWith(
+            fontWeight: FontWeight.w700,
+            color: _textDark,
+            fontSize: 14,
+          ),
+        ),
+      ],
     );
   }
 
   Widget _statusPill(MemberStatus status) {
     final (String label, Color bg, Color textColor) = switch (status) {
-      MemberStatus.active => ('Active', _activeBadge, const Color(0xFF166534)),
-      MemberStatus.expired => ('Expired', _expiredBadge, const Color(0xFF991B1B)),
-      MemberStatus.expiring => ('Expiring', _expiringBadge, const Color(0xFF92400E)),
+      MemberStatus.active => ('Active', _activeBadge, _activeText),
+      MemberStatus.expired => ('Expired', _expiredBadge, _expiredText),
+      MemberStatus.expiring => ('Expiring', _expiringBadge, _expiringText),
     };
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
       decoration: BoxDecoration(
         color: bg,
         borderRadius: BorderRadius.circular(16),
@@ -132,11 +156,9 @@ class MembersTabletView extends StatelessWidget {
         label,
         style: Get.textTheme.labelMedium?.copyWith(
           color: textColor,
-          fontWeight: FontWeight.w500,
+          fontWeight: FontWeight.w600,
           fontSize: 12,
         ),
-        overflow: TextOverflow.ellipsis,
-        maxLines: 1,
       ),
     );
   }

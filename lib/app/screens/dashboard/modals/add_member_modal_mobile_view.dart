@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/flutter_svg.dart';
 import 'package:get/get.dart';
 
 import '../../../../shared/widgets/plan_dropdown.dart';
@@ -48,182 +47,164 @@ class AddMemberModalMobileView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Dialog(
-      backgroundColor: Colors.transparent,
-      insetPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
-      child: Container(
-        width: double.infinity,
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(24),
+    return Scaffold(
+      backgroundColor: Colors.white,
+      appBar: AppBar(
+        backgroundColor: Colors.white,
+        elevation: 0,
+        scrolledUnderElevation: 0,
+        leading: IconButton(
+          onPressed: onCancel,
+          icon: const Icon(Icons.arrow_back, color: AuthConstants.labelColor),
         ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            _buildHeader(),
-            const Divider(thickness: 1, color: Color(0xFFCBD5E1), height: 1),
-            Flexible(
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.all(20),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    _buildSectionTitle('Member Details'),
-                    const SizedBox(height: 16),
-                    AuthFormFieldSection(
-                      label: 'Full Name*',
-                      spacingAfterLabel: 8,
-                      child: AuthTextField(
-                        controller: fullNameController,
-                        hint: 'E.g. John Doe',
-                      ),
+        title: Text(
+          title,
+          style: Get.textTheme.titleMedium?.copyWith(
+            fontWeight: FontWeight.bold,
+            color: AuthConstants.labelColor,
+            fontSize: 18,
+          ),
+        ),
+        centerTitle: true,
+        bottom: const PreferredSize(
+          preferredSize: Size.fromHeight(1),
+          child: Divider(thickness: 1, color: Color(0xFFCBD5E1), height: 1),
+        ),
+      ),
+      body: Column(
+        children: [
+          Expanded(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.all(20),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  _buildSectionTitle('Member Details'),
+                  const SizedBox(height: 16),
+                  AuthFormFieldSection(
+                    label: 'Full Name*',
+                    spacingAfterLabel: 8,
+                    child: AuthTextField(
+                      controller: fullNameController,
+                      hint: 'E.g. John Doe',
                     ),
-                    const SizedBox(height: 16),
-                    AuthFormFieldSection(
-                      label: 'Phone Number',
-                      spacingAfterLabel: 8,
-                      child: SizedBox(
-                        height: AuthConstants.fieldHeight,
-                        child: TextField(
-                          controller: phoneController,
-                          style: Get.theme.textTheme.bodySmall?.copyWith(
-                            color: AuthConstants.textColor,
+                  ),
+                  const SizedBox(height: 16),
+                  AuthFormFieldSection(
+                    label: 'Phone Number',
+                    spacingAfterLabel: 8,
+                    child: SizedBox(
+                      height: AuthConstants.fieldHeight,
+                      child: TextField(
+                        controller: phoneController,
+                        style: Get.theme.textTheme.bodySmall?.copyWith(
+                          color: AuthConstants.textColor,
+                        ),
+                        cursorColor: Colors.black,
+                        decoration: InputDecoration(
+                          prefixIcon: Padding(
+                            padding: const EdgeInsets.only(
+                              left: 12,
+                              right: 4,
+                            ),
+                            child: Align(
+                              widthFactor: 1.0,
+                              alignment: Alignment.centerLeft,
+                              child: Text(
+                                '+91 ',
+                                style: Get.theme.textTheme.labelMedium
+                                    ?.copyWith(
+                                      color: AuthConstants.labelColor,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                              ),
+                            ),
                           ),
-                          cursorColor: Colors.black,
-                          decoration: InputDecoration(
-                            prefixIcon: Padding(
-                              padding: const EdgeInsets.only(
-                                left: 12,
-                                right: 4,
+                          prefixIconConstraints: const BoxConstraints(
+                            minWidth: 0,
+                            minHeight: 0,
+                          ),
+                          hintText: '00000 00000',
+                          hintStyle: Get.theme.textTheme.labelMedium
+                              ?.copyWith(
+                                color: AuthConstants.hintColor,
+                                fontWeight: FontWeight.w400,
                               ),
-                              child: Align(
-                                widthFactor: 1.0,
-                                alignment: Alignment.centerLeft,
-                                child: Text(
-                                  '+91 ',
-                                  style: Get.theme.textTheme.labelMedium
-                                      ?.copyWith(
-                                        color: AuthConstants.labelColor,
-                                        fontWeight: FontWeight.bold,
-                                      ),
-                                ),
-                              ),
+                          filled: true,
+                          fillColor: AuthConstants.fieldFillColor,
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(
+                              AuthConstants.fieldBorderRadius,
                             ),
-                            prefixIconConstraints: const BoxConstraints(
-                              minWidth: 0,
-                              minHeight: 0,
+                            borderSide: const BorderSide(
+                              color: AuthConstants.borderColor,
                             ),
-                            hintText: '00000 00000',
-                            hintStyle: Get.theme.textTheme.labelMedium
-                                ?.copyWith(
-                                  color: AuthConstants.hintColor,
-                                  fontWeight: FontWeight.w400,
-                                ),
-                            filled: true,
-                            fillColor: AuthConstants.fieldFillColor,
-                            border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(
-                                AuthConstants.fieldBorderRadius,
-                              ),
-                              borderSide: const BorderSide(
-                                color: AuthConstants.borderColor,
-                              ),
+                          ),
+                          enabledBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(
+                              AuthConstants.fieldBorderRadius,
                             ),
-                            enabledBorder: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(
-                                AuthConstants.fieldBorderRadius,
-                              ),
-                              borderSide: const BorderSide(
-                                color: AuthConstants.borderColor,
-                              ),
+                            borderSide: const BorderSide(
+                              color: AuthConstants.borderColor,
                             ),
-                            focusedBorder: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(
-                                AuthConstants.fieldBorderRadius,
-                              ),
-                              borderSide: const BorderSide(
-                                color: AuthConstants.focusedBorderColor,
-                              ),
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(
+                              AuthConstants.fieldBorderRadius,
                             ),
-                            contentPadding: const EdgeInsets.symmetric(
-                              horizontal: 12,
-                              vertical: 10,
+                            borderSide: const BorderSide(
+                              color: AuthConstants.focusedBorderColor,
                             ),
+                          ),
+                          contentPadding: const EdgeInsets.symmetric(
+                            horizontal: 12,
+                            vertical: 10,
                           ),
                         ),
                       ),
                     ),
-                    const SizedBox(height: 16),
-                    AuthFormFieldSection(
-                      label: 'Email Address*',
-                      spacingAfterLabel: 8,
-                      child: AuthTextField(
-                        controller: emailController,
-                        hint: 'E.g. John.doe@gmail.com',
-                      ),
+                  ),
+                  const SizedBox(height: 16),
+                  AuthFormFieldSection(
+                    label: 'Email Address*',
+                    spacingAfterLabel: 8,
+                    child: AuthTextField(
+                      controller: emailController,
+                      hint: 'E.g. John.doe@gmail.com',
                     ),
-                    const SizedBox(height: 24),
-                    _buildSectionTitle('Subscription Details'),
-                    const SizedBox(height: 16),
-                    _requiredLabel('Plan'),
-                    const SizedBox(height: 8),
-                    _buildPlanDropdown(),
-                    const SizedBox(height: 16),
-                    _requiredLabel('Start Date'),
-                    const SizedBox(height: 8),
-                    _buildStartDatePicker(),
-                    const SizedBox(height: 16),
-                    Text(
-                      'Expiry Date',
-                      style: Get.theme.textTheme.labelMedium?.copyWith(
-                        color: AuthConstants.labelColor,
-                        fontWeight: FontWeight.w600,
-                      ),
+                  ),
+                  const SizedBox(height: 24),
+                  _buildSectionTitle('Subscription Details'),
+                  const SizedBox(height: 16),
+                  _requiredLabel('Plan'),
+                  const SizedBox(height: 8),
+                  _buildPlanDropdown(),
+                  const SizedBox(height: 16),
+                  _requiredLabel('Start Date'),
+                  const SizedBox(height: 8),
+                  _buildStartDatePicker(),
+                  const SizedBox(height: 16),
+                  Text(
+                    'Expiry Date',
+                    style: Get.theme.textTheme.labelMedium?.copyWith(
+                      color: AuthConstants.labelColor,
+                      fontWeight: FontWeight.w600,
                     ),
-                    const SizedBox(height: 8),
-                    _buildExpiryDisplay(),
-                    const SizedBox(height: 24),
-                    _buildSectionTitle('Reminder Channels'),
-                    const SizedBox(height: 16),
-                    _buildReminderChannels(),
-                  ],
-                ),
+                  ),
+                  const SizedBox(height: 8),
+                  _buildExpiryDisplay(),
+                  const SizedBox(height: 24),
+                  _buildSectionTitle('Reminder Channels'),
+                  const SizedBox(height: 16),
+                  _buildReminderChannels(),
+                ],
               ),
-            ),
-            const Divider(thickness: 1, height: 1, color: Color(0xFFCBD5E1)),
-            Padding(padding: const EdgeInsets.all(20), child: _buildActions()),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildHeader() {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          const SizedBox(width: 40),
-          Text(
-            title,
-            style: Get.textTheme.titleMedium?.copyWith(
-              fontWeight: FontWeight.bold,
-              color: Colors.white,
-              fontSize: 18,
             ),
           ),
-          IconButton(
-            onPressed: onCancel,
-            icon: SvgPicture.asset(
-              'assets/icons/close-button.svg',
-              width: 24,
-              height: 24,
-              colorFilter: ColorFilter.mode(
-                AuthConstants.hintColor,
-                BlendMode.srcIn,
-              ),
-            ),
+          const Divider(thickness: 1, height: 1, color: Color(0xFFCBD5E1)),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(20, 16, 20, 24),
+            child: _buildActions(),
           ),
         ],
       ),
@@ -404,6 +385,7 @@ class AddMemberModalMobileView extends StatelessWidget {
                   AuthConstants.fieldBorderRadius,
                 ),
               ),
+              side: const BorderSide(color: AuthConstants.borderColor),
             ),
             child: const Text('Cancel'),
           ),

@@ -38,122 +38,104 @@ class CreatePlanModalMobileView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Dialog(
-      backgroundColor: Colors.transparent,
-      insetPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
-      child: Container(
-        width: double.infinity,
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(20),
+    return Scaffold(
+      backgroundColor: Colors.white,
+      appBar: AppBar(
+        backgroundColor: Colors.white,
+        elevation: 0,
+        scrolledUnderElevation: 0,
+        leading: IconButton(
+          onPressed: onCancel,
+          icon: const Icon(Icons.arrow_back, color: AuthConstants.labelColor),
         ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            _buildHeader(),
-            const Divider(height: 1, thickness: 1, color: Color(0xFFE2E8F0)),
-            Flexible(
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.all(20),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    _buildSectionTitle('Plan Details'),
-                    const SizedBox(height: 16),
-                    AuthFormFieldSection(
-                      label: 'Plan Name*',
-                      spacingAfterLabel: 8,
-                      child: TextField(
-                        controller: planNameController,
-                        style: Get.textTheme.bodyMedium?.copyWith(color: _labelColor, fontSize: 14),
-                        decoration: _inputDecoration('Enter Plan Name'),
-                      ),
+        title: Text(
+          'Create Plan',
+          style: Get.textTheme.titleMedium?.copyWith(
+            fontWeight: FontWeight.bold,
+            color: AuthConstants.labelColor,
+            fontSize: 18,
+          ),
+        ),
+        centerTitle: true,
+        bottom: const PreferredSize(
+          preferredSize: Size.fromHeight(1),
+          child: Divider(thickness: 1, color: Color(0xFFCBD5E1), height: 1),
+        ),
+      ),
+      body: Column(
+        children: [
+          Expanded(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.all(20),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  _buildSectionTitle('Plan Details'),
+                  const SizedBox(height: 16),
+                  AuthFormFieldSection(
+                    label: 'Plan Name*',
+                    spacingAfterLabel: 8,
+                    child: TextField(
+                      controller: planNameController,
+                      style: Get.textTheme.bodyMedium?.copyWith(color: _labelColor, fontSize: 14),
+                      decoration: _inputDecoration('Enter Plan Name'),
                     ),
-                    const SizedBox(height: 16),
-                    AuthFormFieldSection(
-                      label: 'Price',
-                      spacingAfterLabel: 8,
-                      child: TextField(
-                        controller: priceController,
-                        style: Get.textTheme.bodyMedium?.copyWith(color: _labelColor, fontSize: 14),
-                        decoration: _inputDecoration('Enter Plan Price'),
-                      ),
+                  ),
+                  const SizedBox(height: 16),
+                  AuthFormFieldSection(
+                    label: 'Price',
+                    spacingAfterLabel: 8,
+                    child: TextField(
+                      controller: priceController,
+                      style: Get.textTheme.bodyMedium?.copyWith(color: _labelColor, fontSize: 14),
+                      decoration: _inputDecoration('Enter Plan Price'),
                     ),
-                    const SizedBox(height: 16),
-                    AuthFormFieldSection(
-                      label: 'Status*',
-                      spacingAfterLabel: 8,
-                      child: InkWell(
-                        onTap: onStatusTap,
-                        child: Container(
-                          height: 44,
-                          padding: const EdgeInsets.symmetric(horizontal: 14),
-                          decoration: BoxDecoration(
-                            color: Colors.white,
-                            borderRadius: BorderRadius.circular(_inputBorderRadius),
-                            border: Border.all(color: _inputBorderColor),
-                          ),
-                          child: Row(
-                            children: [
-                              Expanded(
-                                child: Text(
-                                  selectedStatus ?? 'Select Plan Status',
-                                  style: Get.theme.textTheme.bodyMedium?.copyWith(
-                                    fontSize: 14,
-                                    color: selectedStatus != null ? _labelColor : _hintColor,
-                                  ),
+                  ),
+                  const SizedBox(height: 16),
+                  AuthFormFieldSection(
+                    label: 'Status*',
+                    spacingAfterLabel: 8,
+                    child: InkWell(
+                      onTap: onStatusTap,
+                      child: Container(
+                        height: 44,
+                        padding: const EdgeInsets.symmetric(horizontal: 14),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(_inputBorderRadius),
+                          border: Border.all(color: _inputBorderColor),
+                        ),
+                        child: Row(
+                          children: [
+                            Expanded(
+                              child: Text(
+                                selectedStatus ?? 'Select Plan Status',
+                                style: Get.theme.textTheme.bodyMedium?.copyWith(
+                                  fontSize: 14,
+                                  color: selectedStatus != null ? _labelColor : _hintColor,
                                 ),
                               ),
-                              const Icon(Icons.keyboard_arrow_down, size: 20, color: Color(0xFF64748B)),
-                            ],
-                          ),
+                            ),
+                            const Icon(Icons.keyboard_arrow_down, size: 20, color: Color(0xFF64748B)),
+                          ],
                         ),
                       ),
                     ),
-                    const SizedBox(height: 24),
-                    _buildSectionTitle('Select Plan Duration'),
-                    const SizedBox(height: 12),
-                    _buildDurationRadios(),
-                    const SizedBox(height: 16),
-                    _buildCustomDurationField(),
-                    const SizedBox(height: 24),
-                    _buildActions(),
-                  ],
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildHeader() {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-      child: Stack(
-        alignment: Alignment.center,
-        children: [
-          Center(
-            child: Text(
-              'Create Plan',
-              style: Get.textTheme.titleMedium?.copyWith(
-                fontWeight: FontWeight.w700,
-                color: _labelColor,
-                fontSize: 18,
+                  ),
+                  const SizedBox(height: 24),
+                  _buildSectionTitle('Select Plan Duration'),
+                  const SizedBox(height: 12),
+                  _buildDurationRadios(),
+                  const SizedBox(height: 16),
+                  _buildCustomDurationField(),
+                ],
               ),
             ),
           ),
-          Positioned(
-            right: 0,
-            child: InkWell(
-              onTap: onCancel,
-              child: Container(
-                padding: const EdgeInsets.all(4),
-                decoration: const BoxDecoration(color: Color(0xFFF1F5F9), shape: BoxShape.circle),
-                child: const Icon(Icons.close, size: 18, color: Color(0xFF475569)),
-              ),
-            ),
+          const Divider(thickness: 1, height: 1, color: Color(0xFFCBD5E1)),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(20, 16, 20, 24),
+            child: _buildActions(),
           ),
         ],
       ),
