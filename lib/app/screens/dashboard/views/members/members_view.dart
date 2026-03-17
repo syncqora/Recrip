@@ -158,7 +158,9 @@ class _MembersViewState extends State<MembersView> {
   }
 
   static const _searchFieldWidth = 320.0;
-  static const _searchFieldWidthTablet = 480.0;
+  static const _searchFieldWidthTablet = 900.0;
+  static const _dropdownWidthTablet = 132.0;
+  static const _dropdownHeightTablet = 40.0;
 
   Widget _buildSearchRow(bool isMobile, {bool isTablet = false}) {
     if (isMobile) {
@@ -230,7 +232,7 @@ class _MembersViewState extends State<MembersView> {
     }
     return Row(
       children: [
-        Flexible(
+        Expanded(
           child: ConstrainedBox(
             constraints: BoxConstraints(
               maxWidth: isTablet ? _searchFieldWidthTablet : _searchFieldWidth,
@@ -285,13 +287,14 @@ class _MembersViewState extends State<MembersView> {
             ),
           ),
         ),
-        const Spacer(),
+        const SizedBox(width: 20),
         _buildFilterDropdown(
           key: _statusDropdownKey,
           label: 'Status',
           selected: _selectedStatus,
           onTap: _showStatusMenu,
-          width: 169,
+          width: isTablet ? _dropdownWidthTablet : 169,
+          height: isTablet ? _dropdownHeightTablet : null,
         ),
         const SizedBox(width: 16),
         _buildFilterDropdown(
@@ -299,7 +302,8 @@ class _MembersViewState extends State<MembersView> {
           label: 'Plan',
           selected: _selectedPlan,
           onTap: _showPlanMenu,
-          width: 169,
+          width: isTablet ? _dropdownWidthTablet : 169,
+          height: isTablet ? _dropdownHeightTablet : null,
         ),
         const SizedBox(width: 16),
         TextButton(
@@ -427,8 +431,10 @@ class _MembersViewState extends State<MembersView> {
     required String? selected,
     required VoidCallback onTap,
     double? width,
+    double? height,
   }) {
     final display = selected ?? label;
+    final h = height ?? 44;
     return Material(
       color: Colors.transparent,
       child: InkWell(
@@ -437,8 +443,8 @@ class _MembersViewState extends State<MembersView> {
         child: Container(
           key: key,
           width: width,
-          height: 44,
-          padding: const EdgeInsets.symmetric(horizontal: 16),
+          height: h,
+          padding: EdgeInsets.symmetric(horizontal: h <= 40 ? 12 : 16),
           decoration: BoxDecoration(
             color: Colors.white,
             borderRadius: BorderRadius.circular(12),

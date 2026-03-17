@@ -26,7 +26,7 @@ class RemindersTabletView extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _buildReminderRulesSection(),
+        _buildReminderRulesSection(context),
         const SizedBox(height: 28),
         _buildMessageTemplatesSection(context),
       ],
@@ -44,7 +44,7 @@ class RemindersTabletView extends StatelessWidget {
     );
   }
 
-  Widget _buildReminderRulesSection() {
+  Widget _buildReminderRulesSection(BuildContext context) {
     return Container(
       decoration: BoxDecoration(
         color: Colors.white,
@@ -89,7 +89,7 @@ class RemindersTabletView extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 16),
-            _buildRulesTable(rulesData),
+            _buildRulesTable(context, rulesData),
           ],
         ),
       ),
@@ -166,14 +166,18 @@ class RemindersTabletView extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 16),
-            _buildRulesTable(templatesData),
+            _buildRulesTable(context, templatesData, isMessageTemplates: true),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildRulesTable(List<ReminderRuleRow> rows) {
+  Widget _buildRulesTable(
+    BuildContext context,
+    List<ReminderRuleRow> rows, {
+    bool isMessageTemplates = false,
+  }) {
     return Table(
       columnWidths: const {
         0: FlexColumnWidth(1.2),
@@ -214,7 +218,7 @@ class RemindersTabletView extends StatelessWidget {
               _tableCell(_channelIcons()),
               _tableCell(row.audience),
               _tableCell(_statusPill(row.isActive)),
-              _tableCell(_actionIcons()),
+              _tableCell(_actionIcons(context, row, isMessageTemplates)),
             ],
           ),
         ),
@@ -280,14 +284,33 @@ class RemindersTabletView extends StatelessWidget {
     );
   }
 
-  Widget _actionIcons() {
+  Widget _actionIcons(
+    BuildContext context,
+    ReminderRuleRow row,
+    bool isMessageTemplates,
+  ) {
     return FittedBox(
       fit: BoxFit.scaleDown,
       alignment: Alignment.centerRight,
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          _actionIcon('assets/icons/edit.svg'),
+          _actionIcon(
+            'assets/icons/edit.svg',
+            onTap: isMessageTemplates
+                ? () {
+                    Get.dialog(
+                      CreateTemplateModal(
+                        title: 'Edit Template',
+                        initialTrigger: row.trigger,
+                        initialTiming: row.timing,
+                        initialAudience: row.audience,
+                        initialStatus: row.isActive ? 'Active' : 'Inactive',
+                      ),
+                    );
+                  }
+                : null,
+          ),
           const SizedBox(width: 4),
           _actionIcon('assets/icons/trash.svg'),
         ],
@@ -295,11 +318,11 @@ class RemindersTabletView extends StatelessWidget {
     );
   }
 
-  Widget _actionIcon(String assetPath) {
+  Widget _actionIcon(String assetPath, {VoidCallback? onTap}) {
     return Material(
       color: Colors.transparent,
       child: InkWell(
-        onTap: () {},
+        onTap: onTap,
         borderRadius: BorderRadius.circular(20),
         child: Container(
           width: 32,

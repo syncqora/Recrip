@@ -82,7 +82,7 @@ class DashboardMobileView extends StatelessWidget {
         ),
         actions: [
           InkWell(
-            onTap: () => openModalWithTransition(context, const HelpSupportModal()),
+            onTap: () => Get.dialog(const HelpSupportModal()),
             borderRadius: BorderRadius.circular(24),
             child: Padding(
               padding: const EdgeInsets.all(8),
