@@ -123,7 +123,7 @@ class HelpSupportModalMobileView extends StatelessWidget {
               style: Get.textTheme.titleMedium?.copyWith(
                 fontWeight: FontWeight.bold,
                 color: const Color(0xFF0F172A),
-                fontSize: 18,
+                fontSize: 16,
               ),
             ),
           ),

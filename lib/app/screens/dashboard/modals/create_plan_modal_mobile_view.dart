@@ -64,7 +64,7 @@ class CreatePlanModalMobileView extends StatelessWidget {
           style: Get.textTheme.titleMedium?.copyWith(
             fontWeight: FontWeight.bold,
             color: AuthConstants.labelColor,
-            fontSize: 18,
+            fontSize: 16,
           ),
         ),
         centerTitle: true,
@@ -184,7 +184,7 @@ class CreatePlanModalMobileView extends StatelessWidget {
   Widget _buildSectionTitle(String title) {
     return Text(
       title,
-      style: Get.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w700, color: _labelColor, fontSize: 15),
+      style: Get.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w700, color: _labelColor, fontSize: 14),
     );
   }
 

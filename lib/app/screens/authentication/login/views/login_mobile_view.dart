@@ -133,7 +133,7 @@ class _AuthFormCardMobile extends StatelessWidget {
             textAlign: TextAlign.center,
             style: Get.theme.textTheme.bodyLarge?.copyWith(
               color: AuthConstants.titleColor,
-              fontSize: 20,
+              fontSize: 18,
               fontWeight: FontWeight.bold,
             ),
           ),

@@ -220,7 +220,7 @@ class DashboardMobileView extends StatelessWidget {
                                 Text(
                                   e.value,
                                   style: Get.textTheme.bodySmall?.copyWith(
-                                    fontSize: 18,
+                                    fontSize: 16,
                                     color: isActive ? _purple : _sidebarTextColor,
                                     fontWeight: isActive ? FontWeight.w600 : FontWeight.w500,
                                   ),
@@ -263,7 +263,7 @@ class DashboardMobileView extends StatelessWidget {
                       Text(
                         'Logout',
                         style: Get.textTheme.bodySmall?.copyWith(
-                          fontSize: 18,
+                          fontSize: 16,
                           color: _sidebarTextColor,
                         ),
                       ),

@@ -62,7 +62,7 @@ class ForgotPasswordMobileView extends GetView<ForgotPasswordController> {
                     'Back',
                     style: Get.theme.textTheme.bodyMedium?.copyWith(
                       fontWeight: FontWeight.w500,
-                      fontSize: 16,
+                      fontSize: 15,
                       color: const Color(0xFF475569),
                     ),
                   ),
@@ -118,7 +118,7 @@ class _AuthFormCardMobile extends StatelessWidget {
             textAlign: TextAlign.center,
             style: Get.theme.textTheme.bodyLarge?.copyWith(
               color: AuthConstants.titleColor,
-              fontSize: 20,
+              fontSize: 18,
               fontWeight: FontWeight.bold,
             ),
           ),

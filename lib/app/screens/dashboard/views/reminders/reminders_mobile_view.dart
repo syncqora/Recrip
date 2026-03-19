@@ -140,7 +140,7 @@ class RemindersMobileView extends StatelessWidget {
                           style: TextStyle(
                             fontWeight: FontWeight.w600,
                             color: _textDark,
-                            fontSize: 16,
+                            fontSize: 15,
                           ),
                         ),
                         SizedBox(height: 16),
@@ -242,7 +242,7 @@ class RemindersMobileView extends StatelessWidget {
                   row.trigger,
                   style: const TextStyle(
                     fontWeight: FontWeight.bold,
-                    fontSize: 16,
+                    fontSize: 15,
                     color: _textDark,
                   ),
                   overflow: TextOverflow.ellipsis,

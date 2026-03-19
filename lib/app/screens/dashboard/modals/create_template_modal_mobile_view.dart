@@ -71,7 +71,7 @@ class CreateTemplateModalMobileView extends StatelessWidget {
           style: Get.textTheme.titleMedium?.copyWith(
             fontWeight: FontWeight.bold,
             color: AuthConstants.labelColor,
-            fontSize: 18,
+            fontSize: 16,
           ),
         ),
         centerTitle: true,
@@ -156,7 +156,7 @@ class CreateTemplateModalMobileView extends StatelessWidget {
       style: Get.textTheme.titleSmall?.copyWith(
         fontWeight: FontWeight.bold,
         color: AuthConstants.labelColor,
-        fontSize: 15,
+        fontSize: 14,
       ),
     );
   }

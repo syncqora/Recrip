@@ -71,7 +71,7 @@ class ReportsMobileView extends StatelessWidget {
               style: TextStyle(
                 fontWeight: FontWeight.bold,
                 color: _textDark,
-                fontSize: 16,
+                fontSize: 15,
               ),
             ),
             Row(
@@ -134,7 +134,7 @@ class ReportsMobileView extends StatelessWidget {
                 row.planName,
                 style: const TextStyle(
                   fontWeight: FontWeight.bold,
-                  fontSize: 15,
+                  fontSize: 14,
                   color: _textDark,
                 ),
               ),
@@ -142,7 +142,7 @@ class ReportsMobileView extends StatelessWidget {
                 row.revenue,
                 style: const TextStyle(
                   fontWeight: FontWeight.bold,
-                  fontSize: 15,
+                  fontSize: 14,
                   color: Color(0xFF16A34A),
                 ),
               ),

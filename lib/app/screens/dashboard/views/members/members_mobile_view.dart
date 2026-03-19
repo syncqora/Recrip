@@ -96,7 +96,7 @@ class MembersMobileView extends StatelessWidget {
                     member.name,
                     style: Get.textTheme.bodyMedium?.copyWith(
                       fontWeight: FontWeight.bold,
-                      fontSize: 16,
+                      fontSize: 15,
                       color: _textDark,
                     ),
                   ),

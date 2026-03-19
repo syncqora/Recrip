@@ -64,7 +64,7 @@ class RenewalsMobileView extends StatelessWidget {
                 row.name,
                 style: const TextStyle(
                   fontWeight: FontWeight.bold,
-                  fontSize: 16,
+                  fontSize: 15,
                   color: _textDark,
                 ),
               ),
