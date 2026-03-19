@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:get/get.dart';
 
 import '../../../../shared/widgets/success_toast.dart';
@@ -203,7 +204,7 @@ class _HelpSupportModalState extends State<HelpSupportModal> {
 
   Widget _buildHeader() {
     return Padding(
-      padding: const EdgeInsets.fromLTRB(32, 24, 16, 20),
+      padding: const EdgeInsets.fromLTRB(32, 24, 32, 20),
       child: Stack(
         alignment: Alignment.center,
         children: [
@@ -223,16 +224,15 @@ class _HelpSupportModalState extends State<HelpSupportModal> {
               color: Colors.transparent,
               child: InkWell(
                 onTap: () => Navigator.of(context).pop(),
-                borderRadius: BorderRadius.circular(20),
-                child: Container(
+                hoverColor: Colors.transparent,
+                highlightColor: Colors.transparent,
+                splashColor: Colors.transparent,
+                child: const SizedBox(
                   width: 40,
                   height: 40,
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFF1F5F9),
-                    shape: BoxShape.circle,
+                  child: Center(
+                    child: _HelpSupportCloseSvg(),
                   ),
-                  alignment: Alignment.center,
-                  child: const Icon(Icons.close, size: 20, color: Color(0xFF64748B)),
                 ),
               ),
             ),
@@ -243,3 +243,19 @@ class _HelpSupportModalState extends State<HelpSupportModal> {
   }
 }
 
+class _HelpSupportCloseSvg extends StatelessWidget {
+  const _HelpSupportCloseSvg();
+
+  @override
+  Widget build(BuildContext context) {
+    return SvgPicture.asset(
+      'assets/icons/close-button.svg',
+      width: 24,
+      height: 24,
+      colorFilter: const ColorFilter.mode(
+        AuthConstants.hintColor,
+        BlendMode.srcIn,
+      ),
+    );
+  }
+}

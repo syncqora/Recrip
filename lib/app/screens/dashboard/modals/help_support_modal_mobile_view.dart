@@ -129,15 +129,19 @@ class HelpSupportModalMobileView extends StatelessWidget {
           ),
           Positioned(
             right: 0,
-            child: IconButton(
-              onPressed: onCancel,
-              icon: SvgPicture.asset(
-                'assets/icons/close-button.svg',
-                width: 24,
-                height: 24,
-                colorFilter: const ColorFilter.mode(
-                  AuthConstants.hintColor,
-                  BlendMode.srcIn,
+            child: Material(
+              color: Colors.transparent,
+              child: InkWell(
+                onTap: onCancel,
+                hoverColor: Colors.transparent,
+                highlightColor: Colors.transparent,
+                splashColor: Colors.transparent,
+                child: const SizedBox(
+                  width: 40,
+                  height: 40,
+                  child: Center(
+                    child: _HelpSupportCloseSvg(),
+                  ),
                 ),
               ),
             ),
@@ -175,6 +179,23 @@ class HelpSupportModalMobileView extends StatelessWidget {
           child: const Text('Cancel'),
         ),
       ],
+    );
+  }
+}
+
+class _HelpSupportCloseSvg extends StatelessWidget {
+  const _HelpSupportCloseSvg();
+
+  @override
+  Widget build(BuildContext context) {
+    return SvgPicture.asset(
+      'assets/icons/close-button.svg',
+      width: 24,
+      height: 24,
+      colorFilter: const ColorFilter.mode(
+        AuthConstants.hintColor,
+        BlendMode.srcIn,
+      ),
     );
   }
 }
