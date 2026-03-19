@@ -4,6 +4,7 @@ import 'package:get/get.dart';
 
 import '../../../../shared/widgets/success_toast.dart';
 import '../../../../shared/widgets/app_close_button.dart';
+import '../../../../shared/widgets/app_modal_primary_button.dart';
 import '../../authentication/widgets/auth_constants.dart';
 import '../../authentication/widgets/auth_form_field_section.dart';
 import 'create_plan_modal.dart';
@@ -615,18 +616,14 @@ class _EditPlanModalState extends State<EditPlanModal> {
           child: const Text('Cancel'),
         ),
         const SizedBox(width: 14),
-        FilledButton(
+        AppModalPrimaryButton(
+          label: 'Save Changes',
           onPressed: _onSave,
-          style: FilledButton.styleFrom(
-            backgroundColor: AuthConstants.buttonEnabledColor,
-            foregroundColor: Colors.white,
-            padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 12),
-            minimumSize: const Size(0, 44),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(_inputBorderRadius),
-            ),
-          ),
-          child: const Text('Save Changes'),
+          padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 12),
+          minimumSize: const Size(0, 44),
+          borderRadius: _inputBorderRadius,
+          enabledBackgroundColor: AuthConstants.buttonEnabledColor,
+          disabledBackgroundColor: AuthConstants.buttonDisabledColor,
         ),
       ],
     );

@@ -3,6 +3,7 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:get/get.dart';
 
 import '../../../../shared/widgets/plan_dropdown.dart';
+import '../../../../shared/widgets/app_modal_primary_button.dart';
 import '../../authentication/widgets/auth_constants.dart';
 import 'subscription_utils.dart';
 import '../../authentication/widgets/auth_form_field_section.dart';
@@ -414,23 +415,11 @@ class AddMemberModalMobileView extends StatelessWidget {
         ),
         const SizedBox(width: 12),
         Expanded(
-          child: FilledButton(
+          child: AppModalPrimaryButton(
+            label: primaryButtonLabel,
             onPressed: isSaveEnabled ? onSave : null,
-            style: FilledButton.styleFrom(
-              backgroundColor: isSaveEnabled
-                  ? AuthConstants.buttonEnabledColor
-                  : AuthConstants.buttonDisabledColor,
-              disabledBackgroundColor: AuthConstants.buttonDisabledColor,
-              foregroundColor: Colors.white,
-              padding: const EdgeInsets.symmetric(vertical: 12),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(10),
-              ),
-            ),
-            child: Text(
-              primaryButtonLabel,
-              style: const TextStyle(color: Colors.white),
-            ),
+            padding: const EdgeInsets.symmetric(vertical: 12),
+            borderRadius: 10,
           ),
         ),
       ],

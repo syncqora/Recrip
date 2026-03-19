@@ -164,7 +164,9 @@ class _RenewalsViewState extends State<RenewalsView> {
                       child: Container(
                         height: _statusTabsHeight,
                         alignment: Alignment.center,
-                        padding: EdgeInsets.symmetric(horizontal: isMobile ? 8 : 12),
+                        padding: EdgeInsets.symmetric(
+                          horizontal: isMobile ? 8 : 12,
+                        ),
                         decoration: BoxDecoration(
                           color: _selectedTabIndex == i
                               ? _purple
@@ -200,7 +202,9 @@ class _RenewalsViewState extends State<RenewalsView> {
                       child: Container(
                         height: _statusTabsHeight,
                         alignment: Alignment.center,
-                        padding: EdgeInsets.symmetric(horizontal: isMobile ? 8 : 12),
+                        padding: EdgeInsets.symmetric(
+                          horizontal: isMobile ? 8 : 12,
+                        ),
                         decoration: BoxDecoration(
                           color: _selectedTabIndex == i
                               ? _purple

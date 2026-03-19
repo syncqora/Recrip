@@ -4,6 +4,7 @@ import 'package:get/get.dart';
 
 import '../../../../shared/widgets/success_toast.dart';
 import '../../../../shared/widgets/app_close_button.dart';
+import '../../../../shared/widgets/app_modal_primary_button.dart';
 import '../../authentication/widgets/auth_constants.dart';
 import 'create_template_modal_mobile_view.dart';
 import 'create_template_modal_tablet_view.dart';
@@ -583,24 +584,12 @@ class _CreateTemplateModalState extends State<CreateTemplateModal> {
         SizedBox(
           width: 180,
           height: 44,
-          child: FilledButton(
+          child: AppModalPrimaryButton(
+            label: _isEditMode ? 'Update Template' : 'Create Template',
             onPressed: _isCreateEnabled ? _onCreate : null,
-            style: FilledButton.styleFrom(
-              backgroundColor: _isCreateEnabled
-                  ? AuthConstants.buttonEnabledColor
-                  : AuthConstants.buttonDisabledColor,
-              disabledBackgroundColor: AuthConstants.buttonDisabledColor,
-              foregroundColor: Colors.white,
-              padding: const EdgeInsets.fromLTRB(20, 12, 20, 12),
-              minimumSize: const Size(180, 44),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(10),
-              ),
-            ),
-            child: Text(
-              _isEditMode ? 'Update Template' : 'Create Template',
-              style: const TextStyle(color: Colors.white),
-            ),
+            padding: const EdgeInsets.fromLTRB(20, 12, 20, 12),
+            minimumSize: const Size(180, 44),
+            borderRadius: 10,
           ),
         ),
       ],

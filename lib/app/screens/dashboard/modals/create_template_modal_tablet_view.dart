@@ -3,6 +3,7 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:get/get.dart';
 import '../../authentication/widgets/auth_constants.dart';
 import '../../../../shared/widgets/app_close_button.dart';
+import '../../../../shared/widgets/app_modal_primary_button.dart';
 
 class CreateTemplateModalTabletView extends StatelessWidget {
   const CreateTemplateModalTabletView({
@@ -424,23 +425,12 @@ class CreateTemplateModalTabletView extends StatelessWidget {
         SizedBox(
           width: 180,
           height: 44,
-          child: FilledButton(
+          child: AppModalPrimaryButton(
+            label: title.contains('Edit') ? 'Update Template' : 'Create Template',
             onPressed: isCreateEnabled ? onCreate : null,
-            style: FilledButton.styleFrom(
-              backgroundColor: isCreateEnabled
-                  ? AuthConstants.buttonEnabledColor
-                  : AuthConstants.buttonDisabledColor,
-              disabledBackgroundColor: AuthConstants.buttonDisabledColor,
-              disabledForegroundColor: Colors.white,
-              foregroundColor: Colors.white,
-              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(10),
-              ),
-            ),
-            child: Text(
-              title.contains('Edit') ? 'Update Template' : 'Create Template',
-            ),
+            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+            minimumSize: const Size(180, 44),
+            borderRadius: 10,
           ),
         ),
       ],

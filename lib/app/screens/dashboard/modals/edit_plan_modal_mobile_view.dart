@@ -4,6 +4,7 @@ import 'package:get/get.dart';
 
 import '../../authentication/widgets/auth_constants.dart';
 import '../../authentication/widgets/auth_form_field_section.dart';
+import '../../../../shared/widgets/app_modal_primary_button.dart';
 import 'create_plan_modal.dart';
 
 class EditPlanModalMobileView extends StatelessWidget {
@@ -330,15 +331,11 @@ class EditPlanModalMobileView extends StatelessWidget {
         ),
         const SizedBox(width: 12),
         Expanded(
-          child: FilledButton(
+          child: AppModalPrimaryButton(
+            label: 'Save Changes',
             onPressed: onSave,
-            style: FilledButton.styleFrom(
-              backgroundColor: AuthConstants.buttonEnabledColor,
-              foregroundColor: Colors.white,
-              padding: const EdgeInsets.symmetric(vertical: 12),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-            ),
-            child: const Text('Save Changes'),
+            padding: const EdgeInsets.symmetric(vertical: 12),
+            borderRadius: 10,
           ),
         ),
       ],

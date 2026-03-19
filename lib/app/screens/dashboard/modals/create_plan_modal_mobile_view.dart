@@ -3,6 +3,7 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:get/get.dart';
 import '../../authentication/widgets/auth_constants.dart';
 import '../../authentication/widgets/auth_form_field_section.dart';
+import '../../../../shared/widgets/app_modal_primary_button.dart';
 import 'create_plan_modal.dart';
 
 class CreatePlanModalMobileView extends StatelessWidget {
@@ -328,21 +329,11 @@ class CreatePlanModalMobileView extends StatelessWidget {
         ),
         const SizedBox(width: 12),
         Expanded(
-          child: FilledButton(
+          child: AppModalPrimaryButton(
+            label: 'Create Plan',
             onPressed: isCreateEnabled ? onCreate : null,
-            style: FilledButton.styleFrom(
-              backgroundColor: isCreateEnabled
-                  ? AuthConstants.buttonEnabledColor
-                  : AuthConstants.buttonDisabledColor,
-              disabledBackgroundColor: AuthConstants.buttonDisabledColor,
-              foregroundColor: Colors.white,
-              disabledForegroundColor: Colors.white,
-              padding: const EdgeInsets.symmetric(vertical: 12),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(10),
-              ),
-            ),
-            child: const Text('Create Plan'),
+            padding: const EdgeInsets.symmetric(vertical: 12),
+            borderRadius: 10,
           ),
         ),
       ],

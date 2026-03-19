@@ -4,6 +4,7 @@ import 'package:get/get.dart';
 
 import '../../../../shared/widgets/app_close_button.dart';
 import '../../../../shared/widgets/plan_dropdown.dart';
+import '../../../../shared/widgets/app_modal_primary_button.dart';
 import '../../../../shared/widgets/success_toast.dart';
 import '../../authentication/widgets/auth_constants.dart';
 import '../../authentication/widgets/auth_form_field_section.dart';
@@ -711,24 +712,12 @@ class _AddMemberModalState extends State<AddMemberModal> {
         SizedBox(
           width: 146,
           height: 44,
-          child: FilledButton(
+          child: AppModalPrimaryButton(
+            label: isRenewMode ? 'Renew' : 'Save Member',
             onPressed: _isSaveEnabled ? _onSave : null,
-            style: FilledButton.styleFrom(
-              backgroundColor: _isSaveEnabled
-                  ? AuthConstants.buttonEnabledColor
-                  : AuthConstants.buttonDisabledColor,
-              disabledBackgroundColor: AuthConstants.buttonDisabledColor,
-              foregroundColor: Colors.white,
-              padding: const EdgeInsets.fromLTRB(20, 12, 20, 12),
-              minimumSize: const Size(146, 44),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(10),
-              ),
-            ),
-            child: Text(
-              isRenewMode ? 'Renew' : 'Save Member',
-              style: const TextStyle(color: Colors.white),
-            ),
+            padding: const EdgeInsets.fromLTRB(20, 12, 20, 12),
+            minimumSize: const Size(146, 44),
+            borderRadius: 10,
           ),
         ),
       ],

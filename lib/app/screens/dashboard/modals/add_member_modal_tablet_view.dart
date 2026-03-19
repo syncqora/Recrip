@@ -4,6 +4,7 @@ import 'package:get/get.dart';
 
 import '../../../../shared/widgets/app_close_button.dart';
 import '../../../../shared/widgets/plan_dropdown.dart';
+import '../../../../shared/widgets/app_modal_primary_button.dart';
 import '../../authentication/widgets/auth_constants.dart';
 import 'subscription_utils.dart';
 import '../../authentication/widgets/auth_form_field_section.dart';
@@ -454,23 +455,12 @@ class AddMemberModalTabletView extends StatelessWidget {
         SizedBox(
           width: 160,
           height: 44,
-          child: FilledButton(
+          child: AppModalPrimaryButton(
+            label: primaryButtonLabel,
             onPressed: isSaveEnabled ? onSave : null,
-            style: FilledButton.styleFrom(
-              backgroundColor: isSaveEnabled
-                  ? AuthConstants.buttonEnabledColor
-                  : AuthConstants.buttonDisabledColor,
-              disabledBackgroundColor: AuthConstants.buttonDisabledColor,
-              foregroundColor: Colors.white,
-              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(10),
-              ),
-            ),
-            child: Text(
-              primaryButtonLabel,
-              style: const TextStyle(color: Colors.white),
-            ),
+            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+            minimumSize: const Size(160, 44),
+            borderRadius: 10,
           ),
         ),
       ],

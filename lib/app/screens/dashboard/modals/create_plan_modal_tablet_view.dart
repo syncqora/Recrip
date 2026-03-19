@@ -5,6 +5,7 @@ import '../../authentication/widgets/auth_constants.dart';
 import '../../authentication/widgets/auth_form_field_section.dart';
 import 'create_plan_modal.dart';
 import '../../../../shared/widgets/app_close_button.dart';
+import '../../../../shared/widgets/app_modal_primary_button.dart';
 
 class CreatePlanModalTabletView extends StatelessWidget {
   const CreatePlanModalTabletView({
@@ -316,19 +317,11 @@ class CreatePlanModalTabletView extends StatelessWidget {
           child: const Text('Cancel'),
         ),
         const SizedBox(width: 16),
-        FilledButton(
+        AppModalPrimaryButton(
+          label: 'Create Plan',
           onPressed: isCreateEnabled ? onCreate : null,
-          style: FilledButton.styleFrom(
-            backgroundColor: isCreateEnabled
-                ? AuthConstants.buttonEnabledColor
-                : AuthConstants.buttonDisabledColor,
-            disabledBackgroundColor: AuthConstants.buttonDisabledColor,
-            foregroundColor: Colors.white,
-            disabledForegroundColor: Colors.white,
-            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-          ),
-          child: const Text('Create Plan'),
+          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+          borderRadius: 10,
         ),
       ],
     );

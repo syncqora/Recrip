@@ -3,6 +3,7 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:get/get.dart';
 import '../../authentication/widgets/auth_constants.dart';
 import '../../../../shared/widgets/app_close_button.dart';
+import '../../../../shared/widgets/app_modal_primary_button.dart';
 
 class CreateRuleModalTabletView extends StatelessWidget {
   const CreateRuleModalTabletView({
@@ -322,21 +323,11 @@ class CreateRuleModalTabletView extends StatelessWidget {
         SizedBox(
           width: 160,
           height: 44,
-          child: FilledButton(
+          child: AppModalPrimaryButton(
+            label: primaryButtonLabel,
             onPressed: isCreateEnabled ? onCreate : null,
-            style: FilledButton.styleFrom(
-              backgroundColor: isCreateEnabled
-                  ? AuthConstants.buttonEnabledColor
-                  : AuthConstants.buttonDisabledColor,
-              disabledBackgroundColor: AuthConstants.buttonDisabledColor,
-              disabledForegroundColor: Colors.white,
-              foregroundColor: Colors.white,
-              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(10),
-              ),
-            ),
-            child: Text(primaryButtonLabel),
+            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+            borderRadius: 10,
           ),
         ),
       ],

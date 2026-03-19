@@ -3,6 +3,7 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:get/get.dart';
 import '../../../../shared/widgets/success_toast.dart';
 import '../../../../shared/widgets/app_close_button.dart';
+import '../../../../shared/widgets/app_modal_primary_button.dart';
 import '../../authentication/widgets/auth_constants.dart';
 import '../../authentication/widgets/auth_form_field_section.dart';
 import 'create_plan_modal_mobile_view.dart';
@@ -699,25 +700,12 @@ class _CreatePlanModalState extends State<CreatePlanModal> {
         SizedBox(
           width: 146,
           height: 44,
-          child: FilledButton(
+          child: AppModalPrimaryButton(
+            label: 'Create Plan',
             onPressed: _isCreateEnabled ? _onCreate : null,
-            style: FilledButton.styleFrom(
-              backgroundColor: _isCreateEnabled
-                  ? AuthConstants.buttonEnabledColor
-                  : AuthConstants.buttonDisabledColor,
-              disabledBackgroundColor: AuthConstants.buttonDisabledColor,
-              foregroundColor: Colors.white,
-              disabledForegroundColor: Colors.white,
-              padding: const EdgeInsets.fromLTRB(20, 12, 20, 12),
-              minimumSize: const Size(146, 44),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(10),
-              ),
-            ),
-            child: const Text(
-              'Create Plan',
-              style: TextStyle(color: Colors.white),
-            ),
+            padding: const EdgeInsets.fromLTRB(20, 12, 20, 12),
+            minimumSize: const Size(146, 44),
+            borderRadius: 10,
           ),
         ),
       ],
