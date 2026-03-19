@@ -5,6 +5,7 @@ import 'package:get/get.dart';
 
 import '../../../../../shared/widgets/primary_action_button.dart';
 import '../../../../../shared/widgets/success_toast.dart';
+import '../../../../../shared/widgets/app_close_button.dart';
 import 'dashboard_controller.dart';
 import '../../modals/add_member_modal.dart';
 import '../../modals/help_support_modal.dart';
@@ -156,17 +157,9 @@ class DashboardMobileView extends StatelessWidget {
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
               child: Row(
                 children: [
-                  IconButton(
-                    icon: SvgPicture.asset(
-                      'assets/icons/close-button.svg',
-                      width: 24,
-                      height: 24,
-                      colorFilter: const ColorFilter.mode(
-                        Color(0xFF64748B),
-                        BlendMode.srcIn,
-                      ),
-                    ),
+                  AppCloseButton(
                     onPressed: () => Navigator.of(context).pop(),
+                    iconColor: _sidebarIconColor,
                   ),
                   const Spacer(),
                   Image.asset('assets/images/saas-logo.png', height: 36),

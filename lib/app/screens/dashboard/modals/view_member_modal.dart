@@ -3,6 +3,7 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:get/get.dart';
 
 import '../../../../shared/widgets/success_toast.dart';
+import '../../../../shared/widgets/app_close_button.dart';
 import '../../authentication/widgets/auth_constants.dart';
 
 /// Data for the View Member modal.
@@ -110,18 +111,7 @@ class ViewMemberModal extends StatelessWidget {
   }
 
   Widget _buildCloseButton(BuildContext context) {
-    return IconButton(
-      onPressed: () => Navigator.of(context).pop(),
-      icon: SvgPicture.asset(
-        'assets/icons/close-button.svg',
-        width: 24,
-        height: 24,
-        colorFilter: const ColorFilter.mode(
-          AuthConstants.hintColor,
-          BlendMode.srcIn,
-        ),
-      ),
-    );
+    return AppCloseButton(onPressed: () => Navigator.of(context).pop());
   }
 
   Widget _statusPill() {
@@ -336,18 +326,7 @@ class RemoveUserConfirmDialog extends StatelessWidget {
                   ),
                   Positioned(
                     right: 0,
-                    child: IconButton(
-                      onPressed: onCancel,
-                      icon: SvgPicture.asset(
-                        'assets/icons/close-button.svg',
-                        width: 24,
-                        height: 24,
-                        colorFilter: const ColorFilter.mode(
-                          AuthConstants.hintColor,
-                          BlendMode.srcIn,
-                        ),
-                      ),
-                    ),
+                    child: AppCloseButton(onPressed: onCancel),
                   ),
                 ],
               ),

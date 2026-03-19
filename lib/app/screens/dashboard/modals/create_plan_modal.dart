@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:get/get.dart';
 import '../../../../shared/widgets/success_toast.dart';
+import '../../../../shared/widgets/app_close_button.dart';
 import '../../authentication/widgets/auth_constants.dart';
 import '../../authentication/widgets/auth_form_field_section.dart';
 import 'create_plan_modal_mobile_view.dart';
@@ -418,18 +419,7 @@ class _CreatePlanModalState extends State<CreatePlanModal> {
               ),
             ),
           ),
-          IconButton(
-            onPressed: () => Navigator.of(context).pop(),
-            icon: SvgPicture.asset(
-              'assets/icons/close-button.svg',
-              width: 24,
-              height: 24,
-              colorFilter: const ColorFilter.mode(
-                AuthConstants.hintColor,
-                BlendMode.srcIn,
-              ),
-            ),
-          ),
+          AppCloseButton(onPressed: () => Navigator.of(context).pop()),
         ],
       ),
     );

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:get/get.dart';
 import '../../authentication/widgets/auth_constants.dart';
+import '../../../../shared/widgets/app_close_button.dart';
 
 class CreateRuleModalTabletView extends StatelessWidget {
   const CreateRuleModalTabletView({
@@ -106,18 +107,7 @@ class CreateRuleModalTabletView extends StatelessWidget {
               ),
             ),
           ),
-          IconButton(
-            onPressed: onCancel,
-            icon: SvgPicture.asset(
-              'assets/icons/close-button.svg',
-              width: 24,
-              height: 24,
-              colorFilter: const ColorFilter.mode(
-                AuthConstants.hintColor,
-                BlendMode.srcIn,
-              ),
-            ),
-          ),
+          AppCloseButton(onPressed: onCancel),
         ],
       ),
     );

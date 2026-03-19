@@ -3,6 +3,7 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:get/get.dart';
 
 import '../../../../shared/widgets/success_toast.dart';
+import '../../../../shared/widgets/app_close_button.dart';
 import '../../authentication/widgets/auth_constants.dart';
 import '../../authentication/widgets/auth_form_field_section.dart';
 import 'create_plan_modal.dart';
@@ -359,22 +360,12 @@ class _EditPlanModalState extends State<EditPlanModal> {
           ),
           Positioned(
             right: 0,
-            child: Material(
-              color: Colors.transparent,
-              child: InkWell(
-                onTap: () => Navigator.of(context).pop(),
-                borderRadius: BorderRadius.circular(20),
-                child: Container(
-                  width: 36,
-                  height: 36,
-                  decoration: const BoxDecoration(
-                    color: Color(0xFFF1F5F9),
-                    shape: BoxShape.circle,
-                  ),
-                  alignment: Alignment.center,
-                  child: const Icon(Icons.close, size: 18, color: Color(0xFF475569)),
-                ),
-              ),
+            child: AppCloseButton(
+              onPressed: () => Navigator.of(context).pop(),
+              hitSize: 36,
+              iconSize: 18,
+              iconColor: const Color(0xFF475569),
+              backgroundColor: const Color(0xFFF1F5F9),
             ),
           ),
         ],

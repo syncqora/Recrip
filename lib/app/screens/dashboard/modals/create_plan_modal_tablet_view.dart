@@ -4,6 +4,7 @@ import 'package:get/get.dart';
 import '../../authentication/widgets/auth_constants.dart';
 import '../../authentication/widgets/auth_form_field_section.dart';
 import 'create_plan_modal.dart';
+import '../../../../shared/widgets/app_close_button.dart';
 
 class CreatePlanModalTabletView extends StatelessWidget {
   const CreatePlanModalTabletView({
@@ -99,18 +100,7 @@ class CreatePlanModalTabletView extends StatelessWidget {
           ),
           Positioned(
             right: 0,
-            child: IconButton(
-              onPressed: onCancel,
-              icon: SvgPicture.asset(
-                'assets/icons/close-button.svg',
-                width: 24,
-                height: 24,
-                colorFilter: const ColorFilter.mode(
-                  AuthConstants.hintColor,
-                  BlendMode.srcIn,
-                ),
-              ),
-            ),
+            child: AppCloseButton(onPressed: onCancel),
           ),
         ],
       ),

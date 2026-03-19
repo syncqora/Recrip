@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:get/get.dart';
 
+import '../../../../shared/widgets/app_close_button.dart';
 import '../../../../shared/widgets/plan_dropdown.dart';
 import '../../../../shared/widgets/success_toast.dart';
 import '../../authentication/widgets/auth_constants.dart';
@@ -347,18 +348,7 @@ class _AddMemberModalState extends State<AddMemberModal> {
               ),
             ),
           ),
-          IconButton(
-            onPressed: () => Navigator.of(context).pop(),
-            icon: SvgPicture.asset(
-              'assets/icons/close-button.svg',
-              width: 24,
-              height: 24,
-              colorFilter: ColorFilter.mode(
-                AuthConstants.hintColor,
-                BlendMode.srcIn,
-              ),
-            ),
-          ),
+          AppCloseButton(onPressed: () => Navigator.of(context).pop()),
         ],
       ),
     );

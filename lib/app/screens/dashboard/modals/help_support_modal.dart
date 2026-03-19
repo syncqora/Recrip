@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/flutter_svg.dart';
 import 'package:get/get.dart';
 
 import '../../../../shared/widgets/success_toast.dart';
+import '../../../../shared/widgets/app_close_button.dart';
 import '../../authentication/widgets/auth_constants.dart';
 import '../../authentication/widgets/auth_form_field_section.dart';
 import 'help_support_modal_mobile_view.dart';
@@ -220,41 +220,11 @@ class _HelpSupportModalState extends State<HelpSupportModal> {
           ),
           Positioned(
             right: 0,
-            child: Material(
-              color: Colors.transparent,
-              child: InkWell(
-                onTap: () => Navigator.of(context).pop(),
-                hoverColor: Colors.transparent,
-                highlightColor: Colors.transparent,
-                splashColor: Colors.transparent,
-                child: const SizedBox(
-                  width: 40,
-                  height: 40,
-                  child: Center(
-                    child: _HelpSupportCloseSvg(),
-                  ),
-                ),
-              ),
+            child: AppCloseButton(
+              onPressed: () => Navigator.of(context).pop(),
             ),
           ),
         ],
-      ),
-    );
-  }
-}
-
-class _HelpSupportCloseSvg extends StatelessWidget {
-  const _HelpSupportCloseSvg();
-
-  @override
-  Widget build(BuildContext context) {
-    return SvgPicture.asset(
-      'assets/icons/close-button.svg',
-      width: 24,
-      height: 24,
-      colorFilter: const ColorFilter.mode(
-        AuthConstants.hintColor,
-        BlendMode.srcIn,
       ),
     );
   }

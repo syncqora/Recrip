@@ -3,6 +3,7 @@ import 'package:flutter_svg/svg.dart';
 import 'package:get/get.dart';
 
 import '../../../../shared/widgets/success_toast.dart';
+import '../../../../shared/widgets/app_close_button.dart';
 import '../../authentication/widgets/auth_constants.dart';
 import 'create_rule_modal_mobile_view.dart';
 import 'create_rule_modal_tablet_view.dart';
@@ -416,18 +417,7 @@ class _CreateRuleModalState extends State<CreateRuleModal> {
               ),
             ),
           ),
-          IconButton(
-            onPressed: () => Navigator.of(context).pop(),
-            icon: SvgPicture.asset(
-              'assets/icons/close-button.svg',
-              width: 24,
-              height: 24,
-              colorFilter: ColorFilter.mode(
-                AuthConstants.hintColor,
-                BlendMode.srcIn,
-              ),
-            ),
-          ),
+          AppCloseButton(onPressed: () => Navigator.of(context).pop()),
         ],
       ),
     );
