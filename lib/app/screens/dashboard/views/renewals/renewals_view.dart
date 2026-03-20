@@ -85,7 +85,7 @@ class _RenewalsViewState extends State<RenewalsView> {
           const SizedBox(height: 32),
           _buildStatusTabs(isMobile),
           const SizedBox(height: 32),
-          _buildSearchRow(isMobile),
+          _buildSearchRow(isMobile, isTablet: isTablet),
           const SizedBox(height: 32),
           if (isMobile)
             RenewalsMobileView(tableData: _tableData)
@@ -238,9 +238,11 @@ class _RenewalsViewState extends State<RenewalsView> {
     );
   }
 
-  static const _searchFieldWidth = 320.0;
+  // Tablet gets a wider search box; web/desktop should stay compact.
+  static const _searchFieldWidthWeb = 360.0;
+  static const _searchFieldWidthTablet = 900.0;
 
-  Widget _buildSearchRow(bool isMobile) {
+  Widget _buildSearchRow(bool isMobile, {required bool isTablet}) {
     if (isMobile) {
       return Column(
         children: [
@@ -298,60 +300,21 @@ class _RenewalsViewState extends State<RenewalsView> {
     }
     return Row(
       children: [
-        Flexible(
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: _searchFieldWidth),
-            child: Container(
-              height: 44,
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(22),
-                border: Border.all(color: const Color(0xFFE2E8F0), width: 1),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.03),
-                    blurRadius: 4,
-                    offset: const Offset(0, 1),
-                  ),
-                ],
+        if (isTablet)
+          Flexible(
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(
+                maxWidth: _searchFieldWidthTablet,
               ),
-              child: TextField(
-                cursorColor: Colors.black,
-                style: Get.textTheme.bodyMedium?.copyWith(
-                  color: const Color(0xFF0F172A),
-                  fontSize: 14,
-                ),
-                decoration: InputDecoration(
-                  hintText: 'Search by name or phone number',
-                  hintStyle: const TextStyle(
-                    color: Color(0xFF94A3B8),
-                    fontSize: 14,
-                  ),
-                  prefixIcon: Padding(
-                    padding: const EdgeInsets.only(left: 14, right: 10),
-                    child: SvgPicture.asset(
-                      'assets/icons/search.svg',
-                      width: 20,
-                      height: 20,
-                      colorFilter: const ColorFilter.mode(
-                        Color(0xFF64748B),
-                        BlendMode.srcIn,
-                      ),
-                    ),
-                  ),
-                  prefixIconConstraints: const BoxConstraints(
-                    minWidth: 44,
-                    minHeight: 24,
-                  ),
-                  border: InputBorder.none,
-                  contentPadding: const EdgeInsets.fromLTRB(0, 14, 16, 14),
-                  isDense: true,
-                ),
-              ),
+              child: _buildDesktopSearchField(),
             ),
+          )
+        else
+          SizedBox(
+            width: _searchFieldWidthWeb,
+            child: _buildDesktopSearchField(),
           ),
-        ),
-        const Spacer(),
+        if (!isTablet) const Spacer(),
         _buildSelectDatesFilterBox(),
         const SizedBox(width: 16),
         _buildPlanFilterBox(isMobile: false),
@@ -367,6 +330,54 @@ class _RenewalsViewState extends State<RenewalsView> {
           ),
         ),
       ],
+    );
+  }
+
+  Widget _buildDesktopSearchField() {
+    return Container(
+      height: 44,
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(22),
+        border: Border.all(color: const Color(0xFFE2E8F0), width: 1),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.03),
+            blurRadius: 4,
+            offset: const Offset(0, 1),
+          ),
+        ],
+      ),
+      child: TextField(
+        cursorColor: Colors.black,
+        style: Get.textTheme.bodyMedium?.copyWith(
+          color: const Color(0xFF0F172A),
+          fontSize: 14,
+        ),
+        decoration: InputDecoration(
+          hintText: 'Search by name or phone number',
+          hintStyle: const TextStyle(color: Color(0xFF94A3B8), fontSize: 14),
+          prefixIcon: Padding(
+            padding: const EdgeInsets.only(left: 14, right: 10),
+            child: SvgPicture.asset(
+              'assets/icons/search.svg',
+              width: 20,
+              height: 20,
+              colorFilter: const ColorFilter.mode(
+                Color(0xFF64748B),
+                BlendMode.srcIn,
+              ),
+            ),
+          ),
+          prefixIconConstraints: const BoxConstraints(
+            minWidth: 44,
+            minHeight: 24,
+          ),
+          border: InputBorder.none,
+          contentPadding: const EdgeInsets.fromLTRB(0, 14, 16, 14),
+          isDense: true,
+        ),
+      ),
     );
   }
 

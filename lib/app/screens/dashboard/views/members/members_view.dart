@@ -138,7 +138,8 @@ class _MembersViewState extends State<MembersView> {
             if (!isMobile)
               PrimaryActionButton(
                 label: 'Add Member',
-                onPressed: () => openModalWithTransition(context, const AddMemberModal()),
+                onPressed: () =>
+                    openModalWithTransition(context, const AddMemberModal()),
               ),
           ],
         ),
@@ -148,7 +149,8 @@ class _MembersViewState extends State<MembersView> {
             width: double.infinity,
             child: PrimaryActionButton(
               label: 'Add Member',
-              onPressed: () => openModalWithTransition(context, const AddMemberModal()),
+              onPressed: () =>
+                  openModalWithTransition(context, const AddMemberModal()),
               useFixedSize: false,
             ),
           ),
@@ -157,7 +159,8 @@ class _MembersViewState extends State<MembersView> {
     );
   }
 
-  static const _searchFieldWidth = 320.0;
+  // Tablet mode gets the wider search box, while web/desktop should stay compact.
+  static const _searchFieldWidthWeb = 360.0;
   static const _searchFieldWidthTablet = 900.0;
   static const _dropdownWidthTablet = 132.0;
   static const _dropdownHeightTablet = 40.0;
@@ -230,63 +233,66 @@ class _MembersViewState extends State<MembersView> {
         ],
       );
     }
-    return Row(
-      children: [
-        Expanded(
-          child: ConstrainedBox(
-            constraints: BoxConstraints(
-              maxWidth: isTablet ? _searchFieldWidthTablet : _searchFieldWidth,
-            ),
-            child: Container(
-              height: 44,
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(22),
-                border: Border.all(color: const Color(0xFFE2E8F0), width: 1),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.03),
-                    blurRadius: 4,
-                    offset: const Offset(0, 1),
-                  ),
-                ],
-              ),
-              child: TextField(
-                cursorColor: Colors.black,
-                style: Get.textTheme.bodyMedium?.copyWith(
-                  color: const Color(0xFF0F172A),
-                  fontSize: 14,
-                ),
-                decoration: InputDecoration(
-                  hintText: 'Search by name or phone number',
-                  hintStyle: const TextStyle(
-                    color: Color(0xFF94A3B8),
-                    fontSize: 14,
-                  ),
-                  prefixIcon: Padding(
-                    padding: const EdgeInsets.only(left: 14, right: 10),
-                    child: SvgPicture.asset(
-                      'assets/icons/search.svg',
-                      width: 20,
-                      height: 20,
-                      colorFilter: const ColorFilter.mode(
-                        Color(0xFF64748B),
-                        BlendMode.srcIn,
-                      ),
-                    ),
-                  ),
-                  prefixIconConstraints: const BoxConstraints(
-                    minWidth: 44,
-                    minHeight: 24,
-                  ),
-                  border: InputBorder.none,
-                  contentPadding: const EdgeInsets.fromLTRB(0, 14, 16, 14),
-                  isDense: true,
-                ),
+    final searchField = Container(
+      height: 44,
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(22),
+        border: Border.all(color: const Color(0xFFE2E8F0), width: 1),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.03),
+            blurRadius: 4,
+            offset: const Offset(0, 1),
+          ),
+        ],
+      ),
+      child: TextField(
+        cursorColor: Colors.black,
+        style: Get.textTheme.bodyMedium?.copyWith(
+          color: const Color(0xFF0F172A),
+          fontSize: 14,
+        ),
+        decoration: InputDecoration(
+          hintText: 'Search by name or phone number',
+          hintStyle: const TextStyle(color: Color(0xFF94A3B8), fontSize: 14),
+          prefixIcon: Padding(
+            padding: const EdgeInsets.only(left: 14, right: 10),
+            child: SvgPicture.asset(
+              'assets/icons/search.svg',
+              width: 20,
+              height: 20,
+              colorFilter: const ColorFilter.mode(
+                Color(0xFF64748B),
+                BlendMode.srcIn,
               ),
             ),
           ),
+          prefixIconConstraints: const BoxConstraints(
+            minWidth: 44,
+            minHeight: 24,
+          ),
+          border: InputBorder.none,
+          contentPadding: const EdgeInsets.fromLTRB(0, 14, 16, 14),
+          isDense: true,
         ),
+      ),
+    );
+
+    return Row(
+      children: [
+        if (isTablet)
+          Expanded(
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(
+                maxWidth: _searchFieldWidthTablet,
+              ),
+              child: searchField,
+            ),
+          )
+        else
+          SizedBox(width: _searchFieldWidthWeb, child: searchField),
+        if (!isTablet) const Spacer(),
         const SizedBox(width: 20),
         _buildFilterDropdown(
           key: _statusDropdownKey,
