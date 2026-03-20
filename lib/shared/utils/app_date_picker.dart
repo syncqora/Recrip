@@ -116,8 +116,7 @@ Future<DateTime?> showAppDatePicker({
                   ),
                 ),
                 FilledButton(
-                  onPressed: () =>
-                      Navigator.of(stateContext).pop(selectedDate),
+                  onPressed: () => Navigator.of(stateContext).pop(selectedDate),
                   child: Text(
                     localizations.okButtonLabel,
                     style: Get.textTheme.labelLarge?.copyWith(

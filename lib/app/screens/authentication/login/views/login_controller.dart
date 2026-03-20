@@ -62,6 +62,12 @@ class LoginController extends GetxController {
     if (username.isEmpty || password.isEmpty) {
       return;
     }
+
+    if (username == 'admin' && password == 'admin') {
+      appNav.changePage(AppRoutes.adminDashboard);
+      return;
+    }
+
     appNav.changePage(AppRoutes.dashboard);
     // Get.find<AuthService>().login(username, password);
   }

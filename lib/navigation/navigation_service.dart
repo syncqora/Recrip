@@ -8,6 +8,7 @@ import '../app/screens/authentication/login/login.dart';
 import '../app/screens/authentication/otp_authentication/otp_authentication.dart';
 import '../app/screens/authentication/reset_password/reset_password.dart';
 import '../app/screens/dashboard/views/dashboard/dashboard.dart';
+import '../app/screens/admin/dashboard/admin_dashboard.dart';
 import '../core/di/get_injector.dart';
 import '../routes/app_pages.dart';
 import '../shared/constants/app.dart';
@@ -56,6 +57,8 @@ class NavigationService extends GetxService with NavigationMixin {
         return PageTitles.resetPassword;
       case AppRoutes.dashboard:
         return PageTitles.dashboard;
+      case AppRoutes.adminDashboard:
+        return 'Admin Dashboard';
       // case AppRoutes.home:
       //   return PageTitles.home;
       // case AppRoutes.onBoarding:
@@ -104,6 +107,8 @@ class NavigationService extends GetxService with NavigationMixin {
         return ResetPassword();
       case AppRoutes.dashboard:
         return Dashboard();
+      case AppRoutes.adminDashboard:
+        return const AdminDashboard();
       // case AppRoutes.onBoarding:
       //   return OnboardingScreen();
       // case AppRoutes.login:
