@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:get/get.dart';
 import 'package:saas/shared/constants/app_strings.dart';
+import 'package:saas/shared/constants/app_icons.dart';
 
 class SettingsTabletView extends StatefulWidget {
   const SettingsTabletView({super.key});
@@ -19,8 +20,9 @@ class _SettingsTabletViewState extends State<SettingsTabletView> {
   static const _cardShadow = Color(0x0F000000);
 
   int _selectedTabIndex = 0;
-  final _businessNameController =
-      TextEditingController(text: AppStrings.businessNameDefault);
+  final _businessNameController = TextEditingController(
+    text: AppStrings.businessNameDefault,
+  );
   late final String _initialBusinessName;
   final _currentPasswordController = TextEditingController();
   final _newPasswordController = TextEditingController();
@@ -71,7 +73,11 @@ class _SettingsTabletViewState extends State<SettingsTabletView> {
         borderRadius: BorderRadius.circular(12),
         border: Border.all(color: _border),
         boxShadow: [
-          BoxShadow(color: _cardShadow, blurRadius: 12, offset: const Offset(0, 2)),
+          BoxShadow(
+            color: _cardShadow,
+            blurRadius: 12,
+            offset: const Offset(0, 2),
+          ),
         ],
       ),
       child: IntrinsicHeight(
@@ -82,7 +88,9 @@ class _SettingsTabletViewState extends State<SettingsTabletView> {
             Expanded(
               child: Padding(
                 padding: const EdgeInsets.all(24),
-                child: _selectedTabIndex == 0 ? _buildProfileContent() : _buildLoginSecurityContent(),
+                child: _selectedTabIndex == 0
+                    ? _buildProfileContent()
+                    : _buildLoginSecurityContent(),
               ),
             ),
           ],
@@ -102,12 +110,16 @@ class _SettingsTabletViewState extends State<SettingsTabletView> {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          _buildSidebarTab(AppStrings.settingsProfileTabLabel,
-              _selectedTabIndex == 0, () => setState(() => _selectedTabIndex = 0)),
           _buildSidebarTab(
-              AppStrings.settingsLoginSecurityTabLabel,
-              _selectedTabIndex == 1,
-              () => setState(() => _selectedTabIndex = 1)),
+            AppStrings.settingsProfileTabLabel,
+            _selectedTabIndex == 0,
+            () => setState(() => _selectedTabIndex = 0),
+          ),
+          _buildSidebarTab(
+            AppStrings.settingsLoginSecurityTabLabel,
+            _selectedTabIndex == 1,
+            () => setState(() => _selectedTabIndex = 1),
+          ),
         ],
       ),
     );
@@ -161,8 +173,13 @@ class _SettingsTabletViewState extends State<SettingsTabletView> {
               style: OutlinedButton.styleFrom(
                 foregroundColor: _textDark,
                 side: BorderSide(color: _border),
-                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 24,
+                  vertical: 12,
+                ),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
               ),
               child: const Text(AppStrings.cancel),
             ),
@@ -178,8 +195,13 @@ class _SettingsTabletViewState extends State<SettingsTabletView> {
                 disabledBackgroundColor: const Color(0xFFA5B4FC),
                 foregroundColor: Colors.white,
                 disabledForegroundColor: Colors.white,
-                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 24,
+                  vertical: 12,
+                ),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
               ),
               child: const Text(AppStrings.save),
             ),
@@ -196,7 +218,10 @@ class _SettingsTabletViewState extends State<SettingsTabletView> {
       children: [
         Text(
           AppStrings.changePasswordLabel,
-          style: Get.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold, color: _textDark),
+          style: Get.textTheme.titleMedium?.copyWith(
+            fontWeight: FontWeight.bold,
+            color: _textDark,
+          ),
         ),
         const SizedBox(height: 24),
         _buildPasswordField(
@@ -204,7 +229,9 @@ class _SettingsTabletViewState extends State<SettingsTabletView> {
           AppStrings.enterCurrentPasswordHint,
           _currentPasswordController,
           isObscure: !_currentPasswordVisible,
-          onToggleVisibility: () => setState(() => _currentPasswordVisible = !_currentPasswordVisible),
+          onToggleVisibility: () => setState(
+            () => _currentPasswordVisible = !_currentPasswordVisible,
+          ),
         ),
         const SizedBox(height: 20),
         _buildPasswordField(
@@ -212,7 +239,8 @@ class _SettingsTabletViewState extends State<SettingsTabletView> {
           AppStrings.enterNewPasswordHint,
           _newPasswordController,
           isObscure: !_newPasswordVisible,
-          onToggleVisibility: () => setState(() => _newPasswordVisible = !_newPasswordVisible),
+          onToggleVisibility: () =>
+              setState(() => _newPasswordVisible = !_newPasswordVisible),
         ),
         const SizedBox(height: 20),
         _buildPasswordField(
@@ -220,7 +248,9 @@ class _SettingsTabletViewState extends State<SettingsTabletView> {
           AppStrings.confirmNewPasswordHint,
           _confirmPasswordController,
           isObscure: !_confirmPasswordVisible,
-          onToggleVisibility: () => setState(() => _confirmPasswordVisible = !_confirmPasswordVisible),
+          onToggleVisibility: () => setState(
+            () => _confirmPasswordVisible = !_confirmPasswordVisible,
+          ),
         ),
         const SizedBox(height: 28),
         Row(
@@ -235,8 +265,13 @@ class _SettingsTabletViewState extends State<SettingsTabletView> {
               style: OutlinedButton.styleFrom(
                 foregroundColor: _textDark,
                 side: BorderSide(color: _border),
-                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 24,
+                  vertical: 12,
+                ),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
               ),
               child: const Text(AppStrings.cancel),
             ),
@@ -252,8 +287,13 @@ class _SettingsTabletViewState extends State<SettingsTabletView> {
                 disabledBackgroundColor: const Color(0xFFA5B4FC),
                 foregroundColor: Colors.white,
                 disabledForegroundColor: Colors.white,
-                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 24,
+                  vertical: 12,
+                ),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
               ),
               child: const Text(AppStrings.save),
             ),
@@ -275,7 +315,10 @@ class _SettingsTabletViewState extends State<SettingsTabletView> {
       children: [
         Text(
           label,
-          style: Get.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w500, color: _textDark),
+          style: Get.textTheme.bodyMedium?.copyWith(
+            fontWeight: FontWeight.w500,
+            color: _textDark,
+          ),
         ),
         const SizedBox(height: 8),
         TextField(
@@ -287,19 +330,31 @@ class _SettingsTabletViewState extends State<SettingsTabletView> {
             hintStyle: Get.textTheme.bodyMedium?.copyWith(color: _textMuted),
             filled: true,
             fillColor: Colors.white,
-            contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+            contentPadding: const EdgeInsets.symmetric(
+              horizontal: 16,
+              vertical: 14,
+            ),
             suffixIcon: IconButton(
               onPressed: onToggleVisibility,
               icon: SvgPicture.asset(
-                isObscure ? 'assets/icons/eye-close.svg' : 'assets/icons/eye-open.svg',
+                isObscure ? AppIcons.eyeClose : AppIcons.eyeOpen,
                 width: 20,
                 height: 20,
                 colorFilter: ColorFilter.mode(_textMuted, BlendMode.srcIn),
               ),
             ),
-            border: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: BorderSide(color: _border)),
-            enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: BorderSide(color: _border)),
-            focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: const BorderSide(color: _purple, width: 1.5)),
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(10),
+              borderSide: BorderSide(color: _border),
+            ),
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(10),
+              borderSide: BorderSide(color: _border),
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(10),
+              borderSide: const BorderSide(color: _purple, width: 1.5),
+            ),
           ),
         ),
       ],
@@ -312,7 +367,10 @@ class _SettingsTabletViewState extends State<SettingsTabletView> {
       children: [
         Text(
           AppStrings.businessLogoLabel,
-          style: Get.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w600, color: _textDark),
+          style: Get.textTheme.titleSmall?.copyWith(
+            fontWeight: FontWeight.w600,
+            color: _textDark,
+          ),
         ),
         const SizedBox(height: 12),
         Row(
@@ -327,7 +385,11 @@ class _SettingsTabletViewState extends State<SettingsTabletView> {
               ),
               padding: const EdgeInsets.all(12),
               child: Center(
-                child: Image.asset('assets/images/saas-logo.png', height: 40, fit: BoxFit.contain),
+                child: Image.asset(
+                  'assets/images/saas-logo.png',
+                  height: 40,
+                  fit: BoxFit.contain,
+                ),
               ),
             ),
             const SizedBox(width: 16),
@@ -359,10 +421,15 @@ class _SettingsTabletViewState extends State<SettingsTabletView> {
                 style: Get.textTheme.bodyMedium?.copyWith(color: _textDark),
                 decoration: InputDecoration(
                   hintText: AppStrings.businessNameDefault,
-                  hintStyle: Get.textTheme.bodyMedium?.copyWith(color: _textMuted),
+                  hintStyle: Get.textTheme.bodyMedium?.copyWith(
+                    color: _textMuted,
+                  ),
                   filled: true,
                   fillColor: Colors.white,
-                  contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                  contentPadding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 14,
+                  ),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(10),
                     borderSide: BorderSide(color: _border),
@@ -399,12 +466,21 @@ class _SettingsTabletViewState extends State<SettingsTabletView> {
             color: Colors.white,
             shape: BoxShape.circle,
             border: Border.all(color: _border),
-            boxShadow: [BoxShadow(color: _cardShadow, blurRadius: 4, offset: const Offset(0, 1))],
+            boxShadow: [
+              BoxShadow(
+                color: _cardShadow,
+                blurRadius: 4,
+                offset: const Offset(0, 1),
+              ),
+            ],
           ),
-          child: const Icon(Icons.edit_outlined, size: 20, color: Color(0xFF64748B)),
+          child: const Icon(
+            Icons.edit_outlined,
+            size: 20,
+            color: Color(0xFF64748B),
+          ),
         ),
       ),
     );
   }
-
 }

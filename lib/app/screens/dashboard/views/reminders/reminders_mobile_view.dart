@@ -7,6 +7,7 @@ import '../../dialogs/delete_plan_confirm_dialog.dart';
 import '../../modals/create_rule_modal.dart';
 import '../../modals/create_template_modal.dart';
 import '../../modals/modal_route_helper.dart';
+import 'package:saas/shared/constants/app_icons.dart';
 
 class ReminderRuleRow {
   final String trigger;
@@ -157,7 +158,10 @@ class RemindersMobileView extends StatelessWidget {
                     width: 168,
                     height: 44,
                     child: OutlinedButton(
-                      onPressed: () => openModalWithTransition(context, const CreateTemplateModal()),
+                      onPressed: () => openModalWithTransition(
+                        context,
+                        const CreateTemplateModal(),
+                      ),
                       style: OutlinedButton.styleFrom(
                         foregroundColor: _textDark,
                         backgroundColor: Colors.white,
@@ -267,7 +271,7 @@ class RemindersMobileView extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       const Text(
-                            AppStrings.channelLabel,
+                        AppStrings.channelLabel,
                         style: TextStyle(color: _textMuted, fontSize: 11),
                       ),
                       const SizedBox(height: 4),
@@ -283,9 +287,7 @@ class RemindersMobileView extends StatelessWidget {
           ClipRect(
             child: Row(
               mainAxisAlignment: MainAxisAlignment.end,
-              children: [
-                _actionIcons(context, row, isMessageTemplates),
-              ],
+              children: [_actionIcons(context, row, isMessageTemplates)],
             ),
           ),
         ],
@@ -319,14 +321,14 @@ class RemindersMobileView extends StatelessWidget {
       mainAxisSize: MainAxisSize.min,
       children: [
         SvgPicture.asset(
-          'assets/icons/WhatsappLogo.svg',
+          AppIcons.whatsappLogo,
           width: 18,
           height: 18,
           colorFilter: ColorFilter.mode(_whatsAppGreen, BlendMode.srcIn),
         ),
         const SizedBox(width: 8),
         SvgPicture.asset(
-          'assets/icons/email.svg',
+          AppIcons.email,
           width: 18,
           height: 18,
           colorFilter: ColorFilter.mode(_emailBlue, BlendMode.srcIn),
@@ -362,7 +364,7 @@ class RemindersMobileView extends StatelessWidget {
       mainAxisSize: MainAxisSize.min,
       children: [
         _actionIcon(
-          'assets/icons/edit.svg',
+          AppIcons.edit,
           onTap: () {
             if (isMessageTemplates) {
               openModalWithTransition(
@@ -372,8 +374,9 @@ class RemindersMobileView extends StatelessWidget {
                   initialTrigger: row.trigger,
                   initialTiming: row.timing,
                   initialAudience: row.audience,
-                  initialStatus:
-                      row.isActive ? AppStrings.active : AppStrings.inactive,
+                  initialStatus: row.isActive
+                      ? AppStrings.active
+                      : AppStrings.inactive,
                 ),
               );
             } else {
@@ -384,8 +387,9 @@ class RemindersMobileView extends StatelessWidget {
                   initialTrigger: row.trigger,
                   initialTiming: row.timing,
                   initialAudience: row.audience,
-                  initialStatus:
-                      row.isActive ? AppStrings.active : AppStrings.inactive,
+                  initialStatus: row.isActive
+                      ? AppStrings.active
+                      : AppStrings.inactive,
                 ),
               );
             }
@@ -393,7 +397,7 @@ class RemindersMobileView extends StatelessWidget {
         ),
         const SizedBox(width: 12),
         _actionIcon(
-          'assets/icons/trash.svg',
+          AppIcons.trash,
           onTap: () => _showDeleteConfirmDialog(
             context,
             row,

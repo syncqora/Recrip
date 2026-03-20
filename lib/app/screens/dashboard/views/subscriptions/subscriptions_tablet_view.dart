@@ -3,6 +3,7 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:get/get.dart';
 import 'package:saas/shared/constants/app_strings.dart';
 import 'subscriptions_mobile_view.dart';
+import 'package:saas/shared/constants/app_icons.dart';
 
 class SubscriptionsTabletView extends StatelessWidget {
   const SubscriptionsTabletView({
@@ -111,9 +112,9 @@ class SubscriptionsTabletView extends StatelessWidget {
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        _actionIcon('assets/icons/edit.svg', () => onEdit(row, index)),
+        _actionIcon(AppIcons.edit, () => onEdit(row, index)),
         const SizedBox(width: 4),
-        _actionIcon('assets/icons/trash.svg', () => onDelete(row, index)),
+        _actionIcon(AppIcons.trash, () => onDelete(row, index)),
       ],
     );
   }

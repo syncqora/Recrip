@@ -4,6 +4,7 @@ import 'package:get/get.dart';
 import '../../modals/add_member_modal.dart';
 import '../../../../../shared/widgets/success_toast.dart';
 import 'package:saas/shared/constants/app_strings.dart';
+import 'package:saas/shared/constants/app_icons.dart';
 
 enum RenewalStatus { expiring, expired, renewed }
 
@@ -42,7 +43,9 @@ class RenewalsMobileView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Column(
-      children: tableData.map((row) => _buildRenewalCard(context, row)).toList(),
+      children: tableData
+          .map((row) => _buildRenewalCard(context, row))
+          .toList(),
     );
   }
 
@@ -98,7 +101,7 @@ class RenewalsMobileView extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.end,
             children: [
               _actionIcon(
-                'assets/icons/renew.svg',
+                AppIcons.renew,
                 onTap: () => Get.dialog(
                   AddMemberModal(
                     initialFullName: row.name,
@@ -109,7 +112,7 @@ class RenewalsMobileView extends StatelessWidget {
               ),
               const SizedBox(width: 12),
               _actionIcon(
-                'assets/icons/bell-ring.svg',
+                AppIcons.bellRing,
                 onTap: () => SuccessToast.show(
                   context,
                   title: AppStrings.reminderSentTo(row.name),
@@ -151,12 +154,12 @@ class RenewalsMobileView extends StatelessWidget {
       RenewalStatus.expired => (
         AppStrings.expired,
         _expiredBadge,
-        _expiredTextRed
+        _expiredTextRed,
       ),
       RenewalStatus.renewed => (
         AppStrings.renewed,
         _renewedBadge,
-        _renewedText
+        _renewedText,
       ),
     };
     return Container(

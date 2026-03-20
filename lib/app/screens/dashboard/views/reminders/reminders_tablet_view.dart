@@ -9,6 +9,7 @@ import '../../modals/create_rule_modal.dart';
 import '../../modals/create_template_modal.dart';
 import '../../modals/modal_route_helper.dart';
 import 'reminders_mobile_view.dart';
+import 'package:saas/shared/constants/app_icons.dart';
 
 class RemindersTabletView extends StatelessWidget {
   const RemindersTabletView({
@@ -240,14 +241,14 @@ class RemindersTabletView extends StatelessWidget {
       mainAxisSize: MainAxisSize.min,
       children: [
         SvgPicture.asset(
-          'assets/icons/WhatsappLogo.svg',
+          AppIcons.whatsappLogo,
           width: 20,
           height: 20,
           colorFilter: ColorFilter.mode(_whatsAppGreen, BlendMode.srcIn),
         ),
         const SizedBox(width: 8),
         SvgPicture.asset(
-          'assets/icons/email.svg',
+          AppIcons.email,
           width: 20,
           height: 20,
           colorFilter: ColorFilter.mode(_emailBlue, BlendMode.srcIn),
@@ -305,7 +306,7 @@ class RemindersTabletView extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         children: [
           _actionIcon(
-            'assets/icons/edit.svg',
+            AppIcons.edit,
             onTap: () {
               if (isMessageTemplates) {
                 openModalWithTransition(
@@ -315,8 +316,9 @@ class RemindersTabletView extends StatelessWidget {
                     initialTrigger: row.trigger,
                     initialTiming: row.timing,
                     initialAudience: row.audience,
-                    initialStatus:
-                        row.isActive ? AppStrings.active : AppStrings.inactive,
+                    initialStatus: row.isActive
+                        ? AppStrings.active
+                        : AppStrings.inactive,
                   ),
                 );
               } else {
@@ -327,8 +329,9 @@ class RemindersTabletView extends StatelessWidget {
                     initialTrigger: row.trigger,
                     initialTiming: row.timing,
                     initialAudience: row.audience,
-                    initialStatus:
-                        row.isActive ? AppStrings.active : AppStrings.inactive,
+                    initialStatus: row.isActive
+                        ? AppStrings.active
+                        : AppStrings.inactive,
                   ),
                 );
               }
@@ -336,7 +339,7 @@ class RemindersTabletView extends StatelessWidget {
           ),
           const SizedBox(width: 4),
           _actionIcon(
-            'assets/icons/trash.svg',
+            AppIcons.trash,
             onTap: () => _showDeleteConfirmDialog(
               context,
               isMessageTemplates: isMessageTemplates,

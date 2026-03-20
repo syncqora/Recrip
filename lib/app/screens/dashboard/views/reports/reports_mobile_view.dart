@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:saas/shared/constants/app_strings.dart';
+import 'package:saas/shared/constants/app_icons.dart';
 
 class RevenueRow {
   final String planName;
@@ -67,8 +68,8 @@ class ReportsMobileView extends StatelessWidget {
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-        const Text(
-          AppStrings.revenueAnalysisTitle,
+            const Text(
+              AppStrings.revenueAnalysisTitle,
               style: TextStyle(
                 fontWeight: FontWeight.bold,
                 color: _textDark,
@@ -103,11 +104,13 @@ class ReportsMobileView extends StatelessWidget {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          const Text(AppStrings.monthly,
-              style: TextStyle(color: _textDark, fontSize: 12)),
+          const Text(
+            AppStrings.monthly,
+            style: TextStyle(color: _textDark, fontSize: 12),
+          ),
           const SizedBox(width: 4),
           SvgPicture.asset(
-            'assets/icons/dropdown_down.svg',
+            AppIcons.dropdownDown,
             width: 16,
             height: 16,
             colorFilter: ColorFilter.mode(_textMuted, BlendMode.srcIn),
@@ -214,10 +217,13 @@ class _ExportButton extends StatelessWidget {
               mainAxisSize: MainAxisSize.min,
               children: [
                 SvgPicture.asset(
-                  'assets/icons/download.svg',
+                  AppIcons.download,
                   width: 18,
                   height: 18,
-                  colorFilter: ColorFilter.mode(Color(0xFF0F172A), BlendMode.srcIn),
+                  colorFilter: ColorFilter.mode(
+                    Color(0xFF0F172A),
+                    BlendMode.srcIn,
+                  ),
                 ),
                 const SizedBox(width: 8),
                 const Text(

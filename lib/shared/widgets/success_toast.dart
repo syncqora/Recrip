@@ -33,7 +33,12 @@ class SuccessToast {
     String? subtitle,
     Color? iconColor,
   }) {
-    _insert(overlayState, title: title, subtitle: subtitle, iconColor: iconColor);
+    _insert(
+      overlayState,
+      title: title,
+      subtitle: subtitle,
+      iconColor: iconColor,
+    );
   }
 
   /// Red color for destructive toasts (e.g. "Plan Deleted", "Removed").
@@ -42,11 +47,7 @@ class SuccessToast {
   /// Shows a "Removed [userName]" toast with a red circle and checkmark.
   /// Call after closing dialogs; pass the [OverlayState] from context before popping.
   static void showRemoved(OverlayState overlayState, String userName) {
-    _insert(
-      overlayState,
-      title: 'Removed $userName',
-      iconColor: iconColorRed,
-    );
+    _insert(overlayState, title: 'Removed $userName', iconColor: iconColorRed);
   }
 
   static void _insert(
@@ -123,7 +124,11 @@ class _SuccessToastContent extends StatelessWidget {
                       shape: BoxShape.circle,
                     ),
                     alignment: Alignment.center,
-                    child: const Icon(Icons.check, color: Colors.white, size: 26),
+                    child: const Icon(
+                      Icons.check,
+                      color: Colors.white,
+                      size: 26,
+                    ),
                   ),
                   const SizedBox(width: 16),
                   subtitle != null

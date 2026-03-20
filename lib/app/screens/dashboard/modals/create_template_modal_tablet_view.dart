@@ -4,6 +4,7 @@ import 'package:get/get.dart';
 import '../../authentication/widgets/app_constants.dart';
 import '../../../../shared/widgets/app_close_button.dart';
 import '../../../../shared/widgets/app_modal_primary_button.dart';
+import 'package:saas/shared/constants/app_icons.dart';
 
 class CreateTemplateModalTabletView extends StatelessWidget {
   const CreateTemplateModalTabletView({
@@ -297,7 +298,7 @@ class CreateTemplateModalTabletView extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               SvgPicture.asset(
-                'assets/icons/upload.svg',
+                AppIcons.upload,
                 width: 32,
                 height: 32,
                 colorFilter: const ColorFilter.mode(

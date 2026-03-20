@@ -103,8 +103,9 @@ class _SettingsContent extends StatefulWidget {
 
 class _SettingsContentState extends State<_SettingsContent> {
   int _selectedTabIndex = 0; // 0 = Profile, 1 = Login & Security
-  final _businessNameController =
-      TextEditingController(text: AppStrings.businessNameDefault);
+  final _businessNameController = TextEditingController(
+    text: AppStrings.businessNameDefault,
+  );
   final _currentPasswordController = TextEditingController();
   final _newPasswordController = TextEditingController();
   final _confirmPasswordController = TextEditingController();

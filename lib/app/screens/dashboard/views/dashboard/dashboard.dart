@@ -17,6 +17,7 @@ import '../renewals/renewals_view.dart';
 import '../reports/reports_view.dart';
 import '../settings/settings_view.dart';
 import '../subscriptions/subscriptions_view.dart';
+import 'package:saas/shared/constants/app_icons.dart';
 
 class Dashboard extends GetView<DashboardController> {
   const Dashboard({super.key});
@@ -27,7 +28,9 @@ class Dashboard extends GetView<DashboardController> {
   // Design colors (exact from image)
   static const _purple = Color(0xFF4F46E5);
   static const _purpleLight = Color(0xFFEEEDFB); // Active nav background
-  static const _sidebarIconColor = Color(0xFF64748B); // Inactive nav/drawer icons
+  static const _sidebarIconColor = Color(
+    0xFF64748B,
+  ); // Inactive nav/drawer icons
   static const _sidebarTextColor = Color(0xFF475569);
   static const _textDark = Color(0xFF0F172A);
   static const _textMuted = Color(0xFF666666);
@@ -89,13 +92,13 @@ class Dashboard extends GetView<DashboardController> {
   }
 
   static const _menuIcons = (
-    dashboard: 'assets/icons/dashboard.svg',
-    members: 'assets/icons/users-round.svg',
-    subscriptions: 'assets/icons/calendar-days.svg',
-    renewals: 'assets/icons/calendar-sync.svg',
-    reminders: 'assets/icons/bell-ring.svg',
-    reports: 'assets/icons/chart-column-big.svg',
-    settings: 'assets/icons/settings.svg',
+    dashboard: AppIcons.dashboard,
+    members: AppIcons.usersRound,
+    subscriptions: AppIcons.calendarDays,
+    renewals: AppIcons.calendarSync,
+    reminders: AppIcons.bellRing,
+    reports: AppIcons.chartColumnBig,
+    settings: AppIcons.settings,
   );
 
   Widget _buildSidebar(BuildContext context) {
@@ -235,7 +238,7 @@ class Dashboard extends GetView<DashboardController> {
             child: Row(
               children: [
                 SvgPicture.asset(
-                  'assets/icons/log-out.svg',
+                  AppIcons.logOut,
                   width: 24,
                   height: 24,
                   color: _sidebarIconColor,
@@ -338,7 +341,7 @@ class Dashboard extends GetView<DashboardController> {
             child: CircleAvatar(
               backgroundColor: const Color(0xFFEEF2FF),
               child: SvgPicture.asset(
-                'assets/icons/headset.svg',
+                AppIcons.headset,
                 width: 24,
                 height: 24,
                 color: _textMuted,
@@ -393,7 +396,7 @@ class Dashboard extends GetView<DashboardController> {
   Widget _buildSummaryCards() {
     final cards = [
       _SummaryCard(
-        iconPath: 'assets/icons/users_tab.svg',
+        iconPath: AppIcons.usersTab,
         iconColor: Colors.white,
         circleBg: _iconCirclePurple,
         value: '284',
@@ -401,7 +404,7 @@ class Dashboard extends GetView<DashboardController> {
         label: AppStrings.summaryActiveMembers,
       ),
       _SummaryCard(
-        iconPath: 'assets/icons/alarm-clock_tab.svg',
+        iconPath: AppIcons.alarmClockTab,
         iconColor: Colors.white,
         circleBg: _iconCircleOrange,
         value: '18',
@@ -409,7 +412,7 @@ class Dashboard extends GetView<DashboardController> {
         label: AppStrings.summaryExpiring7Days,
       ),
       _SummaryCard(
-        iconPath: 'assets/icons/shield-x_tab.svg',
+        iconPath: AppIcons.shieldXTab,
         iconColor: Colors.white,
         circleBg: _iconCircleRed,
         value: '7',
@@ -417,7 +420,7 @@ class Dashboard extends GetView<DashboardController> {
         label: AppStrings.expired,
       ),
       _SummaryCard(
-        iconPath: 'assets/icons/book-check_tab.svg',
+        iconPath: AppIcons.bookCheckTab,
         iconColor: Colors.white,
         circleBg: _iconCircleGreen,
         value: '96',
@@ -610,9 +613,21 @@ class Dashboard extends GetView<DashboardController> {
                     align: Alignment.centerLeft,
                     isNameColumn: true,
                   ),
-                  _tableCell(AppStrings.plan, isHeader: true, align: Alignment.center),
-                  _tableCell(AppStrings.tableHeaderExpiry, isHeader: true, align: Alignment.center),
-                  _tableCell(AppStrings.status, isHeader: true, align: Alignment.center),
+                  _tableCell(
+                    AppStrings.plan,
+                    isHeader: true,
+                    align: Alignment.center,
+                  ),
+                  _tableCell(
+                    AppStrings.tableHeaderExpiry,
+                    isHeader: true,
+                    align: Alignment.center,
+                  ),
+                  _tableCell(
+                    AppStrings.status,
+                    isHeader: true,
+                    align: Alignment.center,
+                  ),
                   _tableCell(
                     AppStrings.tableHeaderAction,
                     isHeader: true,
@@ -714,7 +729,7 @@ class Dashboard extends GetView<DashboardController> {
               mainAxisSize: MainAxisSize.min,
               children: [
                 _actionButton(
-                  iconPath: 'assets/icons/bell-ring.svg',
+                  iconPath: AppIcons.bellRing,
                   onTap: context != null
                       ? () =>
                             SuccessToast.show(context, title: 'Reminders Sent')
@@ -722,14 +737,14 @@ class Dashboard extends GetView<DashboardController> {
                 ),
                 const SizedBox(width: 8),
                 _actionButton(
-                  iconPath: 'assets/icons/renew.svg',
+                  iconPath: AppIcons.renew,
                   onTap: renewalRow != null
                       ? () => Get.dialog(
-                            AddMemberModal(
-                              initialFullName: renewalRow.name,
-                              initialPlan: renewalRow.plan,
-                            ),
-                          )
+                          AddMemberModal(
+                            initialFullName: renewalRow.name,
+                            initialPlan: renewalRow.plan,
+                          ),
+                        )
                       : null,
                 ),
               ],
@@ -839,73 +854,71 @@ class Dashboard extends GetView<DashboardController> {
                 color: Colors.black,
               ),
             ),
-          const SizedBox(height: 12),
-          RichText(
-            text: TextSpan(
-              style: Get.textTheme.bodySmall?.copyWith(
-                color: _textMuted,
-                fontWeight: FontWeight.w400,
-              ),
-              children: [
-                const TextSpan(text: AppStrings.aiInsightsYouMayLosePrefix),
-                TextSpan(
-                  text: AppStrings.aiInsightsLostAmount,
-                  style: Get.textTheme.bodySmall?.copyWith(
-                    color: _textDark,
-                    fontWeight: FontWeight.w600,
-                  ),
+            const SizedBox(height: 12),
+            RichText(
+              text: TextSpan(
+                style: Get.textTheme.bodySmall?.copyWith(
+                  color: _textMuted,
+                  fontWeight: FontWeight.w400,
                 ),
-                const TextSpan(
-                  text: AppStrings.aiInsightsThisWeekSuffix,
-                ),
-                TextSpan(
-                  text: AppStrings.aiInsightsRecoveredAmount,
-                  style: Get.textTheme.bodySmall?.copyWith(
-                    color: _textDark,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-                const TextSpan(text: AppStrings.aiInsightsMessageEnding),
-              ],
-            ),
-            maxLines: 3,
-            overflow: TextOverflow.ellipsis,
-          ),
-          const SizedBox(height: 20),
-          Align(
-            alignment: Alignment.centerRight,
-            child: Material(
-              color: Colors.transparent,
-              child: InkWell(
-                onTap: controller.onSendRemindersNow,
-                borderRadius: BorderRadius.circular(10),
-                child: Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 16,
-                    vertical: 12,
-                  ),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFEEEDFB),
-                    borderRadius: BorderRadius.circular(10),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.06),
-                        blurRadius: 4,
-                        offset: const Offset(0, 1),
-                      ),
-                    ],
-                  ),
-                  child: Text(
-                    AppStrings.sendRemindersNow,
-                    style: Get.theme.textTheme.bodyMedium?.copyWith(
+                children: [
+                  const TextSpan(text: AppStrings.aiInsightsYouMayLosePrefix),
+                  TextSpan(
+                    text: AppStrings.aiInsightsLostAmount,
+                    style: Get.textTheme.bodySmall?.copyWith(
+                      color: _textDark,
                       fontWeight: FontWeight.w600,
-                      color: _purple,
+                    ),
+                  ),
+                  const TextSpan(text: AppStrings.aiInsightsThisWeekSuffix),
+                  TextSpan(
+                    text: AppStrings.aiInsightsRecoveredAmount,
+                    style: Get.textTheme.bodySmall?.copyWith(
+                      color: _textDark,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  const TextSpan(text: AppStrings.aiInsightsMessageEnding),
+                ],
+              ),
+              maxLines: 3,
+              overflow: TextOverflow.ellipsis,
+            ),
+            const SizedBox(height: 20),
+            Align(
+              alignment: Alignment.centerRight,
+              child: Material(
+                color: Colors.transparent,
+                child: InkWell(
+                  onTap: controller.onSendRemindersNow,
+                  borderRadius: BorderRadius.circular(10),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 12,
+                    ),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFEEEDFB),
+                      borderRadius: BorderRadius.circular(10),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withValues(alpha: 0.06),
+                          blurRadius: 4,
+                          offset: const Offset(0, 1),
+                        ),
+                      ],
+                    ),
+                    child: Text(
+                      AppStrings.sendRemindersNow,
+                      style: Get.theme.textTheme.bodyMedium?.copyWith(
+                        fontWeight: FontWeight.w600,
+                        color: _purple,
+                      ),
                     ),
                   ),
                 ),
               ),
             ),
-          ),
           ],
         ),
       ),
@@ -938,39 +951,39 @@ class Dashboard extends GetView<DashboardController> {
                   color: _textDark,
                 ),
               ),
-          const SizedBox(height: 30),
-          Center(
-            child: SizedBox(
-              width: chartSize,
-              height: chartSize,
-              child: CustomPaint(
-                painter: _DonutChartPainter(
-                  segments: [
-                    (_revenueRecoveredBlue, recoveredFraction),
-                    (_revenueLostRed, lostFraction),
-                  ],
-                  strokeWidth: 24,
+              const SizedBox(height: 30),
+              Center(
+                child: SizedBox(
+                  width: chartSize,
+                  height: chartSize,
+                  child: CustomPaint(
+                    painter: _DonutChartPainter(
+                      segments: [
+                        (_revenueRecoveredBlue, recoveredFraction),
+                        (_revenueLostRed, lostFraction),
+                      ],
+                      strokeWidth: 24,
+                    ),
+                  ),
                 ),
               ),
-            ),
-          ),
-          const SizedBox(height: 24),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.start,
-            children: [
-              _revenueLegendItem(
-                color: _revenueRecoveredBlue,
-                label: AppStrings.revenueRecoveredLabel,
-                value: '₹18,624',
+              const SizedBox(height: 24),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.start,
+                children: [
+                  _revenueLegendItem(
+                    color: _revenueRecoveredBlue,
+                    label: AppStrings.revenueRecoveredLabel,
+                    value: '₹18,624',
+                  ),
+                  const SizedBox(width: 34),
+                  _revenueLegendItem(
+                    color: _revenueLostRed,
+                    label: AppStrings.revenueLostLabel,
+                    value: '₹2,540',
+                  ),
+                ],
               ),
-              const SizedBox(width: 34),
-              _revenueLegendItem(
-                color: _revenueLostRed,
-                label: AppStrings.revenueLostLabel,
-                value: '₹2,540',
-              ),
-            ],
-          ),
             ],
           ),
         ),

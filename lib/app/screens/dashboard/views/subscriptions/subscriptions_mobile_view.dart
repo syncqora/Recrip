@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:get/get.dart';
 import 'package:saas/shared/constants/app_strings.dart';
+import 'package:saas/shared/constants/app_icons.dart';
 
 class SubscriptionPlanRow {
   final String planName;
@@ -41,7 +42,11 @@ class SubscriptionsMobileView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Column(
-      children: tableData.asMap().entries.map((e) => _buildPlanCard(e.value, e.key)).toList(),
+      children: tableData
+          .asMap()
+          .entries
+          .map((e) => _buildPlanCard(e.value, e.key))
+          .toList(),
     );
   }
 
@@ -86,9 +91,9 @@ class SubscriptionsMobileView extends StatelessWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.end,
             children: [
-              _actionButton('assets/icons/edit.svg', () => onEdit(plan, index)),
+              _actionButton(AppIcons.edit, () => onEdit(plan, index)),
               const SizedBox(width: 12),
-              _actionButton('assets/icons/trash.svg', () => onDelete(plan, index)),
+              _actionButton(AppIcons.trash, () => onDelete(plan, index)),
             ],
           ),
         ],

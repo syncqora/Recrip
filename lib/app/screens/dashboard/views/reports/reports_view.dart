@@ -10,6 +10,7 @@ import 'package:saas/shared/constants/app_strings.dart';
 
 import 'reports_mobile_view.dart';
 import 'reports_tablet_view.dart';
+import 'package:saas/shared/constants/app_icons.dart';
 
 class _RevenueRow {
   final String planName;
@@ -451,13 +452,13 @@ class ReportsView extends StatelessWidget {
                     children: [
                       _primaryStyleButton(
                         label: AppStrings.exportLabel,
-                        iconAsset: 'assets/icons/download.svg',
+                        iconAsset: AppIcons.download,
                         onPressed: _exportRevenueTableToPdf,
                       ),
                       const SizedBox(width: 10),
                       _primaryStyleButton(
                         label: AppStrings.thisMonthLabel,
-                        iconAsset: 'assets/icons/dropdown_down.svg',
+                        iconAsset: AppIcons.dropdownDown,
                         onPressed: () {},
                         width: 145,
                       ),
@@ -511,11 +512,7 @@ class ReportsView extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(width: 8),
-                SvgPicture.asset(
-                  iconAsset,
-                  width: 24,
-                  height: 24,
-                ),
+                SvgPicture.asset(iconAsset, width: 24, height: 24),
               ],
             ),
           ),
@@ -585,17 +582,26 @@ class ReportsView extends StatelessWidget {
               isHeader: true,
               align: Alignment.center,
             ),
-            _tableCell(AppStrings.renewalsTitle,
-                isHeader: true, align: Alignment.center),
+            _tableCell(
+              AppStrings.renewalsTitle,
+              isHeader: true,
+              align: Alignment.center,
+            ),
             _tableCell(
               AppStrings.missedRenewalsTitle,
               isHeader: true,
               align: Alignment.center,
             ),
-            _tableCell(AppStrings.renewalRateTitle,
-                isHeader: true, align: Alignment.center),
-            _tableCell(AppStrings.tableHeaderRevenue,
-                isHeader: true, align: Alignment.center),
+            _tableCell(
+              AppStrings.renewalRateTitle,
+              isHeader: true,
+              align: Alignment.center,
+            ),
+            _tableCell(
+              AppStrings.tableHeaderRevenue,
+              isHeader: true,
+              align: Alignment.center,
+            ),
           ],
         ),
         ..._revenueData.map(

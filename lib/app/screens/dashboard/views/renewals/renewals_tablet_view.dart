@@ -6,6 +6,7 @@ import 'package:saas/shared/constants/app_strings.dart';
 import '../../modals/add_member_modal.dart';
 import '../../../../../shared/widgets/success_toast.dart';
 import 'renewals_mobile_view.dart';
+import 'package:saas/shared/constants/app_icons.dart';
 
 class RenewalsTabletView extends StatelessWidget {
   const RenewalsTabletView({super.key, required this.tableData});
@@ -107,7 +108,7 @@ class RenewalsTabletView extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.end,
               children: [
                 _actionIcon(
-                  'assets/icons/renew.svg',
+                  AppIcons.renew,
                   onTap: () => Get.dialog(
                     AddMemberModal(
                       initialFullName: row.name,
@@ -118,7 +119,7 @@ class RenewalsTabletView extends StatelessWidget {
                 ),
                 const SizedBox(width: 12),
                 _actionIcon(
-                  'assets/icons/bell-ring.svg',
+                  AppIcons.bellRing,
                   onTap: () => SuccessToast.show(
                     context,
                     title: AppStrings.reminderSentTo(row.name),

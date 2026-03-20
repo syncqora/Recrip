@@ -7,6 +7,7 @@ import 'package:saas/shared/constants/app_strings.dart';
 import '../../modals/add_member_modal.dart';
 import 'renewals_mobile_view.dart';
 import 'renewals_tablet_view.dart';
+import 'package:saas/shared/constants/app_icons.dart';
 
 /// Renewals page content: header, status tabs, search/filters, table.
 /// Used inside the dashboard main content area when Renewals nav is selected.
@@ -269,7 +270,7 @@ class _RenewalsViewState extends State<RenewalsView> {
                 prefixIcon: Padding(
                   padding: const EdgeInsets.only(left: 14, right: 10),
                   child: SvgPicture.asset(
-                    'assets/icons/search.svg',
+                    AppIcons.search,
                     width: 20,
                     height: 20,
                     colorFilter: const ColorFilter.mode(
@@ -356,7 +357,7 @@ class _RenewalsViewState extends State<RenewalsView> {
           fontSize: 14,
         ),
         decoration: InputDecoration(
-              hintText: AppStrings.searchByNameOrPhoneLong,
+          hintText: AppStrings.searchByNameOrPhoneLong,
           hintStyle: const TextStyle(
             color: AppConstants.hintColor,
             fontSize: 14,
@@ -364,7 +365,7 @@ class _RenewalsViewState extends State<RenewalsView> {
           prefixIcon: Padding(
             padding: const EdgeInsets.only(left: 14, right: 10),
             child: SvgPicture.asset(
-              'assets/icons/search.svg',
+              AppIcons.search,
               width: 20,
               height: 20,
               colorFilter: const ColorFilter.mode(
@@ -594,7 +595,7 @@ class _RenewalsViewState extends State<RenewalsView> {
               ),
               const SizedBox(width: 8),
               SvgPicture.asset(
-                'assets/icons/calendar-days.svg',
+                AppIcons.calendarDays,
                 width: 24,
                 height: 24,
                 colorFilter: const ColorFilter.mode(
@@ -719,7 +720,7 @@ class _RenewalsViewState extends State<RenewalsView> {
               ),
               const SizedBox(width: 8),
               SvgPicture.asset(
-                'assets/icons/dropdown_down.svg',
+                AppIcons.dropdownDown,
                 width: 24,
                 height: 24,
                 colorFilter: const ColorFilter.mode(
@@ -789,9 +790,21 @@ class _RenewalsViewState extends State<RenewalsView> {
                   isHeader: true,
                   align: Alignment.center,
                 ),
-                _tableCell(AppStrings.plan, isHeader: true, align: Alignment.center),
-                _tableCell(AppStrings.status, isHeader: true, align: Alignment.center),
-                _tableCell(AppStrings.tableHeaderAction, isHeader: true, align: Alignment.center),
+                _tableCell(
+                  AppStrings.plan,
+                  isHeader: true,
+                  align: Alignment.center,
+                ),
+                _tableCell(
+                  AppStrings.status,
+                  isHeader: true,
+                  align: Alignment.center,
+                ),
+                _tableCell(
+                  AppStrings.tableHeaderAction,
+                  isHeader: true,
+                  align: Alignment.center,
+                ),
               ],
             ),
             ..._tableData.map(
@@ -886,8 +899,16 @@ class _RenewalsViewState extends State<RenewalsView> {
         _expiringBadge,
         AppConstants.expiringBadgeTextColorDark,
       ),
-      RenewalStatus.expired => (AppStrings.expired, _expiredBadge, _expiredTextRed),
-      RenewalStatus.renewed => (AppStrings.renewed, _renewedBadge, _renewedText),
+      RenewalStatus.expired => (
+        AppStrings.expired,
+        _expiredBadge,
+        _expiredTextRed,
+      ),
+      RenewalStatus.renewed => (
+        AppStrings.renewed,
+        _renewedBadge,
+        _renewedText,
+      ),
     };
     return Container(
       width: _statusPillWidth,
@@ -913,7 +934,7 @@ class _RenewalsViewState extends State<RenewalsView> {
       mainAxisSize: MainAxisSize.min,
       children: [
         _actionIcon(
-          'assets/icons/renew.svg',
+          AppIcons.renew,
           onTap: () => Get.dialog(
             AddMemberModal(
               initialFullName: row.name,
@@ -923,7 +944,7 @@ class _RenewalsViewState extends State<RenewalsView> {
           ),
         ),
         _actionIcon(
-          'assets/icons/bell-ring.svg',
+          AppIcons.bellRing,
           onTap: () => SuccessToast.show(
             context,
             title: AppStrings.reminderSentTo(row.name),

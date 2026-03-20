@@ -6,6 +6,7 @@ import '../../authentication/widgets/auth_form_field_section.dart';
 import 'create_plan_modal.dart';
 import '../../../../shared/widgets/app_close_button.dart';
 import '../../../../shared/widgets/app_modal_primary_button.dart';
+import 'package:saas/shared/constants/app_icons.dart';
 
 class CreatePlanModalTabletView extends StatelessWidget {
   const CreatePlanModalTabletView({
@@ -273,7 +274,7 @@ class CreatePlanModalTabletView extends StatelessWidget {
                       ),
                     ),
                     SvgPicture.asset(
-                      'assets/icons/calendar-days.svg',
+                      AppIcons.calendarDays,
                       width: 20,
                       height: 20,
                       colorFilter: const ColorFilter.mode(

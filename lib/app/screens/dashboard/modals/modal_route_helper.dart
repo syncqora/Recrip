@@ -8,10 +8,7 @@ void openModalWithTransition(BuildContext context, Widget modal) {
   final width = MediaQuery.sizeOf(context).width;
   if (width < 600) {
     Navigator.of(context).push(
-      MaterialPageRoute<void>(
-        fullscreenDialog: true,
-        builder: (_) => modal,
-      ),
+      MaterialPageRoute<void>(fullscreenDialog: true, builder: (_) => modal),
     );
   } else {
     Get.dialog(modal);

@@ -54,8 +54,11 @@ class MembersMobileView extends StatelessWidget {
 
   Widget _buildMemberCard(MemberRow member) {
     final (String label, Color bg, Color textColor) = switch (member.status) {
-      MemberStatus.active => (AppStrings.active, _activeBadge,
-          const Color(0xFF166534)),
+      MemberStatus.active => (
+        AppStrings.active,
+        _activeBadge,
+        const Color(0xFF166534),
+      ),
       MemberStatus.expired => (
         AppStrings.expired,
         _expiredBadge,
@@ -151,8 +154,8 @@ class MembersMobileView extends StatelessWidget {
                         member.plan,
                         style: const TextStyle(
                           fontWeight: FontWeight.w600,
-                      fontSize: 13,
-                      color: _textDark,
+                          fontSize: 13,
+                          color: _textDark,
                         ),
                       ),
                     ],

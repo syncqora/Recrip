@@ -4,6 +4,7 @@ import 'package:get/get.dart';
 
 import 'app_constants.dart';
 import 'package:saas/shared/constants/app_strings.dart';
+import 'package:saas/shared/constants/app_icons.dart';
 
 /// Reusable password field with visibility toggle for authentication screens.
 class AuthPasswordField extends StatelessWidget {
@@ -63,9 +64,7 @@ class AuthPasswordField extends StatelessWidget {
           suffixIcon: IconButton(
             onPressed: onToggleVisibility,
             icon: SvgPicture.asset(
-              obscureText
-                  ? 'assets/icons/eye-close.svg'
-                  : 'assets/icons/eye-open.svg',
+              obscureText ? AppIcons.eyeClose : AppIcons.eyeOpen,
               width: 16,
               height: 16,
               colorFilter: const ColorFilter.mode(

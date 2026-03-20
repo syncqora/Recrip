@@ -8,9 +8,7 @@ class TermsAndConditionsTabletView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text("Terms and Conditions"),
-      ),
+      appBar: AppBar(title: const Text("Terms and Conditions")),
       body: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 48, vertical: 32),
         child: SingleChildScrollView(

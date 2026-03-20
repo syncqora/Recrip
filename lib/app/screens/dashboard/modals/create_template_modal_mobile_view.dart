@@ -3,6 +3,7 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:get/get.dart';
 import '../../authentication/widgets/app_constants.dart';
 import '../../../../shared/widgets/app_modal_primary_button.dart';
+import 'package:saas/shared/constants/app_icons.dart';
 
 class CreateTemplateModalMobileView extends StatelessWidget {
   const CreateTemplateModalMobileView({
@@ -56,11 +57,7 @@ class CreateTemplateModalMobileView extends StatelessWidget {
         scrolledUnderElevation: 0,
         leading: IconButton(
           onPressed: onCancel,
-          icon: SvgPicture.asset(
-            'assets/icons/back-button.svg',
-            width: 20,
-            height: 20,
-          ),
+          icon: SvgPicture.asset(AppIcons.backButton, width: 20, height: 20),
           style: IconButton.styleFrom(
             minimumSize: Size.zero,
             padding: const EdgeInsets.all(12),
@@ -247,7 +244,7 @@ class CreateTemplateModalMobileView extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               SvgPicture.asset(
-                'assets/icons/upload.svg',
+                AppIcons.upload,
                 width: 24,
                 height: 24,
                 colorFilter: const ColorFilter.mode(

@@ -11,6 +11,7 @@ import '../../modals/edit_plan_modal.dart';
 import '../../modals/modal_route_helper.dart';
 import 'subscriptions_mobile_view.dart';
 import 'subscriptions_tablet_view.dart';
+import 'package:saas/shared/constants/app_icons.dart';
 
 /// Subscriptions page content: header, plans table.
 /// Used inside the dashboard main content area when Subscriptions nav is selected.
@@ -185,17 +186,31 @@ class _SubscriptionsViewState extends State<SubscriptionsView> {
                 align: Alignment.centerLeft,
                 isPlanNameColumn: true,
               ),
-              _tableCell(AppStrings.tableHeaderDuration,
-                  isHeader: true, align: Alignment.center),
-              _tableCell(AppStrings.tableHeaderPrice,
-                  isHeader: true, align: Alignment.center),
+              _tableCell(
+                AppStrings.tableHeaderDuration,
+                isHeader: true,
+                align: Alignment.center,
+              ),
+              _tableCell(
+                AppStrings.tableHeaderPrice,
+                isHeader: true,
+                align: Alignment.center,
+              ),
               _tableCell(
                 AppStrings.activeMembersHeader,
                 isHeader: true,
                 align: Alignment.center,
               ),
-              _tableCell(AppStrings.status, isHeader: true, align: Alignment.center),
-              _tableCell(AppStrings.actionHeader, isHeader: true, align: Alignment.center),
+              _tableCell(
+                AppStrings.status,
+                isHeader: true,
+                align: Alignment.center,
+              ),
+              _tableCell(
+                AppStrings.actionHeader,
+                isHeader: true,
+                align: Alignment.center,
+              ),
             ],
           ),
           ..._tableData.asMap().entries.map(
@@ -297,11 +312,11 @@ class _SubscriptionsViewState extends State<SubscriptionsView> {
       mainAxisSize: MainAxisSize.min,
       children: [
         _actionIcon(
-          'assets/icons/edit.svg',
+          AppIcons.edit,
           onTap: () => _showEditPlanDialog(context, row, index),
         ),
         _actionIcon(
-          'assets/icons/trash.svg',
+          AppIcons.trash,
           onTap: () => _showDeletePlanDialog(context, row, index),
         ),
       ],

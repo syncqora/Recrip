@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
 import '../../app/screens/authentication/widgets/app_constants.dart';
+import 'package:saas/shared/constants/app_icons.dart';
 
 /// Reusable close button used across dashboard modals/dialogs.
 ///
@@ -55,7 +56,7 @@ class AppCloseButton extends StatelessWidget {
           height: hitSize,
           child: Center(
             child: SvgPicture.asset(
-              'assets/icons/close-button.svg',
+              AppIcons.closeButton,
               width: iconSize,
               height: iconSize,
               colorFilter: ColorFilter.mode(iconColor, BlendMode.srcIn),

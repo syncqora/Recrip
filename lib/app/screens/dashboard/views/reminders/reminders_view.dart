@@ -12,6 +12,7 @@ import '../../modals/create_template_modal.dart';
 import '../../modals/modal_route_helper.dart';
 import 'reminders_mobile_view.dart';
 import 'reminders_tablet_view.dart';
+import 'package:saas/shared/constants/app_icons.dart';
 
 /// Reminders page content: header, Reminder Rules table, Message Templates table.
 /// Used inside the dashboard main content area when Reminders nav is selected.
@@ -103,7 +104,8 @@ class RemindersView extends StatelessWidget {
             if (!isMobile)
               PrimaryActionButton(
                 label: AppStrings.createReminderRuleLabel,
-                onPressed: () => openModalWithTransition(context, const CreateRuleModal()),
+                onPressed: () =>
+                    openModalWithTransition(context, const CreateRuleModal()),
               ),
           ],
         ),
@@ -113,7 +115,8 @@ class RemindersView extends StatelessWidget {
             width: double.infinity,
             child: PrimaryActionButton(
               label: AppStrings.createReminderRuleLabel,
-              onPressed: () => openModalWithTransition(context, const CreateRuleModal()),
+              onPressed: () =>
+                  openModalWithTransition(context, const CreateRuleModal()),
               useFixedSize: false,
             ),
           ),
@@ -229,7 +232,10 @@ class RemindersView extends StatelessWidget {
                     width: 168,
                     height: 44,
                     child: OutlinedButton(
-                      onPressed: () => openModalWithTransition(context, const CreateTemplateModal()),
+                      onPressed: () => openModalWithTransition(
+                        context,
+                        const CreateTemplateModal(),
+                      ),
                       style: OutlinedButton.styleFrom(
                         foregroundColor: _textDarkTable,
                         backgroundColor: Colors.white,
@@ -250,7 +256,11 @@ class RemindersView extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 16),
-            _buildRulesTable(context, _messageTemplatesData, isMessageTemplates: true),
+            _buildRulesTable(
+              context,
+              _messageTemplatesData,
+              isMessageTemplates: true,
+            ),
           ],
         ),
       ),
@@ -275,12 +285,36 @@ class RemindersView extends StatelessWidget {
         TableRow(
           decoration: const BoxDecoration(color: _headerRowColor),
           children: [
-            _tableCell(AppStrings.triggerLabel, isHeader: true, align: Alignment.center),
-            _tableCell(AppStrings.timingLabel, isHeader: true, align: Alignment.center),
-            _tableCell(AppStrings.channelLabel, isHeader: true, align: Alignment.center),
-            _tableCell(AppStrings.audienceLabel, isHeader: true, align: Alignment.center),
-            _tableCell(AppStrings.status, isHeader: true, align: Alignment.center),
-            _tableCell(AppStrings.tableHeaderAction, isHeader: true, align: Alignment.center),
+            _tableCell(
+              AppStrings.triggerLabel,
+              isHeader: true,
+              align: Alignment.center,
+            ),
+            _tableCell(
+              AppStrings.timingLabel,
+              isHeader: true,
+              align: Alignment.center,
+            ),
+            _tableCell(
+              AppStrings.channelLabel,
+              isHeader: true,
+              align: Alignment.center,
+            ),
+            _tableCell(
+              AppStrings.audienceLabel,
+              isHeader: true,
+              align: Alignment.center,
+            ),
+            _tableCell(
+              AppStrings.status,
+              isHeader: true,
+              align: Alignment.center,
+            ),
+            _tableCell(
+              AppStrings.tableHeaderAction,
+              isHeader: true,
+              align: Alignment.center,
+            ),
           ],
         ),
         ...rows.map(
@@ -313,12 +347,9 @@ class RemindersView extends StatelessWidget {
       mainAxisSize: MainAxisSize.min,
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        _channelCircle(
-          assetPath: 'assets/icons/WhatsappLogo.svg',
-          color: _whatsAppGreen,
-        ),
+        _channelCircle(assetPath: AppIcons.whatsappLogo, color: _whatsAppGreen),
         const SizedBox(width: 4),
-        _channelCircle(assetPath: 'assets/icons/email.svg', color: _emailBlue),
+        _channelCircle(assetPath: AppIcons.email, color: _emailBlue),
       ],
     );
   }
@@ -410,13 +441,17 @@ class RemindersView extends StatelessWidget {
   static const _actionIconColor = Color(0xFF64748B);
   static const _actionIconBgColor = Color(0xFFEEF2FF);
 
-  Widget _actionIcons(BuildContext context, ReminderRuleRow row, bool isMessageTemplates) {
+  Widget _actionIcons(
+    BuildContext context,
+    ReminderRuleRow row,
+    bool isMessageTemplates,
+  ) {
     return Row(
       mainAxisSize: MainAxisSize.min,
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
         _actionIcon(
-          'assets/icons/edit.svg',
+          AppIcons.edit,
           onTap: () {
             if (isMessageTemplates) {
               openModalWithTransition(
@@ -426,8 +461,9 @@ class RemindersView extends StatelessWidget {
                   initialTrigger: row.trigger,
                   initialTiming: row.timing,
                   initialAudience: row.audience,
-                  initialStatus:
-                      row.isActive ? AppStrings.active : AppStrings.inactive,
+                  initialStatus: row.isActive
+                      ? AppStrings.active
+                      : AppStrings.inactive,
                 ),
               );
             } else {
@@ -438,15 +474,16 @@ class RemindersView extends StatelessWidget {
                   initialTrigger: row.trigger,
                   initialTiming: row.timing,
                   initialAudience: row.audience,
-                  initialStatus:
-                      row.isActive ? AppStrings.active : AppStrings.inactive,
+                  initialStatus: row.isActive
+                      ? AppStrings.active
+                      : AppStrings.inactive,
                 ),
               );
             }
           },
         ),
         _actionIcon(
-          'assets/icons/trash.svg',
+          AppIcons.trash,
           onTap: () => _showDeleteConfirmDialog(
             context,
             isMessageTemplates: isMessageTemplates,

@@ -5,6 +5,7 @@ import '../../authentication/widgets/app_constants.dart';
 import '../../authentication/widgets/auth_form_field_section.dart';
 import '../../../../shared/widgets/app_modal_primary_button.dart';
 import 'create_plan_modal.dart';
+import 'package:saas/shared/constants/app_icons.dart';
 
 class CreatePlanModalMobileView extends StatelessWidget {
   const CreatePlanModalMobileView({
@@ -49,11 +50,7 @@ class CreatePlanModalMobileView extends StatelessWidget {
         scrolledUnderElevation: 0,
         leading: IconButton(
           onPressed: onCancel,
-          icon: SvgPicture.asset(
-            'assets/icons/back-button.svg',
-            width: 20,
-            height: 20,
-          ),
+          icon: SvgPicture.asset(AppIcons.backButton, width: 20, height: 20),
           style: IconButton.styleFrom(
             minimumSize: Size.zero,
             padding: const EdgeInsets.all(12),
@@ -311,7 +308,7 @@ class CreatePlanModalMobileView extends StatelessWidget {
                 ),
               ),
               SvgPicture.asset(
-                'assets/icons/calendar-days.svg',
+                AppIcons.calendarDays,
                 width: 18,
                 height: 18,
                 colorFilter: const ColorFilter.mode(

@@ -7,7 +7,8 @@ import 'views/terms_and_conditions_tablet_view.dart';
 class TermsAndConditions extends StatelessWidget {
   const TermsAndConditions({super.key});
 
-  static const String _termsText = "Terms and Conditions\n\n"
+  static const String _termsText =
+      "Terms and Conditions\n\n"
       "1. Introduction\n"
       "Welcome to our application. By using our service, you agree to these terms.\n\n"
       "2. Usage Policy\n"

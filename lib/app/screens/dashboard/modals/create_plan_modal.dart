@@ -8,6 +8,7 @@ import '../../authentication/widgets/app_constants.dart';
 import '../../authentication/widgets/auth_form_field_section.dart';
 import 'create_plan_modal_mobile_view.dart';
 import 'create_plan_modal_tablet_view.dart';
+import 'package:saas/shared/constants/app_icons.dart';
 
 enum PlanDuration { days30, months3, months6, months12 }
 
@@ -650,7 +651,7 @@ class _CreatePlanModalState extends State<CreatePlanModal> {
                     ),
                   ),
                   SvgPicture.asset(
-                    'assets/icons/calendar-days.svg',
+                    AppIcons.calendarDays,
                     width: 20,
                     height: 20,
                     colorFilter: const ColorFilter.mode(

@@ -17,7 +17,11 @@ abstract final class AppStrings {
   static const String searchByNameOrPhoneLong =
       'Search by name or phone number';
 
-  static const List<String> commonPlanOptions = ['Monthly', 'Quarterly', 'Yearly'];
+  static const List<String> commonPlanOptions = [
+    'Monthly',
+    'Quarterly',
+    'Yearly',
+  ];
   static const String monthly = 'Monthly';
 
   // Table headers
@@ -38,17 +42,24 @@ abstract final class AppStrings {
   static const String membersTitle = 'Members';
   static const String membersSubtitle =
       'Manage all your members and their subscriptions';
-  static const List<String> membersStatusOptions = ['Active', 'Expiring', 'Expired'];
+  static const List<String> membersStatusOptions = [
+    'Active',
+    'Expiring',
+    'Expired',
+  ];
 
-  static const String paginationMembers =
-      'Showing 1-10 of 248 members';
+  static const String paginationMembers = 'Showing 1-10 of 248 members';
 
   // Renewals
   static const String renewalsTitle = 'Renewals';
   static const String renewalsSubtitle =
       'Track and manage upcoming and missed renewals';
-  static const List<String> renewalsStatusTabs =
-      ['All', 'Expiring Soon', 'Expired', 'Renewed'];
+  static const List<String> renewalsStatusTabs = [
+    'All',
+    'Expiring Soon',
+    'Expired',
+    'Renewed',
+  ];
 
   static const String selectDate = 'Select date';
   static const String selectDates = 'Select Dates';
@@ -113,7 +124,8 @@ abstract final class AppStrings {
   static const String enterPasswordHint = 'Enter Password';
   static const String forgotPasswordTitle = 'Forgot Password?';
   static const String emailOrPhoneLabel = 'Email Address/Phone Number';
-  static const String enterEmailOrPhoneHint = 'Enter Email Address /Phone Number';
+  static const String enterEmailOrPhoneHint =
+      'Enter Email Address /Phone Number';
   static const String otpSentToEmailOrPhone =
       'OTP will be sent to the\nEmail Address/Phone Number';
   static const String getOtpText = 'Get OTP';
@@ -208,7 +220,7 @@ abstract final class AppStrings {
   static const String priceHeader = 'Price';
   static const String activeMembersHeader = 'Active Members';
   static const String actionHeader = 'Action';
-  static const String planCreatedSuccessfullyTitle = 'Plan Created Successfully!';
+  static const String planCreatedSuccessfullyTitle =
+      'Plan Created Successfully!';
   static const String planDeletedTitle = 'Plan Deleted';
 }
-

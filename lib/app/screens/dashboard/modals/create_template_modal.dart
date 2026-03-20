@@ -8,6 +8,7 @@ import '../../../../shared/widgets/app_modal_primary_button.dart';
 import '../../authentication/widgets/app_constants.dart';
 import 'create_template_modal_mobile_view.dart';
 import 'create_template_modal_tablet_view.dart';
+import 'package:saas/shared/constants/app_icons.dart';
 
 class CreateTemplateModal extends StatefulWidget {
   const CreateTemplateModal({
@@ -426,7 +427,7 @@ class _CreateTemplateModalState extends State<CreateTemplateModal> {
                                                             .center,
                                                     children: [
                                                       SvgPicture.asset(
-                                                        'assets/icons/upload.svg',
+                                                        AppIcons.upload,
                                                         width: 32,
                                                         height: 32,
                                                         colorFilter:

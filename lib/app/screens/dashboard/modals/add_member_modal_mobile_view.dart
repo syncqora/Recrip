@@ -8,6 +8,7 @@ import '../../authentication/widgets/app_constants.dart';
 import 'subscription_utils.dart';
 import '../../authentication/widgets/auth_form_field_section.dart';
 import '../../authentication/widgets/auth_text_field.dart';
+import 'package:saas/shared/constants/app_icons.dart';
 
 class AddMemberModalMobileView extends StatelessWidget {
   const AddMemberModalMobileView({
@@ -57,11 +58,7 @@ class AddMemberModalMobileView extends StatelessWidget {
         scrolledUnderElevation: 0,
         leading: IconButton(
           onPressed: onCancel,
-          icon: SvgPicture.asset(
-            'assets/icons/back-button.svg',
-            width: 20,
-            height: 20,
-          ),
+          icon: SvgPicture.asset(AppIcons.backButton, width: 20, height: 20),
           style: IconButton.styleFrom(
             minimumSize: Size.zero,
             padding: const EdgeInsets.all(12),

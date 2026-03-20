@@ -3,6 +3,7 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:get/get.dart';
 import 'package:saas/shared/constants/app_strings.dart';
 import 'reports_mobile_view.dart';
+import 'package:saas/shared/constants/app_icons.dart';
 
 class ReportsTabletView extends StatelessWidget {
   const ReportsTabletView({
@@ -87,11 +88,13 @@ class ReportsTabletView extends StatelessWidget {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          const Text(AppStrings.monthly,
-              style: TextStyle(color: _textDark, fontSize: 14)),
+          const Text(
+            AppStrings.monthly,
+            style: TextStyle(color: _textDark, fontSize: 14),
+          ),
           const SizedBox(width: 8),
           SvgPicture.asset(
-            'assets/icons/dropdown_down.svg',
+            AppIcons.dropdownDown,
             width: 20,
             height: 20,
             colorFilter: ColorFilter.mode(_textMuted, BlendMode.srcIn),
@@ -195,10 +198,13 @@ class _ExportButton extends StatelessWidget {
               mainAxisSize: MainAxisSize.min,
               children: [
                 SvgPicture.asset(
-                  'assets/icons/download.svg',
+                  AppIcons.download,
                   width: 18,
                   height: 18,
-                  colorFilter: ColorFilter.mode(const Color(0xFF0F172A), BlendMode.srcIn),
+                  colorFilter: ColorFilter.mode(
+                    const Color(0xFF0F172A),
+                    BlendMode.srcIn,
+                  ),
                 ),
                 const SizedBox(width: 8),
                 const Text(

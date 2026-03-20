@@ -14,6 +14,7 @@ import 'views/reports/reports_view.dart';
 import 'views/settings/settings_view.dart';
 import 'views/subscriptions/subscriptions_view.dart';
 import 'package:saas/shared/constants/app_strings.dart';
+import 'package:saas/shared/constants/app_icons.dart';
 
 class Dashboard extends GetView<DashboardController> {
   const Dashboard({super.key});
@@ -231,7 +232,7 @@ class Dashboard extends GetView<DashboardController> {
           child: Row(
             children: [
               SvgPicture.asset(
-                'assets/icons/log-out.svg',
+                AppIcons.logOut,
                 width: 24,
                 height: 24,
                 color: _sidebarIconColor,
@@ -239,7 +240,7 @@ class Dashboard extends GetView<DashboardController> {
               ),
               const SizedBox(width: 16),
               Text(
-                  AppStrings.logout,
+                AppStrings.logout,
                 style: Get.textTheme.bodySmall?.copyWith(
                   fontSize: 18,
                   color: _sidebarTextColor,
@@ -330,7 +331,7 @@ class Dashboard extends GetView<DashboardController> {
             child: CircleAvatar(
               backgroundColor: const Color(0xFFEEF2FF),
               child: SvgPicture.asset(
-                'assets/icons/headset.svg',
+                AppIcons.headset,
                 width: 24,
                 height: 24,
                 color: _textMuted,

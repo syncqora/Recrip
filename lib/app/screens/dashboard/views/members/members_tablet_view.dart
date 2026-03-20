@@ -105,8 +105,11 @@ class MembersTabletView extends StatelessWidget {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   _infoColumn(AppStrings.plan, member.plan),
-                  _infoColumn(AppStrings.tableHeaderExpiryDate, member.expiry,
-                      alignRight: true),
+                  _infoColumn(
+                    AppStrings.tableHeaderExpiryDate,
+                    member.expiry,
+                    alignRight: true,
+                  ),
                 ],
               ),
             ],
@@ -147,8 +150,11 @@ class MembersTabletView extends StatelessWidget {
     final (String label, Color bg, Color textColor) = switch (status) {
       MemberStatus.active => (AppStrings.active, _activeBadge, _activeText),
       MemberStatus.expired => (AppStrings.expired, _expiredBadge, _expiredText),
-      MemberStatus.expiring =>
-          (AppStrings.expiring, _expiringBadge, _expiringText),
+      MemberStatus.expiring => (
+        AppStrings.expiring,
+        _expiringBadge,
+        _expiringText,
+      ),
     };
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),

@@ -3,6 +3,7 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:get/get.dart';
 import '../../authentication/widgets/app_constants.dart';
 import '../../../../shared/widgets/app_modal_primary_button.dart';
+import 'package:saas/shared/constants/app_icons.dart';
 
 class CreateRuleModalMobileView extends StatelessWidget {
   const CreateRuleModalMobileView({
@@ -54,11 +55,7 @@ class CreateRuleModalMobileView extends StatelessWidget {
         scrolledUnderElevation: 0,
         leading: IconButton(
           onPressed: onCancel,
-          icon: SvgPicture.asset(
-            'assets/icons/back-button.svg',
-            width: 20,
-            height: 20,
-          ),
+          icon: SvgPicture.asset(AppIcons.backButton, width: 20, height: 20),
           style: IconButton.styleFrom(
             minimumSize: Size.zero,
             padding: const EdgeInsets.all(12),

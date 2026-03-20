@@ -10,6 +10,7 @@ import '../../authentication/widgets/auth_form_field_section.dart';
 import 'create_plan_modal.dart';
 import 'edit_plan_modal_mobile_view.dart';
 import 'edit_plan_modal_tablet_view.dart';
+import 'package:saas/shared/constants/app_icons.dart';
 
 /// Initial data for editing a plan.
 class EditPlanData {
@@ -603,7 +604,7 @@ class _EditPlanModalState extends State<EditPlanModal> {
                     ),
                   ),
                   SvgPicture.asset(
-                    'assets/icons/calendar-days.svg',
+                    AppIcons.calendarDays,
                     width: 20,
                     height: 20,
                     colorFilter: const ColorFilter.mode(

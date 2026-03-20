@@ -10,6 +10,7 @@ import '../../modals/modal_route_helper.dart';
 import '../../modals/view_member_modal.dart';
 import 'members_mobile_view.dart';
 import 'members_tablet_view.dart';
+import 'package:saas/shared/constants/app_icons.dart';
 
 /// Members page content: header, search/filters, table, pagination.
 /// Used inside the dashboard main content area when Members nav is selected.
@@ -189,7 +190,7 @@ class _MembersViewState extends State<MembersView> {
                 prefixIcon: Padding(
                   padding: const EdgeInsets.only(left: 12, right: 8),
                   child: SvgPicture.asset(
-                    'assets/icons/search.svg',
+                    AppIcons.search,
                     width: 18,
                     height: 18,
                     colorFilter: const ColorFilter.mode(
@@ -263,7 +264,7 @@ class _MembersViewState extends State<MembersView> {
           prefixIcon: Padding(
             padding: const EdgeInsets.only(left: 14, right: 10),
             child: SvgPicture.asset(
-              'assets/icons/search.svg',
+              AppIcons.search,
               width: 20,
               height: 20,
               colorFilter: const ColorFilter.mode(
@@ -487,11 +488,7 @@ class _MembersViewState extends State<MembersView> {
                 ),
               ),
               const SizedBox(width: 8),
-              SvgPicture.asset(
-                'assets/icons/dropdown_down.svg',
-                width: 24,
-                height: 24,
-              ),
+              SvgPicture.asset(AppIcons.dropdownDown, width: 24, height: 24),
             ],
           ),
         ),
