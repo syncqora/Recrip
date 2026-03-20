@@ -1,10 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/flutter_svg.dart';
 import 'package:get/get.dart';
 
 import '../../../../shared/widgets/success_toast.dart';
 import '../../../../shared/widgets/app_close_button.dart';
-import '../../authentication/widgets/app_constants.dart';
+import 'view_member_mobile_modal.dart';
 
 /// Data for the View Member modal.
 class ViewMemberData {
@@ -44,6 +43,34 @@ class ViewMemberModal extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isMobile = MediaQuery.sizeOf(context).width < 600;
+    if (isMobile) {
+      return ViewMemberMobileModal(
+        memberName: member.name,
+        phone: member.phone,
+        email: member.email,
+        plan: member.plan,
+        expiry: member.expiry,
+        statusLabel: member.statusLabel,
+        statusColor: member.statusColor,
+        onClose: () => Navigator.of(context).pop(),
+        onRenew: () {
+          SuccessToast.show(context, title: 'Renewal started', popRoute: false);
+        },
+        onSendReminder: () {
+          SuccessToast.show(
+            context,
+            title: 'Reminder Sent to ${member.name}',
+            popRoute: false,
+          );
+        },
+        onEdit: () {
+          Navigator.of(context).pop();
+        },
+        onDelete: () => _showRemoveUserDialog(context),
+      );
+    }
+
     return Dialog(
       backgroundColor: Colors.transparent,
       insetPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 48),

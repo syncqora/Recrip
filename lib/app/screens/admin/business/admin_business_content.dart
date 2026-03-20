@@ -448,29 +448,41 @@ class AdminBusinessContent extends StatelessWidget {
     const pincode = '560093';
     const startDate = '18/03/2026';
 
+    final modal = ViewBusinessModal(
+      onEditBusinessTap: onEditBusinessTap,
+      business: ViewBusinessData(
+        businessName: businessName,
+        ownerName: ownerName,
+        phoneNumber: phoneNumber,
+        emailAddress: emailAddress,
+        gstNumber: gstNumber,
+        buildingName: buildingName,
+        streetAddress: streetAddress,
+        city: city,
+        state: state,
+        pincode: pincode,
+        plan: plan,
+        startDate: startDate,
+        expiryDate: expiryDate,
+        statusLabel: statusLabel,
+        statusColor: const Color(0xFF166534),
+        isActive: statusLabel.toLowerCase() == 'active',
+      ),
+    );
+
+    if (MediaQuery.sizeOf(context).width < 600) {
+      Navigator.of(context).push(
+        MaterialPageRoute<void>(
+          fullscreenDialog: true,
+          builder: (_) => modal,
+        ),
+      );
+      return;
+    }
+
     showDialog<void>(
       context: context,
-      builder: (_) => ViewBusinessModal(
-        onEditBusinessTap: onEditBusinessTap,
-        business: ViewBusinessData(
-          businessName: businessName,
-          ownerName: ownerName,
-          phoneNumber: phoneNumber,
-          emailAddress: emailAddress,
-          gstNumber: gstNumber,
-          buildingName: buildingName,
-          streetAddress: streetAddress,
-          city: city,
-          state: state,
-          pincode: pincode,
-          plan: plan,
-          startDate: startDate,
-          expiryDate: expiryDate,
-          statusLabel: statusLabel,
-          statusColor: const Color(0xFF166534),
-          isActive: statusLabel.toLowerCase() == 'active',
-        ),
-      ),
+      builder: (_) => modal,
     );
   }
 }

@@ -5,6 +5,7 @@ import 'package:saas/shared/constants/app_icons.dart';
 import 'package:saas/shared/utils/app_date_picker.dart';
 import 'package:saas/shared/widgets/primary_action_button.dart';
 import 'view_business_modal.dart';
+import 'package:saas/shared/widgets/success_toast.dart';
 
 import '../../dashboard/modals/subscription_utils.dart';
 
@@ -527,7 +528,13 @@ class AdminAddBusinessContent extends StatelessWidget {
             label: isEditMode ? 'Save Changes' : 'Add Business',
             onPressed: () {
               // TODO: validate and call API to create/update the business.
-              if (!isEditMode) {
+              if (isEditMode) {
+                SuccessToast.show(
+                  context,
+                  title: 'Changes saved successfully',
+                  popRoute: false,
+                );
+              } else {
                 _showBusinessAddedDialog(context);
               }
             },

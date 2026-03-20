@@ -6,6 +6,7 @@ import 'package:saas/app/screens/dashboard/dialogs/delete_plan_confirm_dialog.da
 import 'package:saas/shared/constants/app_icons.dart';
 import 'package:saas/shared/widgets/success_toast.dart';
 import 'package:saas/shared/widgets/app_close_button.dart';
+import 'view_business_mobile_modal.dart';
 
 class ViewBusinessData {
   const ViewBusinessData({
@@ -68,6 +69,29 @@ class ViewBusinessModal extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isMobile = MediaQuery.sizeOf(context).width < 600;
+    if (isMobile) {
+      return ViewBusinessMobileModal(
+        business: business,
+        onClose: () => Navigator.of(context).pop(),
+        onRenew: () {
+          SuccessToast.show(context, title: 'Renewal started', popRoute: false);
+        },
+        onSendReminder: () {
+          SuccessToast.show(
+            context,
+            title: 'Reminder Sent to Business',
+            popRoute: false,
+          );
+        },
+        onEdit: () {
+          Navigator.of(context).pop();
+          onEditBusinessTap?.call(business);
+        },
+        onDelete: () => _showDeleteConfirmDialog(context),
+      );
+    }
+
     final bg = business.isActive ? _activeGreenBg : business.statusColor.withValues(alpha: 0.18);
     final fg = business.isActive ? _activeGreenText : business.statusColor;
 
