@@ -35,6 +35,85 @@ class AdminDashboardTabletView extends StatelessWidget {
   static const _textDark = Color(0xFF0F172A);
   static const _textMuted = Color(0xFF64748B);
   static const _border = Color(0xFFE2E8F0);
+  static const _activeBadge = Color(0xFFDCFCE7);
+  static const _activeText = Color(0xFF166534);
+  static const _expiringBadge = Color(0xFFFEF3C7);
+  static const _expiringText = Color(0xFF92400E);
+  static const _expiredBadge = Color(0xFFFEE2E2);
+  static const _expiredText = Color(0xFF991B1B);
+
+  static const _recentBusinessRows = [
+    (
+      business: 'T-rex Fitness Club',
+      owner: 'Kattapadi Suresh',
+      plan: 'Yearly',
+      status: 'Active',
+      expiry: '18/03/2027',
+    ),
+    (
+      business: 'Iron Forge Gym',
+      owner: 'Rahul Menon',
+      plan: 'Half Yearly',
+      status: 'Expiring',
+      expiry: '02/04/2026',
+    ),
+    (
+      business: 'Urban Pulse Fitness',
+      owner: 'Nikhil Shetty',
+      plan: 'Quarterly',
+      status: 'Expired',
+      expiry: '14/02/2026',
+    ),
+    (
+      business: 'Alpha Strength Studio',
+      owner: 'Pranav Nair',
+      plan: 'Yearly',
+      status: 'Active',
+      expiry: '11/11/2026',
+    ),
+    (
+      business: 'Spartan Arena Gym',
+      owner: 'Akhil Raj',
+      plan: 'Monthly',
+      status: 'Expiring',
+      expiry: '28/03/2026',
+    ),
+    (
+      business: 'Core Nation Fitness',
+      owner: 'Arjun Pillai',
+      plan: 'Yearly',
+      status: 'Active',
+      expiry: '30/12/2026',
+    ),
+    (
+      business: 'LiftLab Performance',
+      owner: 'Dinesh Kumar',
+      plan: 'Quarterly',
+      status: 'Expired',
+      expiry: '05/01/2026',
+    ),
+    (
+      business: 'Beast Mode Club',
+      owner: 'Midhun Das',
+      plan: 'Half Yearly',
+      status: 'Active',
+      expiry: '19/08/2026',
+    ),
+    (
+      business: 'PeakFit Training Hub',
+      owner: 'Srinath R',
+      plan: 'Monthly',
+      status: 'Expiring',
+      expiry: '25/03/2026',
+    ),
+    (
+      business: 'PowerHouse Athletics',
+      owner: 'Vivek Balan',
+      plan: 'Yearly',
+      status: 'Active',
+      expiry: '09/10/2026',
+    ),
+  ];
 
   @override
   Widget build(BuildContext context) {
@@ -369,47 +448,22 @@ class AdminDashboardTabletView extends StatelessWidget {
                       _headerCell('Expiry', align: Alignment.center),
                     ],
                   ),
-                  TableRow(
-                    decoration: const BoxDecoration(
-                      color: Colors.white,
-                      border: Border(
-                        bottom: BorderSide(color: Colors.transparent),
+                  for (final row in _recentBusinessRows)
+                    TableRow(
+                      decoration: const BoxDecoration(
+                        color: Colors.white,
+                        border: Border(
+                          bottom: BorderSide(color: Colors.transparent),
+                        ),
                       ),
+                      children: [
+                        _dataCell(row.business),
+                        _dataCell(row.owner),
+                        _dataCell(row.plan),
+                        _statusCell(row.status),
+                        _dataCell(row.expiry, align: Alignment.center),
+                      ],
                     ),
-                    children: [
-                      _dataCell('T-rex Fitness Club'),
-                      _dataCell('Kattapadi Suresh'),
-                      _dataCell('Yearly'),
-                      Padding(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 12,
-                          vertical: 14,
-                        ),
-                        child: Container(
-                          width: 80,
-                          height: 30,
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 12,
-                            vertical: 4,
-                          ),
-                          decoration: BoxDecoration(
-                            color: const Color(0xFFDCFCE7),
-                            borderRadius: BorderRadius.circular(16),
-                          ),
-                          alignment: Alignment.center,
-                          child: Text(
-                            'Active',
-                            style: Get.textTheme.labelMedium?.copyWith(
-                              color: const Color(0xFF166534),
-                              fontWeight: FontWeight.w500,
-                              fontSize: 12,
-                            ),
-                          ),
-                        ),
-                      ),
-                      _dataCell('01/01/2026', align: Alignment.center),
-                    ],
-                  ),
                 ],
               );
             },
@@ -446,5 +500,51 @@ class AdminDashboardTabletView extends StatelessWidget {
         ),
       ),
     );
+  }
+
+  Widget _statusCell(String status) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
+      child: Container(
+        width: 92,
+        height: 30,
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+        decoration: BoxDecoration(
+          color: _statusBadgeColor(status),
+          borderRadius: BorderRadius.circular(16),
+        ),
+        alignment: Alignment.center,
+        child: Text(
+          status,
+          style: Get.textTheme.labelMedium?.copyWith(
+            color: _statusTextColor(status),
+            fontWeight: FontWeight.w500,
+            fontSize: 12,
+          ),
+        ),
+      ),
+    );
+  }
+
+  Color _statusBadgeColor(String status) {
+    switch (status.toLowerCase()) {
+      case 'expired':
+        return _expiredBadge;
+      case 'expiring':
+        return _expiringBadge;
+      default:
+        return _activeBadge;
+    }
+  }
+
+  Color _statusTextColor(String status) {
+    switch (status.toLowerCase()) {
+      case 'expired':
+        return _expiredText;
+      case 'expiring':
+        return _expiringText;
+      default:
+        return _activeText;
+    }
   }
 }
