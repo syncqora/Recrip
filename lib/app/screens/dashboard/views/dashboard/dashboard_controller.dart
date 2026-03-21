@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import '../../../../../routes/app_pages.dart';
+import '../../../../../core/controllers/app_settings_controller.dart';
 import '../../../../../core/di/get_injector.dart';
+import '../../../../../core/services/auth_service.dart';
+import '../../../../../routes/app_pages.dart';
 
 class DashboardController extends GetxController {
   final selectedNavIndex = 0.obs;
@@ -18,8 +20,9 @@ class DashboardController extends GetxController {
     // TODO: navigate to Members, Subscriptions, etc. when those screens exist
   }
 
-  void onLogout() {
-    // TODO: clear session and navigate to login
+  Future<void> onLogout() async {
+    await Get.find<AuthService>().logout();
+    Get.find<AppSettingsController>().isUserLoggedIn.value = false;
     appNav.changePage(AppRoutes.home);
   }
 

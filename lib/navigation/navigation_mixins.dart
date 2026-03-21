@@ -80,6 +80,7 @@ mixin NavigationMixin on GetxService {
     appBarTitle.value =
         {
           AppRoutes.home: PageTitles.home,
+          AppRoutes.dashboard: PageTitles.dashboard,
           AppRoutes.categories: PageTitles.categories,
           AppRoutes.profile: PageTitles.profile,
           AppRoutes.onBoarding: PageTitles.onboarding,

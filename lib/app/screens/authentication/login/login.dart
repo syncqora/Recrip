@@ -32,15 +32,22 @@ class Login extends GetView<LoginController> {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               AuthFormFieldSection(
-                label: AppStrings.userNameLabel,
+                label: AppStrings.loginEmailLabel,
                 child: MouseRegion(
                   onEnter: (_) => controller.setUsernameHovered(true),
                   onExit: (_) => controller.setUsernameHovered(false),
                   child: Obx(
                     () => AuthTextField(
-                      controller: controller.usernameController,
-                      hint: AppStrings.enterUsernameHint,
+                      controller: controller.emailController,
+                      focusNode: controller.emailFocusNode,
+                      hint: AppStrings.loginEmailHint,
                       isHovered: controller.isUsernameHovered.value,
+                      errorText: controller.emailError.value,
+                      keyboardType: TextInputType.emailAddress,
+                      autocorrect: false,
+                      textInputAction: TextInputAction.next,
+                      onSubmitted: (_) =>
+                          controller.passwordFocusNode.requestFocus(),
                     ),
                   ),
                 ),
@@ -54,9 +61,13 @@ class Login extends GetView<LoginController> {
                   child: Obx(
                     () => AuthPasswordField(
                       controller: controller.passwordController,
+                      focusNode: controller.passwordFocusNode,
                       obscureText: !controller.isPasswordVisible.value,
                       onToggleVisibility: controller.togglePasswordVisibility,
                       isHovered: controller.isPasswordHovered.value,
+                      errorText: controller.passwordError.value,
+                      textInputAction: TextInputAction.done,
+                      onSubmitted: (_) => controller.onLogin(),
                     ),
                   ),
                 ),
@@ -94,6 +105,7 @@ class Login extends GetView<LoginController> {
                   text: AppStrings.loginTitle,
                   onPressed: controller.onLogin,
                   isEnabled: controller.isFormValid.value,
+                  isLoading: controller.isSubmitting.value,
                 ),
               ),
               const SizedBox(height: AppConstants.spacingAfterButton),

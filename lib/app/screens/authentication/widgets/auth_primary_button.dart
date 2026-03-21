@@ -10,20 +10,23 @@ class AuthPrimaryButton extends StatelessWidget {
     required this.text,
     required this.onPressed,
     required this.isEnabled,
+    this.isLoading = false,
   });
 
   final String text;
   final VoidCallback? onPressed;
   final bool isEnabled;
+  final bool isLoading;
 
   @override
   Widget build(BuildContext context) {
+    final active = isEnabled && !isLoading;
     return ElevatedButton(
-      onPressed: isEnabled ? onPressed : null,
+      onPressed: active ? onPressed : null,
       style: ElevatedButton.styleFrom(
         elevation: 0,
         minimumSize: Size(double.infinity, AppConstants.buttonHeight),
-        backgroundColor: isEnabled
+        backgroundColor: active
             ? AppConstants.buttonEnabledColor
             : AppConstants.buttonDisabledColor,
         disabledBackgroundColor: AppConstants.buttonDisabledColor,
@@ -34,17 +37,26 @@ class AuthPrimaryButton extends StatelessWidget {
           borderRadius: BorderRadius.circular(AppConstants.fieldBorderRadius),
         ),
       ),
-      child: Text(
-        text,
-        textAlign: TextAlign.center,
-        maxLines: 1,
-        overflow: TextOverflow.ellipsis,
-        style: Get.theme.textTheme.bodyMedium?.copyWith(
-          color: Colors.white,
-          fontWeight: FontWeight.w600,
-          height: 1.15,
-        ),
-      ),
+      child: isLoading
+          ? const SizedBox(
+              height: 22,
+              width: 22,
+              child: CircularProgressIndicator(
+                strokeWidth: 2.2,
+                color: Colors.white,
+              ),
+            )
+          : Text(
+              text,
+              textAlign: TextAlign.center,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: Get.theme.textTheme.bodyMedium?.copyWith(
+                color: Colors.white,
+                fontWeight: FontWeight.w600,
+                height: 1.15,
+              ),
+            ),
     );
   }
 }

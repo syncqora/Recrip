@@ -8,8 +8,11 @@ import '../../shared/utils/app_logger.dart';
 import '../../shared/utils/logx.dart';
 import '../controllers/app_settings_controller.dart';
 import '../controllers/ui_controller.dart';
+import '../services/auth_service.dart';
 import '../services/box_db.dart';
-import '../services/firebase_services.dart';
+import '../../network/api/api.dart';
+import '../../network/repo/repo.dart';
+import '../../network/services/services.dart';
 import '../services/supabase_services.dart';
 
 GetIt di = GetIt.instance;
@@ -52,6 +55,22 @@ Future<void> setupGlobalServices() async {
 
   if (!di.isRegistered<ThemeService>()) {
     di.registerLazySingleton<ThemeService>(() => ThemeService());
+  }
+
+  if (!Get.isRegistered<ApiServices>()) {
+    Get.put<ApiServices>(ApiServices(), permanent: true);
+  }
+  if (!Get.isRegistered<AuthRepository>()) {
+    Get.put<AuthRepository>(
+      AuthRepo(services: AuthServices()),
+      permanent: true,
+    );
+  }
+  if (!Get.isRegistered<AuthService>()) {
+    Get.put<AuthService>(
+      AuthService(Get.find<AuthRepository>()),
+      permanent: true,
+    );
   }
 }
 

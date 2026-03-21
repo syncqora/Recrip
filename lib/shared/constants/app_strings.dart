@@ -120,6 +120,15 @@ abstract final class AppStrings {
   static const String loginTitle = 'Login';
   static const String userNameLabel = 'User Name';
   static const String enterUsernameHint = 'Enter username';
+  static const String loginEmailLabel = 'Email';
+  static const String loginEmailHint = 'name@example.com';
+  static const String loginEmailInvalid = 'Enter a valid email address';
+  static const String loginEmailRequired = 'Enter your email address';
+  static const String loginPasswordRequired = 'Enter your password';
+  static const String loginPasswordTooShort =
+      'Password must be at least 8 characters';
+  static const String loginPasswordWeak =
+      'Use upper & lower case, a number, and a special character';
   static const String passwordLabel = 'Password';
   static const String enterPasswordHint = 'Enter Password';
   static const String forgotPasswordTitle = 'Forgot Password?';

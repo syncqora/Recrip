@@ -2,6 +2,10 @@ class BoxConstants {
   static const String userName = 'userName';
   static const String phoneNumber = 'phoneNumber';
   static const String isUserLoggedIn = 'isLoggedIn';
+  static const String accessToken = 'accessToken';
+  static const String refreshToken = 'refreshToken';
+  static const String tokenExpiresAtMs = 'tokenExpiresAtMs';
+  static const String tokenScope = 'tokenScope';
   static const String userId = 'userId';
   static const String isAlreadyInstalled = "isAlreadyInstalled";
   static const String deviceID = 'deviceID';

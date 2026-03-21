@@ -92,7 +92,6 @@ dependencies:
   # Share and print PDF.
   printing: ^5.13.4
 
-
 dev_dependencies:
   flutter_test:
     sdk: flutter
