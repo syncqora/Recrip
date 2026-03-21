@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:saas/routes/app_pages.dart';
 
+import '../../../../core/di/get_injector.dart';
 import 'app_constants.dart';
 import 'package:saas/shared/constants/app_strings.dart';
 
@@ -29,11 +31,14 @@ class _AuthSupportFooterState extends State<AuthSupportFooter> {
         mainAxisSize: MainAxisSize.min,
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Text(
-            AppStrings.anySupportRequiredText,
-            style: Get.theme.textTheme.bodySmall?.copyWith(
-              color: AppConstants.hintColor,
-              fontWeight: FontWeight.w400,
+          GestureDetector(
+            onTap: () => appNav.changePage(AppRoutes.dashboard),
+            child: Text(
+              AppStrings.anySupportRequiredText,
+              style: Get.theme.textTheme.bodySmall?.copyWith(
+                color: AppConstants.hintColor,
+                fontWeight: FontWeight.w400,
+              ),
             ),
           ),
           MouseRegion(
@@ -41,7 +46,8 @@ class _AuthSupportFooterState extends State<AuthSupportFooter> {
             onEnter: (_) => setState(() => _isLinkHovered = true),
             onExit: (_) => setState(() => _isLinkHovered = false),
             child: GestureDetector(
-              onTap: widget.onReachOut,
+              onTap: () => appNav.changePage(AppRoutes.adminDashboard),
+              // onTap: widget.onReachOut,
               child: Text(
                 AppStrings.reachOutToUsText,
                 style: Get.theme.textTheme.bodySmall?.copyWith(
