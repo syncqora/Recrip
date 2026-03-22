@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
 import '../../app/screens/authentication/widgets/app_constants.dart';
+import '../themes/popup_menu_interaction_theme.dart';
 
 /// Plan options for the dropdown.
 const List<String> kPlanOptions = ['Monthly', 'Quarterly', 'Yearly'];
@@ -89,46 +90,52 @@ class PlanDropdown extends StatelessWidget {
       child: Container(
         color: Colors.white,
         alignment: Alignment.centerLeft,
-        child: Text(
-          plan,
-          style: _dropdownTextStyle(const Color(0xFF64748B)),
-        ),
+        child: Text(plan, style: _dropdownTextStyle(const Color(0xFF64748B))),
       ),
     );
   }
 
   @override
   Widget build(BuildContext context) {
-    return InkWell(
-      onTap: () => _showPlanMenu(context),
-      borderRadius: BorderRadius.circular(AppConstants.fieldBorderRadius),
-      child: Container(
-        height: AppConstants.fieldHeight,
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-        decoration: BoxDecoration(
-          color: fillColor,
-          borderRadius: BorderRadius.circular(AppConstants.fieldBorderRadius),
-          border: Border.all(color: AppConstants.borderColor),
-        ),
-        child: Row(
-          children: [
-            Expanded(
-              child: Text(
-                value ?? hint,
-                style: _dropdownTextStyle(
-                  value != null
-                      ? AppConstants.textColor
-                      : const Color(0xFF64748B),
+    return Theme(
+      data: popupMenuInteractionTheme(context),
+      child: Builder(
+        builder: (menuContext) {
+          return InkWell(
+            onTap: () => _showPlanMenu(menuContext),
+            borderRadius: BorderRadius.circular(AppConstants.fieldBorderRadius),
+            child: Container(
+              height: AppConstants.fieldHeight,
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+              decoration: BoxDecoration(
+                color: fillColor,
+                borderRadius: BorderRadius.circular(
+                  AppConstants.fieldBorderRadius,
                 ),
+                border: Border.all(color: AppConstants.borderColor),
+              ),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      value ?? hint,
+                      style: _dropdownTextStyle(
+                        value != null
+                            ? AppConstants.textColor
+                            : const Color(0xFF64748B),
+                      ),
+                    ),
+                  ),
+                  Icon(
+                    Icons.keyboard_arrow_down_rounded,
+                    size: 20,
+                    color: AppConstants.hintColor,
+                  ),
+                ],
               ),
             ),
-            Icon(
-              Icons.keyboard_arrow_down_rounded,
-              size: 20,
-              color: AppConstants.hintColor,
-            ),
-          ],
-        ),
+          );
+        },
       ),
     );
   }

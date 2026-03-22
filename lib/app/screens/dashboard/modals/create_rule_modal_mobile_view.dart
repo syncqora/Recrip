@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:get/get.dart';
+import 'package:saas/shared/themes/popup_menu_interaction_theme.dart';
 import '../../authentication/widgets/app_constants.dart';
 import '../../../../shared/widgets/app_modal_primary_button.dart';
 import 'package:saas/shared/constants/app_icons.dart';
@@ -111,9 +112,7 @@ class CreateRuleModalMobileView extends StatelessWidget {
             const SizedBox(height: 24),
             _buildSectionTitle('Reminder Channels'),
             const SizedBox(height: 16),
-            _buildCheckbox('WhatsApp', whatsApp, onWhatsAppChanged),
-            const SizedBox(height: 12),
-            _buildCheckbox('Email', email, onEmailChanged),
+            _buildReminderChannels(),
             const SizedBox(height: 140),
           ],
         ),
@@ -176,40 +175,45 @@ class CreateRuleModalMobileView extends StatelessWidget {
   ) {
     return Builder(
       builder: (anchorContext) {
-        return InkWell(
-          onTap: () => onTap(anchorContext),
-          borderRadius: BorderRadius.circular(AppConstants.fieldBorderRadius),
-          child: Container(
-            height: AppConstants.fieldHeight,
-            padding: const EdgeInsets.symmetric(horizontal: 12),
-            decoration: BoxDecoration(
-              color: text.contains('Select') ? Colors.white : _filledFieldColor,
-              borderRadius: BorderRadius.circular(
-                AppConstants.fieldBorderRadius,
+        return Theme(
+          data: popupMenuInteractionTheme(anchorContext),
+          child: InkWell(
+            onTap: () => onTap(anchorContext),
+            borderRadius: BorderRadius.circular(AppConstants.fieldBorderRadius),
+            child: Container(
+              height: AppConstants.fieldHeight,
+              padding: const EdgeInsets.symmetric(horizontal: 12),
+              decoration: BoxDecoration(
+                color: text.contains('Select')
+                    ? Colors.white
+                    : _filledFieldColor,
+                borderRadius: BorderRadius.circular(
+                  AppConstants.fieldBorderRadius,
+                ),
+                border: Border.all(color: AppConstants.borderColor),
               ),
-              border: Border.all(color: AppConstants.borderColor),
-            ),
-            child: Row(
-              children: [
-                Expanded(
-                  child: Text(
-                    text,
-                    style: Get.theme.textTheme.labelMedium?.copyWith(
-                      color: text.contains('Select')
-                          ? _dropdownPlaceholderColor
-                          : AppConstants.textColor,
-                      fontSize: 12,
-                      fontWeight: FontWeight.w500,
-                      height: 1,
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      text,
+                      style: Get.theme.textTheme.labelMedium?.copyWith(
+                        color: text.contains('Select')
+                            ? _dropdownPlaceholderColor
+                            : AppConstants.textColor,
+                        fontSize: 12,
+                        fontWeight: FontWeight.w500,
+                        height: 1,
+                      ),
                     ),
                   ),
-                ),
-                const Icon(
-                  Icons.keyboard_arrow_down_rounded,
-                  size: 20,
-                  color: AppConstants.hintColor,
-                ),
-              ],
+                  const Icon(
+                    Icons.keyboard_arrow_down_rounded,
+                    size: 20,
+                    color: AppConstants.hintColor,
+                  ),
+                ],
+              ),
             ),
           ),
         );
@@ -239,7 +243,10 @@ class CreateRuleModalMobileView extends StatelessWidget {
                 return null;
               }),
               checkColor: AppConstants.labelColor,
-              side: const BorderSide(color: AppConstants.borderColor, width: 1),
+              side: WidgetStateBorderSide.resolveWith(
+                (states) =>
+                    const BorderSide(color: AppConstants.borderColor, width: 1),
+              ),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(4),
               ),
@@ -249,12 +256,25 @@ class CreateRuleModalMobileView extends StatelessWidget {
           const SizedBox(width: 12),
           Text(
             label,
-            style: Get.textTheme.bodyMedium?.copyWith(
+            style: Get.textTheme.labelMedium?.copyWith(
               color: AppConstants.labelColor,
+              fontWeight: FontWeight.w600,
             ),
           ),
         ],
       ),
+    );
+  }
+
+  Widget _buildReminderChannels() {
+    return Row(
+      children: [
+        Expanded(
+          child: _buildCheckbox('WhatsApp', whatsApp, onWhatsAppChanged),
+        ),
+        const SizedBox(width: 16),
+        Expanded(child: _buildCheckbox('Email', email, onEmailChanged)),
+      ],
     );
   }
 

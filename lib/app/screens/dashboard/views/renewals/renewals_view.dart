@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:get/get.dart';
 import '../../../../../shared/widgets/success_toast.dart';
+import '../../../../../shared/themes/popup_menu_interaction_theme.dart';
 import '../../../authentication/widgets/app_constants.dart';
 import 'package:saas/shared/constants/app_strings.dart';
 import '../../modals/add_member_modal.dart';
@@ -522,8 +523,9 @@ class _RenewalsViewState extends State<RenewalsView> {
 
   Future<void> _showPlanMenu() async {
     final menuWidth = _planDropdownTriggerWidth();
+    final menuContext = _planDropdownKey.currentContext ?? context;
     final result = await showMenu<String>(
-      context: context,
+      context: menuContext,
       position: _planDropdownPosition(),
       constraints: BoxConstraints.tightFor(width: menuWidth),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
@@ -568,52 +570,55 @@ class _RenewalsViewState extends State<RenewalsView> {
   Widget _buildPlanFilterBox({required bool isMobile}) {
     const planBoxWidth = 169.0;
     final display = _selectedPlan ?? AppStrings.plan;
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        onTap: _showPlanMenu,
-        borderRadius: BorderRadius.circular(12),
-        child: Container(
-          key: _planDropdownKey,
-          width: planBoxWidth,
-          height: 44,
-          padding: const EdgeInsets.symmetric(horizontal: 16),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: AppConstants.borderColor),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withValues(alpha: 0.03),
-                blurRadius: 4,
-                offset: const Offset(0, 1),
-              ),
-            ],
-          ),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(
-                display,
-                style: Get.textTheme.labelMedium?.copyWith(
-                  color: _selectedPlan != null
-                      ? AppConstants.textColor
-                      : AppConstants.hintColor,
-                  fontWeight: FontWeight.w500,
+    return Theme(
+      data: popupMenuInteractionTheme(context),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: _showPlanMenu,
+          borderRadius: BorderRadius.circular(12),
+          child: Container(
+            key: _planDropdownKey,
+            width: planBoxWidth,
+            height: 44,
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: AppConstants.borderColor),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.03),
+                  blurRadius: 4,
+                  offset: const Offset(0, 1),
                 ),
-              ),
-              const SizedBox(width: 8),
-              SvgPicture.asset(
-                AppIcons.dropdownDown,
-                width: 24,
-                height: 24,
-                colorFilter: const ColorFilter.mode(
-                  AppConstants.slateMutedColor,
-                  BlendMode.srcIn,
+              ],
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  display,
+                  style: Get.textTheme.labelMedium?.copyWith(
+                    color: _selectedPlan != null
+                        ? AppConstants.textColor
+                        : AppConstants.hintColor,
+                    fontWeight: FontWeight.w500,
+                  ),
                 ),
-              ),
-            ],
+                const SizedBox(width: 8),
+                SvgPicture.asset(
+                  AppIcons.dropdownDown,
+                  width: 24,
+                  height: 24,
+                  colorFilter: const ColorFilter.mode(
+                    AppConstants.slateMutedColor,
+                    BlendMode.srcIn,
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       ),

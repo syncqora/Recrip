@@ -156,6 +156,7 @@ class CreatePlanModalTabletView extends StatelessWidget {
             spacingAfterLabel: 8,
             child: TextField(
               controller: planNameController,
+              cursorColor: Colors.black,
               style: Get.textTheme.bodyMedium?.copyWith(
                 color: _labelColor,
                 fontSize: 14,
@@ -171,6 +172,7 @@ class CreatePlanModalTabletView extends StatelessWidget {
             spacingAfterLabel: 8,
             child: TextField(
               controller: priceController,
+              cursorColor: Colors.black,
               style: Get.textTheme.bodyMedium?.copyWith(
                 color: _labelColor,
                 fontSize: 14,

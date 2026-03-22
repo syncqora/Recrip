@@ -86,6 +86,7 @@ class CreatePlanModalMobileView extends StatelessWidget {
               spacingAfterLabel: 8,
               child: TextField(
                 controller: planNameController,
+                cursorColor: Colors.black,
                 onTapOutside: (_) {},
                 style: Get.textTheme.bodyMedium?.copyWith(
                   color: _labelColor,
@@ -103,6 +104,7 @@ class CreatePlanModalMobileView extends StatelessWidget {
               spacingAfterLabel: 8,
               child: TextField(
                 controller: priceController,
+                cursorColor: Colors.black,
                 onTapOutside: (_) {},
                 style: Get.textTheme.bodyMedium?.copyWith(
                   color: _labelColor,

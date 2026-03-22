@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:get/get.dart';
 import 'package:saas/shared/constants/app_strings.dart';
+import 'package:saas/shared/widgets/report_period_dropdown.dart';
 import 'reports_mobile_view.dart';
 import 'package:saas/shared/constants/app_icons.dart';
 
@@ -18,7 +19,6 @@ class ReportsTabletView extends StatelessWidget {
   final VoidCallback onExport;
 
   static const _textDark = Color(0xFF0F172A);
-  static const _textMuted = Color(0xFF666666);
   static const _border = Color(0xFFE5E7EB);
 
   @override
@@ -65,7 +65,7 @@ class ReportsTabletView extends StatelessWidget {
               children: [
                 _ExportButton(onPressed: onExport),
                 const SizedBox(width: 8),
-                _buildMonthlyFilter(),
+                const ReportPeriodDropdown(width: 132, height: 40),
               ],
             ),
           ],
@@ -73,34 +73,6 @@ class ReportsTabletView extends StatelessWidget {
         const SizedBox(height: 16),
         _buildRevenueTable(),
       ],
-    );
-  }
-
-  Widget _buildMonthlyFilter() {
-    return Container(
-      height: 40,
-      padding: const EdgeInsets.symmetric(horizontal: 12),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: _border),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          const Text(
-            AppStrings.monthly,
-            style: TextStyle(color: _textDark, fontSize: 14),
-          ),
-          const SizedBox(width: 8),
-          SvgPicture.asset(
-            AppIcons.dropdownDown,
-            width: 20,
-            height: 20,
-            colorFilter: ColorFilter.mode(_textMuted, BlendMode.srcIn),
-          ),
-        ],
-      ),
     );
   }
 

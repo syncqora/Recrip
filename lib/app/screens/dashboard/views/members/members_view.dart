@@ -3,6 +3,7 @@ import 'package:get/get.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import '../../../authentication/widgets/app_constants.dart';
 import 'package:saas/shared/constants/app_strings.dart';
+import 'package:saas/shared/themes/popup_menu_interaction_theme.dart';
 import 'package:saas/shared/widgets/primary_action_button.dart';
 
 import '../../modals/add_member_modal.dart';
@@ -221,7 +222,8 @@ class _MembersViewState extends State<MembersView> {
                   label: AppStrings.status,
                   selected: _selectedStatus,
                   options: _statusOptions,
-                  onSelected: (value) => setState(() => _selectedStatus = value),
+                  onSelected: (value) =>
+                      setState(() => _selectedStatus = value),
                   width: 169,
                 ),
               ),
@@ -348,86 +350,89 @@ class _MembersViewState extends State<MembersView> {
     final h = height ?? 44;
     final menuWidth = width ?? 169;
     final isStatusDropdown = label == AppStrings.status;
-    return PopupMenuButton<String>(
-      onSelected: onSelected,
-      color: Colors.white,
-      elevation: 8,
-      position: PopupMenuPosition.under,
-      offset: const Offset(0, 4),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      constraints: BoxConstraints.tightFor(width: menuWidth),
-      itemBuilder: (context) => options.asMap().entries.map((entry) {
-        final value = entry.value;
-        final isLast = entry.key == options.length - 1;
-        return PopupMenuItem<String>(
-          value: value,
-          height: 52,
-          child: Container(
-            width: menuWidth,
-            alignment: Alignment.centerLeft,
-            padding: const EdgeInsets.symmetric(vertical: 10),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              border: isLast
-                  ? null
-                  : const Border(
-                      bottom: BorderSide(
-                        color: AppConstants.borderColor,
-                        width: 1,
+    return Theme(
+      data: popupMenuInteractionTheme(context),
+      child: PopupMenuButton<String>(
+        onSelected: onSelected,
+        color: Colors.white,
+        elevation: 8,
+        position: PopupMenuPosition.under,
+        offset: const Offset(0, 4),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        constraints: BoxConstraints.tightFor(width: menuWidth),
+        itemBuilder: (context) => options.asMap().entries.map((entry) {
+          final value = entry.value;
+          final isLast = entry.key == options.length - 1;
+          return PopupMenuItem<String>(
+            value: value,
+            height: 52,
+            child: Container(
+              width: menuWidth,
+              alignment: Alignment.centerLeft,
+              padding: const EdgeInsets.symmetric(vertical: 10),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                border: isLast
+                    ? null
+                    : const Border(
+                        bottom: BorderSide(
+                          color: AppConstants.borderColor,
+                          width: 1,
+                        ),
                       ),
-                    ),
-            ),
-            child: Text(
-              value,
-              style: Get.textTheme.labelMedium?.copyWith(
-                color: isStatusDropdown
-                    ? _statusColor(value)
-                    : const Color(0xFF64748B),
-                fontSize: 12,
-                fontWeight: FontWeight.w500,
-                height: 1,
               ),
-            ),
-          ),
-        );
-      }).toList(),
-      child: Material(
-        color: Colors.transparent,
-        borderRadius: BorderRadius.circular(12),
-        child: Container(
-          width: width,
-          height: h,
-          padding: EdgeInsets.symmetric(horizontal: h <= 40 ? 12 : 16),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: AppConstants.borderColor),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withValues(alpha: 0.03),
-                blurRadius: 4,
-                offset: const Offset(0, 1),
-              ),
-            ],
-          ),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(
-                display,
+              child: Text(
+                value,
                 style: Get.textTheme.labelMedium?.copyWith(
-                  color: selected != null
-                      ? (isStatusDropdown
-                            ? _statusColor(selected)
-                            : AppConstants.textColor)
-                      : AppConstants.hintColor,
+                  color: isStatusDropdown
+                      ? _statusColor(value)
+                      : const Color(0xFF64748B),
+                  fontSize: 12,
                   fontWeight: FontWeight.w500,
+                  height: 1,
                 ),
               ),
-              const SizedBox(width: 8),
-              SvgPicture.asset(AppIcons.dropdownDown, width: 24, height: 24),
-            ],
+            ),
+          );
+        }).toList(),
+        child: Material(
+          color: Colors.transparent,
+          borderRadius: BorderRadius.circular(12),
+          child: Container(
+            width: width,
+            height: h,
+            padding: EdgeInsets.symmetric(horizontal: h <= 40 ? 12 : 16),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: AppConstants.borderColor),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.03),
+                  blurRadius: 4,
+                  offset: const Offset(0, 1),
+                ),
+              ],
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  display,
+                  style: Get.textTheme.labelMedium?.copyWith(
+                    color: selected != null
+                        ? (isStatusDropdown
+                              ? _statusColor(selected)
+                              : AppConstants.textColor)
+                        : AppConstants.hintColor,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+                const SizedBox(width: 8),
+                SvgPicture.asset(AppIcons.dropdownDown, width: 24, height: 24),
+              ],
+            ),
           ),
         ),
       ),

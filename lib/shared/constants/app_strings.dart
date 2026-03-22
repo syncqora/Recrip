@@ -206,6 +206,8 @@ abstract final class AppStrings {
   static const String revenueAnalysisTitle = 'Revenue Analysis';
   static const String exportLabel = 'Export';
   static const String thisMonthLabel = 'This Month';
+  static const String lastMonthLabel = 'Last Month';
+  static const String lastQuarterLabel = 'Last Quarter';
   static const String totalRenewalsTitle = 'Total Renewals';
   static const String missedRenewalsTitle = 'Missed Renewals';
   static const String renewalRateTitle = 'Renewal Rate';

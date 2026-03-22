@@ -264,21 +264,20 @@ class RemindersMobileView extends StatelessWidget {
             children: [
               _infoColumn(AppStrings.timingLabel, row.timing),
               _infoColumn(AppStrings.audienceLabel, row.audience),
-              if (!isMessageTemplates)
-                Padding(
-                  padding: const EdgeInsets.only(left: 8),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Text(
-                        AppStrings.channelLabel,
-                        style: TextStyle(color: _textMuted, fontSize: 11),
-                      ),
-                      const SizedBox(height: 4),
-                      _channelIcons(),
-                    ],
-                  ),
+              Padding(
+                padding: const EdgeInsets.only(left: 8),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      AppStrings.channelLabel,
+                      style: TextStyle(color: _textMuted, fontSize: 11),
+                    ),
+                    const SizedBox(height: 4),
+                    _channelIcons(),
+                  ],
                 ),
+              ),
             ],
           ),
           const SizedBox(height: 16),

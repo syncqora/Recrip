@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:saas/shared/themes/popup_menu_interaction_theme.dart';
 
 import '../../../../shared/widgets/success_toast.dart';
 import '../../../../shared/widgets/app_close_button.dart';
@@ -508,45 +509,48 @@ class _CreateRuleModalState extends State<CreateRuleModal> {
   }) {
     return Builder(
       builder: (fieldContext) {
-        return InkWell(
-          onTap: () => _showSelectMenu(
-            context: fieldContext,
-            options: options,
-            onSelected: onChanged,
-          ),
-          borderRadius: BorderRadius.circular(AppConstants.fieldBorderRadius),
-          child: Container(
-            height: AppConstants.fieldHeight,
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-            decoration: BoxDecoration(
-              color: AppConstants.fieldFillColor,
-              borderRadius: BorderRadius.circular(
-                AppConstants.fieldBorderRadius,
-              ),
-              border: Border.all(color: AppConstants.borderColor),
+        return Theme(
+          data: popupMenuInteractionTheme(fieldContext),
+          child: InkWell(
+            onTap: () => _showSelectMenu(
+              context: fieldContext,
+              options: options,
+              onSelected: onChanged,
             ),
-            child: Row(
-              children: [
-                Expanded(
-                  child: Text(
-                    value ?? hint,
-                    style: value != null
-                        ? Get.theme.textTheme.bodySmall?.copyWith(
-                            color: AppConstants.labelColor,
-                            fontWeight: FontWeight.w600,
-                          )
-                        : Get.theme.textTheme.labelMedium?.copyWith(
-                            color: AppConstants.hintColor,
-                            fontWeight: FontWeight.w500,
-                          ),
+            borderRadius: BorderRadius.circular(AppConstants.fieldBorderRadius),
+            child: Container(
+              height: AppConstants.fieldHeight,
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+              decoration: BoxDecoration(
+                color: AppConstants.fieldFillColor,
+                borderRadius: BorderRadius.circular(
+                  AppConstants.fieldBorderRadius,
+                ),
+                border: Border.all(color: AppConstants.borderColor),
+              ),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      value ?? hint,
+                      style: value != null
+                          ? Get.theme.textTheme.bodySmall?.copyWith(
+                              color: AppConstants.labelColor,
+                              fontWeight: FontWeight.w600,
+                            )
+                          : Get.theme.textTheme.labelMedium?.copyWith(
+                              color: AppConstants.hintColor,
+                              fontWeight: FontWeight.w500,
+                            ),
+                    ),
                   ),
-                ),
-                Icon(
-                  Icons.keyboard_arrow_down_rounded,
-                  size: 20,
-                  color: AppConstants.hintColor,
-                ),
-              ],
+                  Icon(
+                    Icons.keyboard_arrow_down_rounded,
+                    size: 20,
+                    color: AppConstants.hintColor,
+                  ),
+                ],
+              ),
             ),
           ),
         );

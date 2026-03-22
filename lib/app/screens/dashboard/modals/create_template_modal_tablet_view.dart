@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:get/get.dart';
+import 'package:saas/shared/themes/popup_menu_interaction_theme.dart';
 import '../../authentication/widgets/app_constants.dart';
 import '../../../../shared/widgets/app_close_button.dart';
 import '../../../../shared/widgets/app_modal_primary_button.dart';
@@ -215,42 +216,45 @@ class CreateTemplateModalTabletView extends StatelessWidget {
         const SizedBox(height: 8),
         Builder(
           builder: (anchorContext) {
-            return InkWell(
-              onTap: () => onTap(anchorContext),
-              borderRadius: BorderRadius.circular(
-                AppConstants.fieldBorderRadius,
-              ),
-              child: Container(
-                height: AppConstants.fieldHeight,
-                padding: const EdgeInsets.symmetric(horizontal: 12),
-                decoration: BoxDecoration(
-                  color: AppConstants.fieldFillColor,
-                  borderRadius: BorderRadius.circular(
-                    AppConstants.fieldBorderRadius,
-                  ),
-                  border: Border.all(color: AppConstants.borderColor),
+            return Theme(
+              data: popupMenuInteractionTheme(anchorContext),
+              child: InkWell(
+                onTap: () => onTap(anchorContext),
+                borderRadius: BorderRadius.circular(
+                  AppConstants.fieldBorderRadius,
                 ),
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: Text(
-                        value,
-                        style: Get.theme.textTheme.bodySmall?.copyWith(
-                          color: value.contains('Select')
-                              ? AppConstants.hintColor
-                              : AppConstants.labelColor,
-                          fontWeight: value.contains('Select')
-                              ? FontWeight.w500
-                              : FontWeight.w600,
+                child: Container(
+                  height: AppConstants.fieldHeight,
+                  padding: const EdgeInsets.symmetric(horizontal: 12),
+                  decoration: BoxDecoration(
+                    color: AppConstants.fieldFillColor,
+                    borderRadius: BorderRadius.circular(
+                      AppConstants.fieldBorderRadius,
+                    ),
+                    border: Border.all(color: AppConstants.borderColor),
+                  ),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: Text(
+                          value,
+                          style: Get.theme.textTheme.bodySmall?.copyWith(
+                            color: value.contains('Select')
+                                ? AppConstants.hintColor
+                                : AppConstants.labelColor,
+                            fontWeight: value.contains('Select')
+                                ? FontWeight.w500
+                                : FontWeight.w600,
+                          ),
                         ),
                       ),
-                    ),
-                    const Icon(
-                      Icons.keyboard_arrow_down_rounded,
-                      size: 20,
-                      color: AppConstants.hintColor,
-                    ),
-                  ],
+                      const Icon(
+                        Icons.keyboard_arrow_down_rounded,
+                        size: 20,
+                        color: AppConstants.hintColor,
+                      ),
+                    ],
+                  ),
                 ),
               ),
             );

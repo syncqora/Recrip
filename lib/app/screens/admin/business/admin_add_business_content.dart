@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:get/get.dart';
 import 'package:saas/shared/constants/app_icons.dart';
+import 'package:saas/shared/themes/popup_menu_interaction_theme.dart';
 import 'package:saas/shared/utils/app_date_picker.dart';
 import 'package:saas/shared/widgets/primary_action_button.dart';
 import 'view_business_modal.dart';
@@ -37,7 +38,9 @@ class AdminAddBusinessContent extends StatelessWidget {
     final startDateValue = initialBusiness?.startDate ?? '';
     final startDate = _tryParseDate(startDateValue);
     final expiryFromPlan = calculateExpiryDate(planValue, startDate);
-    final expiryText = expiryFromPlan == null ? '' : _formatDate(expiryFromPlan);
+    final expiryText = expiryFromPlan == null
+        ? ''
+        : _formatDate(expiryFromPlan);
 
     return Column(
       children: [
@@ -63,7 +66,9 @@ class AdminAddBusinessContent extends StatelessWidget {
                       'E.g. John Doe',
                       initialValue: initialBusiness?.ownerName,
                     ),
-                    _buildPhoneNumberField(initialValue: initialBusiness?.phoneNumber),
+                    _buildPhoneNumberField(
+                      initialValue: initialBusiness?.phoneNumber,
+                    ),
                     _buildTextField(
                       'Email Address',
                       'E.g. John.doe@gmail.com',
@@ -132,7 +137,9 @@ class AdminAddBusinessContent extends StatelessWidget {
                     _buildDatePickerField(
                       context,
                       'Start Date',
-                      startDateValue.isNotEmpty ? startDateValue : 'Select Date',
+                      startDateValue.isNotEmpty
+                          ? startDateValue
+                          : 'Select Date',
                       initialDate: startDate,
                     ),
                     _buildExpiryDateField(expiryText: expiryText),
@@ -167,7 +174,9 @@ class AdminAddBusinessContent extends StatelessWidget {
               ),
               const SizedBox(height: 4),
               Text(
-                isEditMode ? 'Make changes in the business here' : 'Add a business here',
+                isEditMode
+                    ? 'Make changes in the business here'
+                    : 'Add a business here',
                 style: Get.textTheme.bodyMedium?.copyWith(
                   fontWeight: FontWeight.w600,
                   color: _textMuted,
@@ -191,7 +200,9 @@ class AdminAddBusinessContent extends StatelessWidget {
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    isEditMode ? 'Make changes in the business here' : 'Add a business here',
+                    isEditMode
+                        ? 'Make changes in the business here'
+                        : 'Add a business here',
                     style: Get.textTheme.bodyMedium?.copyWith(
                       fontWeight: FontWeight.w600,
                       color: _textMuted,
@@ -276,11 +287,7 @@ class AdminAddBusinessContent extends StatelessWidget {
     );
   }
 
-  Widget _buildTextField(
-    String label,
-    String hint, {
-    String? initialValue,
-  }) {
+  Widget _buildTextField(String label, String hint, {String? initialValue}) {
     return _buildFieldWrapper(
       label,
       Container(
@@ -368,7 +375,8 @@ class AdminAddBusinessContent extends StatelessWidget {
     String hint, {
     bool useMembersStyle = false,
   }) {
-    final isPlaceholder = hint == 'Choose a Plan' ||
+    final isPlaceholder =
+        hint == 'Choose a Plan' ||
         hint == 'Select Status' ||
         hint == 'Select State';
     final dropdownHeight = useMembersStyle && !isMobile ? 40.0 : 48.0;
@@ -399,20 +407,27 @@ class AdminAddBusinessContent extends StatelessWidget {
           children: [
             Text(
               hint,
-              style: (useMembersStyle
-                      ? Get.textTheme.labelMedium
-                      : Get.textTheme.bodyMedium)
-                  ?.copyWith(
-                color: isPlaceholder ? const Color(0xFF94A3B8) : _textDark,
-                fontSize: useMembersStyle ? null : 13,
-                fontWeight: useMembersStyle ? FontWeight.w500 : null,
-              ),
+              style:
+                  (useMembersStyle
+                          ? Get.textTheme.labelMedium
+                          : Get.textTheme.bodyMedium)
+                      ?.copyWith(
+                        color: isPlaceholder
+                            ? const Color(0xFF94A3B8)
+                            : _textDark,
+                        fontSize: useMembersStyle ? null : 13,
+                        fontWeight: useMembersStyle ? FontWeight.w500 : null,
+                      ),
             ),
             if (useMembersStyle) ...[
               const SizedBox(width: 8),
               SvgPicture.asset(AppIcons.dropdownDown, width: 24, height: 24),
             ] else
-              const Icon(Icons.keyboard_arrow_down, color: _textMuted, size: 20),
+              const Icon(
+                Icons.keyboard_arrow_down,
+                color: _textMuted,
+                size: 20,
+              ),
           ],
         ),
       ),
@@ -440,9 +455,9 @@ class AdminAddBusinessContent extends StatelessWidget {
   Widget _buildDatePickerField(
     BuildContext context,
     String label,
-    String hint,
-    {DateTime? initialDate}
-  ) {
+    String hint, {
+    DateTime? initialDate,
+  }) {
     return _buildFieldWrapper(
       label,
       InkWell(
@@ -629,7 +644,11 @@ class AdminAddBusinessContent extends StatelessWidget {
                       shape: BoxShape.circle,
                       border: Border.all(color: Colors.white, width: 1.6),
                     ),
-                    child: const Icon(Icons.check, size: 16, color: Colors.white),
+                    child: const Icon(
+                      Icons.check,
+                      size: 16,
+                      color: Colors.white,
+                    ),
                   ),
                 ),
               ),
@@ -678,7 +697,8 @@ class _FilterStyleDropdownField extends StatefulWidget {
   final List<Color>? optionColors;
 
   @override
-  State<_FilterStyleDropdownField> createState() => _FilterStyleDropdownFieldState();
+  State<_FilterStyleDropdownField> createState() =>
+      _FilterStyleDropdownFieldState();
 }
 
 class _FilterStyleDropdownFieldState extends State<_FilterStyleDropdownField> {
@@ -701,40 +721,43 @@ class _FilterStyleDropdownFieldState extends State<_FilterStyleDropdownField> {
     final display = _selected ?? widget.placeholder;
     final isPlaceholder = _selected == null;
 
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        onTap: _showMenu,
-        borderRadius: BorderRadius.circular(12),
-        child: Container(
-          key: _dropdownKey,
-          height: 40,
-          padding: const EdgeInsets.symmetric(horizontal: 12),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: _border),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withValues(alpha: 0.03),
-                blurRadius: 4,
-                offset: const Offset(0, 1),
-              ),
-            ],
-          ),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                display,
-                style: Get.textTheme.labelMedium?.copyWith(
-                  color: isPlaceholder ? _hint : _text,
-                  fontWeight: FontWeight.w500,
+    return Theme(
+      data: popupMenuInteractionTheme(context),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: _showMenu,
+          borderRadius: BorderRadius.circular(12),
+          child: Container(
+            key: _dropdownKey,
+            height: 40,
+            padding: const EdgeInsets.symmetric(horizontal: 12),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: _border),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.03),
+                  blurRadius: 4,
+                  offset: const Offset(0, 1),
                 ),
-              ),
-              const SizedBox(width: 8),
-              SvgPicture.asset(AppIcons.dropdownDown, width: 24, height: 24),
-            ],
+              ],
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  display,
+                  style: Get.textTheme.labelMedium?.copyWith(
+                    color: isPlaceholder ? _hint : _text,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+                const SizedBox(width: 8),
+                SvgPicture.asset(AppIcons.dropdownDown, width: 24, height: 24),
+              ],
+            ),
           ),
         ),
       ),
@@ -751,7 +774,12 @@ class _FilterStyleDropdownFieldState extends State<_FilterStyleDropdownField> {
     final box = _dropdownKey.currentContext?.findRenderObject() as RenderBox?;
     final size = MediaQuery.sizeOf(context);
     if (box == null || !box.hasSize) {
-      return RelativeRect.fromLTRB(24, 200, size.width - 200, size.height - 300);
+      return RelativeRect.fromLTRB(
+        24,
+        200,
+        size.width - 200,
+        size.height - 300,
+      );
     }
     final pos = box.localToGlobal(Offset.zero);
     final top = pos.dy + box.size.height + 4;
@@ -765,9 +793,10 @@ class _FilterStyleDropdownFieldState extends State<_FilterStyleDropdownField> {
 
   Future<void> _showMenu() async {
     final menuWidth = _menuWidth();
+    final menuContext = _dropdownKey.currentContext ?? context;
     final result = await showMenu<String>(
-      context: context,
-      position: _menuPosition(context),
+      context: menuContext,
+      position: _menuPosition(menuContext),
       constraints: BoxConstraints.tightFor(width: menuWidth),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       color: Colors.white,
@@ -775,7 +804,8 @@ class _FilterStyleDropdownFieldState extends State<_FilterStyleDropdownField> {
       items: List.generate(widget.options.length, (i) {
         final value = widget.options[i];
         final isLast = i == widget.options.length - 1;
-        final color = widget.optionColors != null && i < widget.optionColors!.length
+        final color =
+            widget.optionColors != null && i < widget.optionColors!.length
             ? widget.optionColors![i]
             : const Color(0xFF334155);
         return PopupMenuItem<String>(

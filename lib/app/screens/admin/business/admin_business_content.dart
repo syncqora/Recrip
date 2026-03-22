@@ -3,6 +3,7 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:get/get.dart';
 import 'package:saas/shared/widgets/primary_action_button.dart';
 import 'package:saas/shared/constants/app_icons.dart';
+import 'package:saas/shared/themes/popup_menu_interaction_theme.dart';
 import 'view_business_modal.dart';
 
 class AdminBusinessContent extends StatelessWidget {
@@ -181,9 +182,7 @@ class AdminBusinessContent extends StatelessWidget {
               ],
             ),
             Expanded(
-              child: SingleChildScrollView(
-                child: _buildDesktopTable(context),
-              ),
+              child: SingleChildScrollView(child: _buildDesktopTable(context)),
             ),
           ],
         ),
@@ -321,7 +320,9 @@ class AdminBusinessContent extends StatelessWidget {
         if (isTablet)
           Expanded(
             child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: _searchFieldWidthTablet),
+              constraints: const BoxConstraints(
+                maxWidth: _searchFieldWidthTablet,
+              ),
               child: searchField,
             ),
           )
@@ -385,7 +386,10 @@ class AdminBusinessContent extends StatelessWidget {
               colorFilter: const ColorFilter.mode(_textMuted, BlendMode.srcIn),
             ),
           ),
-          prefixIconConstraints: const BoxConstraints(minWidth: 44, minHeight: 24),
+          prefixIconConstraints: const BoxConstraints(
+            minWidth: 44,
+            minHeight: 24,
+          ),
           border: InputBorder.none,
           contentPadding: isTablet
               ? const EdgeInsets.fromLTRB(0, 12, 16, 12)
@@ -793,18 +797,12 @@ class AdminBusinessContent extends StatelessWidget {
 
     if (MediaQuery.sizeOf(context).width < 600) {
       Navigator.of(context).push(
-        MaterialPageRoute<void>(
-          fullscreenDialog: true,
-          builder: (_) => modal,
-        ),
+        MaterialPageRoute<void>(fullscreenDialog: true, builder: (_) => modal),
       );
       return;
     }
 
-    showDialog<void>(
-      context: context,
-      builder: (_) => modal,
-    );
+    showDialog<void>(context: context, builder: (_) => modal);
   }
 
   Widget _statusCell(String status) {
@@ -866,7 +864,8 @@ class _BusinessFilterDropdown extends StatefulWidget {
   final double height;
 
   @override
-  State<_BusinessFilterDropdown> createState() => _BusinessFilterDropdownState();
+  State<_BusinessFilterDropdown> createState() =>
+      _BusinessFilterDropdownState();
 }
 
 class _BusinessFilterDropdownState extends State<_BusinessFilterDropdown> {
@@ -880,43 +879,46 @@ class _BusinessFilterDropdownState extends State<_BusinessFilterDropdown> {
   @override
   Widget build(BuildContext context) {
     final display = _selected ?? widget.label;
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        onTap: _showMenu,
-        borderRadius: BorderRadius.circular(12),
-        child: Container(
-          key: _dropdownKey,
-          height: widget.height,
-          padding: EdgeInsets.symmetric(
-            horizontal: widget.height <= 40 ? 12 : 16,
-          ),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: _border),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withValues(alpha: 0.03),
-                blurRadius: 4,
-                offset: const Offset(0, 1),
-              ),
-            ],
-          ),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(
-                display,
-                style: Get.textTheme.labelMedium?.copyWith(
-                  color: _selected == null ? _hint : _text,
-                  fontWeight: FontWeight.w500,
+    return Theme(
+      data: popupMenuInteractionTheme(context),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: _showMenu,
+          borderRadius: BorderRadius.circular(12),
+          child: Container(
+            key: _dropdownKey,
+            height: widget.height,
+            padding: EdgeInsets.symmetric(
+              horizontal: widget.height <= 40 ? 12 : 16,
+            ),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: _border),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.03),
+                  blurRadius: 4,
+                  offset: const Offset(0, 1),
                 ),
-              ),
-              const SizedBox(width: 8),
-              SvgPicture.asset(AppIcons.dropdownDown, width: 24, height: 24),
-            ],
+              ],
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  display,
+                  style: Get.textTheme.labelMedium?.copyWith(
+                    color: _selected == null ? _hint : _text,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+                const SizedBox(width: 8),
+                SvgPicture.asset(AppIcons.dropdownDown, width: 24, height: 24),
+              ],
+            ),
           ),
         ),
       ),
@@ -933,7 +935,12 @@ class _BusinessFilterDropdownState extends State<_BusinessFilterDropdown> {
     final box = _dropdownKey.currentContext?.findRenderObject() as RenderBox?;
     final size = MediaQuery.sizeOf(context);
     if (box == null || !box.hasSize) {
-      return RelativeRect.fromLTRB(24, 200, size.width - 200, size.height - 300);
+      return RelativeRect.fromLTRB(
+        24,
+        200,
+        size.width - 200,
+        size.height - 300,
+      );
     }
     final pos = box.localToGlobal(Offset.zero);
     final top = pos.dy + box.size.height + 4;
@@ -947,9 +954,10 @@ class _BusinessFilterDropdownState extends State<_BusinessFilterDropdown> {
 
   Future<void> _showMenu() async {
     final menuWidth = _menuWidth();
+    final menuContext = _dropdownKey.currentContext ?? context;
     final result = await showMenu<String>(
-      context: context,
-      position: _menuPosition(context),
+      context: menuContext,
+      position: _menuPosition(menuContext),
       constraints: BoxConstraints.tightFor(width: menuWidth),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       color: Colors.white,
@@ -957,7 +965,8 @@ class _BusinessFilterDropdownState extends State<_BusinessFilterDropdown> {
       items: List.generate(widget.options.length, (i) {
         final value = widget.options[i];
         final isLast = i == widget.options.length - 1;
-        final color = widget.optionColors != null && i < widget.optionColors!.length
+        final color =
+            widget.optionColors != null && i < widget.optionColors!.length
             ? widget.optionColors![i]
             : const Color(0xFF334155);
         return PopupMenuItem<String>(

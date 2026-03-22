@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:get/get.dart';
+import 'package:saas/shared/themes/popup_menu_interaction_theme.dart';
 import '../../../../shared/widgets/success_toast.dart';
 import '../../../../shared/widgets/app_close_button.dart';
 import '../../../../shared/widgets/app_modal_primary_button.dart';
@@ -369,6 +370,7 @@ class _CreatePlanModalState extends State<CreatePlanModal> {
             spacingAfterLabel: 8,
             child: TextField(
               controller: _planNameController,
+              cursorColor: Colors.black,
               style: Get.textTheme.bodyMedium?.copyWith(
                 color: _labelColor,
                 fontSize: 14,
@@ -384,6 +386,7 @@ class _CreatePlanModalState extends State<CreatePlanModal> {
             spacingAfterLabel: 8,
             child: TextField(
               controller: _priceController,
+              cursorColor: Colors.black,
               style: Get.textTheme.bodyMedium?.copyWith(
                 color: _labelColor,
                 fontSize: 14,
@@ -399,39 +402,42 @@ class _CreatePlanModalState extends State<CreatePlanModal> {
             spacingAfterLabel: 8,
             child: Builder(
               builder: (context) {
-                return InkWell(
-                  onTap: () => _showStatusMenu(context),
-                  borderRadius: BorderRadius.circular(_inputBorderRadius),
-                  child: Container(
-                    height: 44,
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 14,
-                      vertical: 10,
-                    ),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(_inputBorderRadius),
-                      border: Border.all(color: _inputBorderColor),
-                    ),
-                    child: Row(
-                      children: [
-                        Expanded(
-                          child: Text(
-                            _selectedStatus ?? 'Select Plan Status',
-                            style: Get.theme.textTheme.bodyMedium?.copyWith(
-                              fontSize: 14,
-                              color: _selectedStatus != null
-                                  ? _labelColor
-                                  : _hintColor,
+                return Theme(
+                  data: popupMenuInteractionTheme(context),
+                  child: InkWell(
+                    onTap: () => _showStatusMenu(context),
+                    borderRadius: BorderRadius.circular(_inputBorderRadius),
+                    child: Container(
+                      height: 44,
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 14,
+                        vertical: 10,
+                      ),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(_inputBorderRadius),
+                        border: Border.all(color: _inputBorderColor),
+                      ),
+                      child: Row(
+                        children: [
+                          Expanded(
+                            child: Text(
+                              _selectedStatus ?? 'Select Plan Status',
+                              style: Get.theme.textTheme.bodyMedium?.copyWith(
+                                fontSize: 14,
+                                color: _selectedStatus != null
+                                    ? _labelColor
+                                    : _hintColor,
+                              ),
                             ),
                           ),
-                        ),
-                        Icon(
-                          Icons.keyboard_arrow_down_rounded,
-                          size: 20,
-                          color: _hintColor,
-                        ),
-                      ],
+                          Icon(
+                            Icons.keyboard_arrow_down_rounded,
+                            size: 20,
+                            color: _hintColor,
+                          ),
+                        ],
+                      ),
                     ),
                   ),
                 );

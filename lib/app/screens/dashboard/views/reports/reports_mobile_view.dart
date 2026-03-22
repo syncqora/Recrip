@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:saas/shared/constants/app_strings.dart';
 import 'package:saas/shared/constants/app_icons.dart';
+import 'package:saas/shared/widgets/report_period_dropdown.dart';
 
 class RevenueRow {
   final String planName;
@@ -66,22 +67,28 @@ class ReportsMobileView extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            const Text(
-              AppStrings.revenueAnalysisTitle,
-              style: TextStyle(
-                fontWeight: FontWeight.bold,
-                color: _textDark,
-                fontSize: 15,
+            const Expanded(
+              child: Text(
+                AppStrings.revenueAnalysisTitle,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  color: _textDark,
+                  fontSize: 15,
+                  height: 1,
+                ),
               ),
             ),
+            const SizedBox(width: 8),
             Row(
               mainAxisSize: MainAxisSize.min,
               children: [
                 _ExportButton(onPressed: onExport),
                 const SizedBox(width: 8),
-                _buildMonthlyFilter(),
+                const ReportPeriodDropdown(width: 122, height: 40),
               ],
             ),
           ],
@@ -89,34 +96,6 @@ class ReportsMobileView extends StatelessWidget {
         const SizedBox(height: 12),
         ...revenueData.map((row) => _buildRevenueCard(row)),
       ],
-    );
-  }
-
-  Widget _buildMonthlyFilter() {
-    return Container(
-      height: 32,
-      padding: const EdgeInsets.symmetric(horizontal: 8),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(6),
-        border: Border.all(color: _border),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          const Text(
-            AppStrings.monthly,
-            style: TextStyle(color: _textDark, fontSize: 12),
-          ),
-          const SizedBox(width: 4),
-          SvgPicture.asset(
-            AppIcons.dropdownDown,
-            width: 16,
-            height: 16,
-            colorFilter: ColorFilter.mode(_textMuted, BlendMode.srcIn),
-          ),
-        ],
-      ),
     );
   }
 
@@ -192,7 +171,7 @@ class _ExportButton extends StatelessWidget {
 
   final VoidCallback? onPressed;
 
-  static const double _width = 122;
+  static const double _width = 104;
   static const double _height = 40;
 
   @override
@@ -206,8 +185,8 @@ class _ExportButton extends StatelessWidget {
         child: InkWell(
           onTap: onPressed,
           borderRadius: BorderRadius.circular(10),
-          child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12),
+            child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 10),
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(10),
               border: Border.all(width: 1, color: const Color(0xFFE2E8F0)),
@@ -229,7 +208,7 @@ class _ExportButton extends StatelessWidget {
                 const Text(
                   AppStrings.exportLabel,
                   style: TextStyle(
-                    fontSize: 13,
+                    fontSize: 12,
                     fontWeight: FontWeight.w600,
                     color: Color(0xFF0F172A),
                   ),

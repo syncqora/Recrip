@@ -6,6 +6,7 @@ import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 import 'package:printing/printing.dart';
 import 'package:saas/shared/widgets/hover_elevated_card.dart';
+import 'package:saas/shared/widgets/report_period_dropdown.dart';
 import 'package:saas/shared/constants/app_strings.dart';
 
 import 'reports_mobile_view.dart';
@@ -456,10 +457,8 @@ class ReportsView extends StatelessWidget {
                         onPressed: _exportRevenueTableToPdf,
                       ),
                       const SizedBox(width: 10),
-                      _primaryStyleButton(
-                        label: AppStrings.thisMonthLabel,
-                        iconAsset: AppIcons.dropdownDown,
-                        onPressed: () {},
+                      const ReportPeriodDropdown(
+                        initialValue: AppStrings.thisMonthLabel,
                         width: 145,
                       ),
                     ],
