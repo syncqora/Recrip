@@ -19,7 +19,7 @@ const _cors = <String, String>{
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Methods': 'GET, POST, PUT, PATCH, DELETE, OPTIONS, HEAD',
   'Access-Control-Allow-Headers':
-      'Authorization, Content-Type, X-Tenant-Id, X-Tracking-Id, Accept',
+      'Authorization, Content-Type, X-Tenant-Id, X-Tracking-Id, X-Client-Id, Accept',
   'Access-Control-Max-Age': '86400',
 };
 

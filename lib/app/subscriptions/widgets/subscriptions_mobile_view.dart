@@ -67,7 +67,6 @@ class SubscriptionsMobileView extends StatelessWidget {
             children: [
               _infoColumn(AppStrings.tableHeaderDuration, plan.duration),
               _infoColumn(AppStrings.tableHeaderPrice, plan.price),
-              _infoColumn(AppStrings.membersTitle, plan.activeMembers),
             ],
           ),
           const SizedBox(height: 16),

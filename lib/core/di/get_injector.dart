@@ -72,6 +72,12 @@ Future<void> setupGlobalServices() async {
       permanent: true,
     );
   }
+  if (!Get.isRegistered<MemberRepository>()) {
+    Get.put<MemberRepository>(
+      MemberRepo(services: MemberServices()),
+      permanent: true,
+    );
+  }
   if (!Get.isRegistered<AuthService>()) {
     Get.put<AuthService>(
       AuthService(Get.find<AuthRepository>()),

@@ -152,7 +152,6 @@ class SubscriptionsViewBody extends GetView<SubscriptionsController> {
               planName: updated.planName,
               duration: updated.duration,
               price: updated.price,
-              activeMembers: row.activeMembers,
               isActive: updated.isActive,
               remoteId: row.remoteId,
             ),
@@ -195,7 +194,6 @@ class SubscriptionsViewBody extends GetView<SubscriptionsController> {
               planName: result.planName,
               duration: result.duration,
               price: result.price,
-              activeMembers: '0',
               isActive: result.isActive,
             ),
           );

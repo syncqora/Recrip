@@ -225,6 +225,8 @@ abstract final class AppStrings {
   static const String subscriptionsTitle = 'Subscriptions';
   static const String subscriptionsSubtitle =
       'Manage subscription plans and pricing';
+  static const String membersEmptyState =
+      'No members yet. Pull to refresh or add a member.';
   static const String subscriptionsEmptyState =
       'No subscription plans yet. Pull to refresh or tap Retry after an error.';
   static const String createPlanLabel = 'Create Plan';

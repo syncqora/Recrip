@@ -11,4 +11,7 @@ class ApiEndPoints {
 
   /// Sent as `X-Tenant-Id` on asset/schema API calls.
   static String tenantId = 'test-property-001';
+
+  /// Sent as `X-Client-Id` on content/subscription API calls.
+  static String clientId = 'syncquora-recrip-web';
 }

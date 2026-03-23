@@ -3,6 +3,10 @@ import '../api/subscription_api_services.dart';
 
 abstract class SubscriptionRepository {
   Future<SubscriptionSchemaResponse> getSubscriptionSchema();
+  Future<SubscriptionSchemaResponse> getSubscriptions({
+    int pageNumber,
+    int pageSize,
+  });
 }
 
 class SubscriptionRepo implements SubscriptionRepository {
@@ -13,4 +17,10 @@ class SubscriptionRepo implements SubscriptionRepository {
   @override
   Future<SubscriptionSchemaResponse> getSubscriptionSchema() =>
       services.getSubscriptionSchema();
+
+  @override
+  Future<SubscriptionSchemaResponse> getSubscriptions({
+    int pageNumber = 1,
+    int pageSize = 20,
+  }) => services.getSubscriptions(pageNumber: pageNumber, pageSize: pageSize);
 }

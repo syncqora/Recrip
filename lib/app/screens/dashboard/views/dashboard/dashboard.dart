@@ -12,6 +12,8 @@ import '../../modals/help_support_modal.dart';
 import 'dashboard_mobile_view.dart';
 import 'dashboard_tablet_view.dart';
 import '../members/members_view.dart';
+import '../members/members_controller.dart';
+import '../members/members_mobile_view.dart';
 import '../reminders/reminders_view.dart';
 import '../renewals/renewals_view.dart';
 import '../reports/reports_view.dart';
@@ -502,61 +504,31 @@ class Dashboard extends GetView<DashboardController> {
   }
 
   Widget _buildRenewalsSection(BuildContext context) {
-    final rows = [
-      _RenewalRow(
-        name: 'Rahul Kamath',
-        plan: 'Quarterly',
-        expiry: '01/01/2026',
-        status: 'Expired',
-        isExpired: true,
-      ),
-      _RenewalRow(
-        name: 'Lina Benny Thomas',
-        plan: 'Monthly',
-        expiry: '15/01/2026',
-        status: 'Expiring',
-        isExpired: false,
-      ),
-      _RenewalRow(
-        name: 'Ankith Rawat',
-        plan: 'Yearly',
-        expiry: '15/01/2026',
-        status: 'Expiring',
-        isExpired: false,
-      ),
-      _RenewalRow(
-        name: 'Alex George',
-        plan: 'Monthly',
-        expiry: '15/01/2026',
-        status: 'Expiring',
-        isExpired: false,
-      ),
-      _RenewalRow(
-        name: 'Mary Steenberg',
-        plan: 'Yearly',
-        expiry: '15/01/2026',
-        status: 'Expiring',
-        isExpired: false,
-      ),
-      _RenewalRow(
-        name: 'Mary Steenberg',
-        plan: 'Monthly',
-        expiry: '15/01/2026',
-        status: 'Expiring',
-        isExpired: false,
-      ),
-      _RenewalRow(
-        name: 'Mary Steenberg',
-        plan: 'Quarterly',
-        expiry: '15/01/2026',
-        status: 'Expiring',
-        isExpired: false,
-      ),
-    ];
-    return HoverElevatedCard(
-      accentColor: _purple,
-      borderRadius: 12,
-      child: Column(
+    final membersController = Get.isRegistered<MembersController>()
+        ? Get.find<MembersController>()
+        : Get.put(MembersController(), permanent: true);
+
+    return Obx(() {
+      final rows = membersController.tableData
+          .map(
+            (m) => _RenewalRow(
+              name: m.name,
+              plan: m.plan,
+              expiry: m.expiry,
+              status: switch (m.status) {
+                MemberStatus.active => AppStrings.active,
+                MemberStatus.expired => AppStrings.expired,
+                MemberStatus.expiring => AppStrings.expiring,
+              },
+              isExpired: m.status == MemberStatus.expired,
+            ),
+          )
+          .toList();
+
+      return HoverElevatedCard(
+        accentColor: _purple,
+        borderRadius: 12,
+        child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         mainAxisSize: MainAxisSize.min,
         children: [
@@ -638,68 +610,83 @@ class Dashboard extends GetView<DashboardController> {
               ),
             ],
           ),
-          Expanded(
-            child: Scrollbar(
-              controller: controller.renewalsScrollController,
-              thickness: 4,
-              radius: const Radius.circular(2),
-              thumbVisibility: true,
-              child: SingleChildScrollView(
+          if (membersController.isLoading.value && rows.isEmpty)
+            const Expanded(
+              child: Center(child: CircularProgressIndicator()),
+            )
+          else if (rows.isEmpty)
+            Expanded(
+              child: Center(
+                child: Text(
+                  AppStrings.membersEmptyState,
+                  style: Get.textTheme.bodySmall?.copyWith(color: _textMuted),
+                ),
+              ),
+            )
+          else
+            Expanded(
+              child: Scrollbar(
                 controller: controller.renewalsScrollController,
-                scrollDirection: Axis.vertical,
-                child: Table(
-                  columnWidths: const {
-                    0: FlexColumnWidth(2),
-                    1: FlexColumnWidth(1),
-                    2: FlexColumnWidth(1.2),
-                    3: FlexColumnWidth(1),
-                    4: FixedColumnWidth(120),
-                  },
-                  children: rows
-                      .map(
-                        (row) => TableRow(
-                          decoration: const BoxDecoration(
-                            color: Colors.white,
-                            border: Border(
-                              bottom: BorderSide(
-                                color: Color(0xFFE5E7EB),
-                                width: 1,
+                thickness: 4,
+                radius: const Radius.circular(2),
+                thumbVisibility: true,
+                child: SingleChildScrollView(
+                  controller: controller.renewalsScrollController,
+                  scrollDirection: Axis.vertical,
+                  child: Table(
+                    columnWidths: const {
+                      0: FlexColumnWidth(2),
+                      1: FlexColumnWidth(1),
+                      2: FlexColumnWidth(1.2),
+                      3: FlexColumnWidth(1),
+                      4: FixedColumnWidth(120),
+                    },
+                    children: rows
+                        .map(
+                          (row) => TableRow(
+                            decoration: const BoxDecoration(
+                              color: Colors.white,
+                              border: Border(
+                                bottom: BorderSide(
+                                  color: Color(0xFFE5E7EB),
+                                  width: 1,
+                                ),
                               ),
                             ),
+                            children: [
+                              _tableCell(
+                                row.name,
+                                align: Alignment.centerLeft,
+                                isNameColumn: true,
+                              ),
+                              _tableCell(row.plan, align: Alignment.center),
+                              _tableCell(row.expiry, align: Alignment.center),
+                              _tableCell(
+                                row.status,
+                                isBadge: true,
+                                isExpired: row.isExpired,
+                                align: Alignment.center,
+                              ),
+                              _tableCell(
+                                '',
+                                isActions: true,
+                                align: Alignment.center,
+                                context: context,
+                                renewalRow: row,
+                                isActionColumn: true,
+                              ),
+                            ],
                           ),
-                          children: [
-                            _tableCell(
-                              row.name,
-                              align: Alignment.centerLeft,
-                              isNameColumn: true,
-                            ),
-                            _tableCell(row.plan, align: Alignment.center),
-                            _tableCell(row.expiry, align: Alignment.center),
-                            _tableCell(
-                              row.status,
-                              isBadge: true,
-                              isExpired: row.isExpired,
-                              align: Alignment.center,
-                            ),
-                            _tableCell(
-                              '',
-                              isActions: true,
-                              align: Alignment.center,
-                              context: context,
-                              renewalRow: row,
-                              isActionColumn: true,
-                            ),
-                          ],
-                        ),
-                      )
-                      .toList(),
+                        )
+                        .toList(),
+                  ),
                 ),
               ),
             ),
-          ),
         ],
       ),
     );
+    });
   }
 
   static const _nameColumnLeftPadding = 15.0;

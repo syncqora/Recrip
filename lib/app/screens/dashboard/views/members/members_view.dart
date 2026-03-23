@@ -11,18 +11,14 @@ import '../../modals/modal_route_helper.dart';
 import '../../modals/view_member_modal.dart';
 import 'members_mobile_view.dart';
 import 'members_tablet_view.dart';
+import 'members_controller.dart';
 import 'package:saas/shared/constants/app_icons.dart';
 
 /// Members page content: header, search/filters, table, pagination.
 /// Used inside the dashboard main content area when Members nav is selected.
-class MembersView extends StatefulWidget {
+class MembersView extends GetView<MembersController> {
   const MembersView({super.key});
 
-  @override
-  State<MembersView> createState() => _MembersViewState();
-}
-
-class _MembersViewState extends State<MembersView> {
   static const _purple = AppConstants.titleColor;
   static const _textDark = AppConstants.textColor;
   static const _textMuted = AppConstants.mutedTextColor;
@@ -32,89 +28,81 @@ class _MembersViewState extends State<MembersView> {
   static const _iconCircleRed = AppConstants.expiredBadgeColor;
   static const _iconCircleGreen = AppConstants.activeBadgeColor;
 
-  String? _selectedPlan;
-  String? _selectedStatus;
-
   static const _planOptions = AppStrings.commonPlanOptions;
   static const _statusOptions = AppStrings.membersStatusOptions;
 
-  Color _statusColor(String value) {
-    switch (value) {
-      case AppStrings.active:
-        return const Color(0xFF166534);
-      case AppStrings.expiring:
-        return const Color(0xFF92400E);
-      case AppStrings.expired:
-        return const Color(0xFF991B1B);
-      default:
-        return AppConstants.textColor;
-    }
-  }
-
-  static final _tableData = [
-    MemberRow(
-      name: 'Rahul Kamath',
-      phone: '+91 98642 13565',
-      email: 'rahul.kamath@gmail.com',
-      plan: 'Yearly',
-      expiry: '08/07/2027',
-      status: MemberStatus.active,
-    ),
-    MemberRow(
-      name: 'Mithun Shetty',
-      phone: '+91 98642 13565',
-      email: 'mithunshetty96@gmail.com',
-      plan: 'Quarterly',
-      expiry: '31/12/2025',
-      status: MemberStatus.expired,
-    ),
-    MemberRow(
-      name: 'Vishal AV',
-      phone: '+91 98642 13565',
-      email: 'vishal.av@gmail.com',
-      plan: 'Monthly',
-      expiry: '02/02/2026',
-      status: MemberStatus.expiring,
-    ),
-  ];
-
   @override
   Widget build(BuildContext context) {
+    if (!Get.isRegistered<MembersController>()) {
+      Get.put(MembersController(), permanent: true);
+    }
     final width = MediaQuery.sizeOf(context).width;
     final isMobile = width < 600;
     final isTablet = width >= 600 && width < 1024;
 
-    return SingleChildScrollView(
-      padding: isMobile
-          ? const EdgeInsets.all(16)
-          : (isTablet ? const EdgeInsets.all(24) : EdgeInsets.zero),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          _buildHeader(isMobile),
-          const SizedBox(height: 32),
-          _buildSearchRow(isMobile, isTablet: isTablet),
-          const SizedBox(height: 16),
-          if (isMobile)
-            MembersMobileView(
-              tableData: _tableData,
-              onOpenViewMember: _openViewMember,
-            )
-          else if (isTablet)
-            MembersTabletView(
-              tableData: _tableData,
-              onOpenViewMember: _openViewMember,
-            )
-          else
-            _buildDesktopTable(),
-          const SizedBox(height: 16),
-          _buildPagination(isMobile),
-        ],
-      ),
-    );
+    return Obx(() {
+      final tableData = List<MemberRow>.from(controller.tableData);
+      final isLoading = controller.isLoading.value;
+      final errorMessage = controller.errorMessage.value;
+      return SingleChildScrollView(
+        padding: isMobile
+            ? const EdgeInsets.all(16)
+            : (isTablet ? const EdgeInsets.all(24) : EdgeInsets.zero),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            _buildHeader(context, isMobile),
+            const SizedBox(height: 32),
+            _buildSearchRow(context, isMobile, isTablet: isTablet),
+            const SizedBox(height: 16),
+            if (isLoading)
+              const Padding(
+                padding: EdgeInsets.symmetric(vertical: 48),
+                child: Center(child: CircularProgressIndicator()),
+              )
+            else if (errorMessage != null)
+              Padding(
+                padding: const EdgeInsets.symmetric(vertical: 16),
+                child: Text(
+                  errorMessage,
+                  style: Get.textTheme.bodySmall?.copyWith(
+                    color: const Color(0xFFB91C1C),
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              )
+            else if (tableData.isEmpty)
+              Padding(
+                padding: const EdgeInsets.symmetric(vertical: 16),
+                child: Text(
+                  AppStrings.membersEmptyState,
+                  style: Get.textTheme.bodySmall?.copyWith(
+                    color: AppConstants.hintColor,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              )
+            else if (isMobile)
+              MembersMobileView(
+                tableData: tableData,
+                onOpenViewMember: (row) => _openViewMember(context, row),
+              )
+            else if (isTablet)
+              MembersTabletView(
+                tableData: tableData,
+                onOpenViewMember: (row) => _openViewMember(context, row),
+              )
+            else
+              _buildDesktopTable(context, tableData),
+            const SizedBox(height: 16),
+            if (tableData.isNotEmpty) _buildPagination(isMobile),
+          ],
+        ),
+      );
+    });
   }
 
-  Widget _buildHeader(bool isMobile) {
+  Widget _buildHeader(BuildContext context, bool isMobile) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -173,7 +161,11 @@ class _MembersViewState extends State<MembersView> {
   static const _dropdownWidthTablet = 132.0;
   static const _dropdownHeightTablet = 40.0;
 
-  Widget _buildSearchRow(bool isMobile, {bool isTablet = false}) {
+  Widget _buildSearchRow(
+    BuildContext context,
+    bool isMobile, {
+    bool isTablet = false,
+  }) {
     if (isMobile) {
       return Column(
         children: [
@@ -219,21 +211,22 @@ class _MembersViewState extends State<MembersView> {
             children: [
               Expanded(
                 child: _buildFilterDropdown(
+                  context: context,
                   label: AppStrings.status,
-                  selected: _selectedStatus,
+                  selected: controller.selectedStatus.value,
                   options: _statusOptions,
-                  onSelected: (value) =>
-                      setState(() => _selectedStatus = value),
+                  onSelected: controller.setSelectedStatus,
                   width: 169,
                 ),
               ),
               const SizedBox(width: 16),
               Expanded(
                 child: _buildFilterDropdown(
+                  context: context,
                   label: AppStrings.plan,
-                  selected: _selectedPlan,
+                  selected: controller.selectedPlan.value,
                   options: _planOptions,
-                  onSelected: (value) => setState(() => _selectedPlan = value),
+                  onSelected: controller.setSelectedPlan,
                   width: 169,
                 ),
               ),
@@ -307,19 +300,21 @@ class _MembersViewState extends State<MembersView> {
         if (!isTablet) const Spacer(),
         const SizedBox(width: 20),
         _buildFilterDropdown(
+          context: context,
           label: AppStrings.status,
-          selected: _selectedStatus,
+          selected: controller.selectedStatus.value,
           options: _statusOptions,
-          onSelected: (value) => setState(() => _selectedStatus = value),
+          onSelected: controller.setSelectedStatus,
           width: isTablet ? _dropdownWidthTablet : 169,
           height: isTablet ? _dropdownHeightTablet : null,
         ),
         const SizedBox(width: 16),
         _buildFilterDropdown(
+          context: context,
           label: AppStrings.plan,
-          selected: _selectedPlan,
+          selected: controller.selectedPlan.value,
           options: _planOptions,
-          onSelected: (value) => setState(() => _selectedPlan = value),
+          onSelected: controller.setSelectedPlan,
           width: isTablet ? _dropdownWidthTablet : 169,
           height: isTablet ? _dropdownHeightTablet : null,
         ),
@@ -339,6 +334,7 @@ class _MembersViewState extends State<MembersView> {
   }
 
   Widget _buildFilterDropdown({
+    required BuildContext context,
     required String label,
     required String? selected,
     required List<String> options,
@@ -385,7 +381,7 @@ class _MembersViewState extends State<MembersView> {
                 value,
                 style: Get.textTheme.labelMedium?.copyWith(
                   color: isStatusDropdown
-                      ? _statusColor(value)
+                      ? controller.statusColor(value)
                       : const Color(0xFF64748B),
                   fontSize: 12,
                   fontWeight: FontWeight.w500,
@@ -423,7 +419,7 @@ class _MembersViewState extends State<MembersView> {
                   style: Get.textTheme.labelMedium?.copyWith(
                     color: selected != null
                         ? (isStatusDropdown
-                              ? _statusColor(selected)
+                              ? controller.statusColor(selected)
                               : AppConstants.textColor)
                         : AppConstants.hintColor,
                     fontWeight: FontWeight.w500,
@@ -441,7 +437,7 @@ class _MembersViewState extends State<MembersView> {
 
   static const _tableBorderRadius = 12.0;
 
-  Widget _buildDesktopTable() {
+  Widget _buildDesktopTable(BuildContext context, List<MemberRow> tableData) {
     return Container(
       decoration: BoxDecoration(
         color: Colors.white,
@@ -505,7 +501,7 @@ class _MembersViewState extends State<MembersView> {
                 ),
               ],
             ),
-            ..._tableData.asMap().entries.map(
+            ...tableData.asMap().entries.map(
               (entry) => TableRow(
                 decoration: const BoxDecoration(
                   color: Colors.white,
@@ -518,32 +514,38 @@ class _MembersViewState extends State<MembersView> {
                 ),
                 children: [
                   _tapableCell(
+                    context,
                     entry.value,
                     entry.value.name,
                     align: Alignment.centerLeft,
                     isNameColumn: true,
                   ),
                   _tapableCell(
+                    context,
                     entry.value,
                     entry.value.phone,
                     align: Alignment.center,
                   ),
                   _tapableCell(
+                    context,
                     entry.value,
                     entry.value.email,
                     align: Alignment.center,
                   ),
                   _tapableCell(
+                    context,
                     entry.value,
                     entry.value.plan,
                     align: Alignment.center,
                   ),
                   _tapableCell(
+                    context,
                     entry.value,
                     entry.value.expiry,
                     align: Alignment.center,
                   ),
                   _tapableCell(
+                    context,
                     entry.value,
                     _statusPill(entry.value.status),
                     align: Alignment.center,
@@ -557,7 +559,7 @@ class _MembersViewState extends State<MembersView> {
     );
   }
 
-  void _openViewMember(MemberRow row) {
+  void _openViewMember(BuildContext context, MemberRow row) {
     final (String label, Color color) = switch (row.status) {
       MemberStatus.active => (AppStrings.active, _iconCircleGreen),
       MemberStatus.expired => (AppStrings.expired, _iconCircleRed),
@@ -580,6 +582,7 @@ class _MembersViewState extends State<MembersView> {
   }
 
   Widget _tapableCell(
+    BuildContext context,
     MemberRow row,
     dynamic content, {
     Alignment align = Alignment.centerLeft,
@@ -588,7 +591,7 @@ class _MembersViewState extends State<MembersView> {
     return Material(
       color: Colors.transparent,
       child: InkWell(
-        onTap: () => _openViewMember(row),
+        onTap: () => _openViewMember(context, row),
         hoverColor: Colors.transparent,
         splashColor: Colors.transparent,
         highlightColor: Colors.transparent,

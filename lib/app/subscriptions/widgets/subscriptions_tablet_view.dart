@@ -38,9 +38,8 @@ class SubscriptionsTabletView extends StatelessWidget {
           0: FlexColumnWidth(1.5),
           1: FlexColumnWidth(1.2),
           2: FlexColumnWidth(1.2),
-          3: FlexColumnWidth(1.2),
+          3: FlexColumnWidth(1),
           4: FlexColumnWidth(1),
-          5: FlexColumnWidth(1),
         },
         children: [
           TableRow(
@@ -49,7 +48,6 @@ class SubscriptionsTabletView extends StatelessWidget {
               _tableCell(AppStrings.planNameHeader, isHeader: true),
               _tableCell(AppStrings.tableHeaderDuration, isHeader: true),
               _tableCell(AppStrings.tableHeaderPrice, isHeader: true),
-              _tableCell(AppStrings.activeMembersHeader, isHeader: true),
               _tableCell(AppStrings.status, isHeader: true),
               _tableCell(AppStrings.actionHeader, isHeader: true),
             ],
@@ -61,7 +59,6 @@ class SubscriptionsTabletView extends StatelessWidget {
                 _tableCell(entry.value.planName),
                 _tableCell(entry.value.duration),
                 _tableCell(entry.value.price),
-                _tableCell(entry.value.activeMembers),
                 _tableCell(_statusPill(entry.value.isActive)),
                 _tableCell(_actionIcons(entry.value, entry.key)),
               ],

@@ -39,9 +39,8 @@ class SubscriptionsDesktopTable extends StatelessWidget {
           0: FlexColumnWidth(1.5),
           1: FlexColumnWidth(1.2),
           2: FlexColumnWidth(1.2),
-          3: FlexColumnWidth(1.2),
+          3: FlexColumnWidth(1),
           4: FlexColumnWidth(1),
-          5: FlexColumnWidth(1),
         },
         children: [
           TableRow(
@@ -60,11 +59,6 @@ class SubscriptionsDesktopTable extends StatelessWidget {
               ),
               _tableCell(
                 AppStrings.tableHeaderPrice,
-                isHeader: true,
-                align: Alignment.center,
-              ),
-              _tableCell(
-                AppStrings.activeMembersHeader,
                 isHeader: true,
                 align: Alignment.center,
               ),
@@ -96,7 +90,6 @@ class SubscriptionsDesktopTable extends StatelessWidget {
                 ),
                 _tableCell(entry.value.duration, align: Alignment.center),
                 _tableCell(entry.value.price, align: Alignment.center),
-                _tableCell(entry.value.activeMembers, align: Alignment.center),
                 _tableCell(
                   _statusPill(entry.value.isActive),
                   align: Alignment.center,

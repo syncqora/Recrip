@@ -124,7 +124,7 @@ class ApiServices extends GetConnect {
           'Access-Control-Allow-Headers listing every header this request sends. '
           'Login often works on the same port because the first request may only send '
           'Content-Type (no token yet). Subscription also sends Authorization, '
-          'X-Tenant-Id, and X-Tracking-Id — those names must appear in '
+          'X-Tenant-Id, X-Tracking-Id, and X-Client-Id — those names must appear in '
           'Access-Control-Allow-Headers for /schema/... (many backends only whitelist '
           'headers for /auth/*). Or use tool/web_cors_proxy.dart + --dart-define=API_BASE_URL=…',
         );

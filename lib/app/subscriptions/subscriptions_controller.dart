@@ -31,12 +31,17 @@ class SubscriptionsController extends GetxController {
     loadInitialData();
   }
 
-  /// Loads subscription schema from GET `/schema/asset/subscription`.
+  /// Loads subscription schema, then fetches rows from GET `/content/asset/subscription`.
   Future<void> loadInitialData() async {
     isLoading.value = true;
     errorMessage.value = null;
     try {
-      final response = await _repository.getSubscriptionSchema();
+      // Keep schema check first, then load actual content list.
+      await _repository.getSubscriptionSchema();
+      final response = await _repository.getSubscriptions(
+        pageNumber: 1,
+        pageSize: 20,
+      );
       plans.assignAll(response.items.map(_rowFromAsset).toList());
     } catch (e) {
       errorMessage.value = _authService.messageForError(e);
@@ -60,7 +65,6 @@ class SubscriptionsController extends GetxController {
       planName: name,
       duration: durationLabel,
       price: priceLabel,
-      activeMembers: '—',
       isActive: published,
       remoteId: a.id.isNotEmpty ? a.id : null,
     );

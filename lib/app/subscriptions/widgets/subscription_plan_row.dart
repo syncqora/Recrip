@@ -4,7 +4,6 @@ class SubscriptionPlanRow {
     required this.planName,
     required this.duration,
     required this.price,
-    required this.activeMembers,
     this.isActive = true,
     this.remoteId,
   });
@@ -12,7 +11,6 @@ class SubscriptionPlanRow {
   final String planName;
   final String duration;
   final String price;
-  final String activeMembers;
   final bool isActive;
 
   /// Server resource id when loaded from API.
