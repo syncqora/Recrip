@@ -1,0 +1,42 @@
+{
+  "project": {
+    "name": "SaaS Website",
+    "key": "SAAS",
+    "description": "Flutter SaaS website – UI and functionality tracked at company level."
+  },
+  "epics": [
+    { "name": "Authentication", "description": "Login, OTP, forgot/reset password, session handling" },
+    { "name": "Dashboard", "description": "Main site home, navigation, base layout" },
+    { "name": "User & account", "description": "Profile, settings, members" },
+    { "name": "Subscriptions & billing", "description": "Plans, renewals, payment" },
+    { "name": "Notifications & reminders", "description": "Browser/email, on-site reminders" },
+    { "name": "Reports & analytics", "description": "Reporting screens" }
+  ],
+  "stories": [
+    { "epic": "Authentication", "summary": "[UI] Login screen – email & password fields, submit, validation", "labels": ["ui", "auth"] },
+    { "epic": "Authentication", "summary": "[UI] Forgot password screen", "labels": ["ui", "auth"] },
+    { "epic": "Authentication", "summary": "[UI] Reset password screen", "labels": ["ui", "auth"] },
+    { "epic": "Authentication", "summary": "[UI] OTP entry screen", "labels": ["ui", "auth"] },
+    { "epic": "Authentication", "summary": "[Functionality] Login API integration & session", "labels": ["functionality", "auth"] },
+    { "epic": "Authentication", "summary": "[Functionality] Forgot password flow – email send + reset", "labels": ["functionality", "auth"] },
+    { "epic": "Authentication", "summary": "[Functionality] OTP sign-in flow", "labels": ["functionality", "auth"] },
+    { "epic": "Authentication", "summary": "[Functionality] Session persistence across tabs/refresh", "labels": ["functionality", "auth"] },
+    { "epic": "Dashboard", "summary": "[UI] Dashboard home layout & navigation", "labels": ["ui", "dashboard"] },
+    { "epic": "Dashboard", "summary": "[UI] Main sections / widgets layout", "labels": ["ui", "dashboard"] },
+    { "epic": "Dashboard", "summary": "[Functionality] Dashboard data loading", "labels": ["functionality", "dashboard"] },
+    { "epic": "Dashboard", "summary": "[Functionality] Navigation routing", "labels": ["functionality", "dashboard"] },
+    { "epic": "User & account", "summary": "[UI] Profile / settings screen", "labels": ["ui", "settings"] },
+    { "epic": "User & account", "summary": "[UI] Members list screen (admin)", "labels": ["ui", "settings"] },
+    { "epic": "User & account", "summary": "[Functionality] Update profile & settings API", "labels": ["functionality", "settings"] },
+    { "epic": "User & account", "summary": "[Functionality] Members management API", "labels": ["functionality", "settings"] },
+    { "epic": "Subscriptions & billing", "summary": "[UI] Plan & subscription view screen", "labels": ["ui", "billing"] },
+    { "epic": "Subscriptions & billing", "summary": "[UI] Renewal history screen", "labels": ["ui", "billing"] },
+    { "epic": "Subscriptions & billing", "summary": "[Functionality] Subscription data & renewal logic", "labels": ["functionality", "billing"] },
+    { "epic": "Notifications & reminders", "summary": "[UI] Notifications list & preferences screen", "labels": ["ui", "notifications"] },
+    { "epic": "Notifications & reminders", "summary": "[UI] Reminders / alerts UI", "labels": ["ui", "notifications"] },
+    { "epic": "Notifications & reminders", "summary": "[Functionality] Browser / email notifications", "labels": ["functionality", "notifications"] },
+    { "epic": "Notifications & reminders", "summary": "[Functionality] Reminders backend", "labels": ["functionality", "notifications"] },
+    { "epic": "Reports & analytics", "summary": "[UI] Reports layout & charts", "labels": ["ui", "reports"] },
+    { "epic": "Reports & analytics", "summary": "[Functionality] Reports data & export", "labels": ["functionality", "reports"] }
+  ]
+}

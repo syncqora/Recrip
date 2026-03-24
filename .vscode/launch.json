@@ -1,0 +1,26 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Flutter: Chrome (API via CORS proxy :8081)",
+      "request": "launch",
+      "type": "dart",
+      "program": "lib/main.dart",
+      "deviceId": "chrome",
+      "toolArgs": [
+        "--dart-define=API_BASE_URL=http://127.0.0.1:8081"
+      ]
+    },
+    {
+      "name": "Flutter: Chrome (preLaunch: start CORS proxy)",
+      "request": "launch",
+      "type": "dart",
+      "program": "lib/main.dart",
+      "deviceId": "chrome",
+      "preLaunchTask": "web-cors-proxy",
+      "toolArgs": [
+        "--dart-define=API_BASE_URL=http://127.0.0.1:8081"
+      ]
+    }
+  ]
+}
