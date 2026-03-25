@@ -4,6 +4,8 @@ import 'package:get/get.dart';
 import '../../../../shared/widgets/success_toast.dart';
 import '../../../../shared/widgets/app_close_button.dart';
 import 'view_member_mobile_modal.dart';
+import 'add_member_modal.dart';
+import 'modal_route_helper.dart';
 
 /// Data for the View Member modal.
 class ViewMemberData {
@@ -66,6 +68,15 @@ class ViewMemberModal extends StatelessWidget {
         },
         onEdit: () {
           Navigator.of(context).pop();
+          openModalWithTransition(
+            context,
+            AddMemberModal(
+              initialFullName: member.name,
+              initialPhone: member.phone,
+              initialPlan: member.plan,
+              isEditMode: true,
+            ),
+          );
         },
         onDelete: () => _showRemoveUserDialog(context),
       );
@@ -250,8 +261,19 @@ class ViewMemberModal extends StatelessWidget {
                   title: 'Reminder Sent to ${member.name}',
                   popRoute: false,
                 );
+              } else if (label == 'Edit') {
+                Navigator.of(context).pop();
+                openModalWithTransition(
+                  context,
+                  AddMemberModal(
+                    initialFullName: member.name,
+                    initialPhone: member.phone,
+                    initialPlan: member.plan,
+                    isEditMode: true,
+                  ),
+                );
               } else {
-                // TODO: handle Renew, Edit
+                // TODO: handle Renew
                 Navigator.of(context).pop();
               }
             },

@@ -6,6 +6,9 @@ import 'package:saas/shared/constants/app_icons.dart';
 import 'package:saas/shared/constants/app_strings.dart';
 import 'package:saas/shared/widgets/app_close_button.dart';
 import 'package:saas/shared/widgets/success_toast.dart';
+import '../../modals/add_member_modal.dart';
+import '../../modals/modal_route_helper.dart';
+import '../../modals/view_member_modal.dart';
 
 enum MemberStatus { active, expired, expiring }
 
@@ -389,14 +392,28 @@ class MembersMobileView extends StatelessWidget {
                       child: _actionItem(
                         icon: AppIcons.edit,
                         label: 'Edit',
-                        onTap: () => Navigator.of(dialogContext).pop(),
+                        onTap: () {
+                          Navigator.of(dialogContext).pop();
+                          openModalWithTransition(
+                            context,
+                            AddMemberModal(
+                              initialFullName: member.name,
+                              initialPhone: member.phone,
+                              initialPlan: member.plan,
+                              isEditMode: true,
+                            ),
+                          );
+                        },
                       ),
                     ),
                     Expanded(
                       child: _actionItem(
                         icon: AppIcons.trash,
                         label: 'Delete',
-                        onTap: () => Navigator.of(dialogContext).pop(),
+                        onTap: () {
+                          Navigator.of(dialogContext).pop();
+                          _showRemoveUserDialog(context, member.name);
+                        },
                       ),
                     ),
                   ],
@@ -485,6 +502,21 @@ class MembersMobileView extends StatelessWidget {
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  void _showRemoveUserDialog(BuildContext context, String userName) {
+    showDialog<void>(
+      context: context,
+      builder: (ctx) => RemoveUserConfirmDialog(
+        userName: userName,
+        onCancel: () => Navigator.of(ctx).pop(),
+        onDelete: () {
+          final overlayState = Overlay.of(ctx);
+          Navigator.of(ctx).pop();
+          SuccessToast.showRemoved(overlayState, userName);
+        },
       ),
     );
   }

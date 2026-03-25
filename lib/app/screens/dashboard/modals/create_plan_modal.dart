@@ -207,14 +207,7 @@ class _CreatePlanModalState extends State<CreatePlanModal> {
         selectedStatus: _selectedStatus,
         onPickCustomDates: _pickCustomDate,
         onDurationChanged: (v) => setState(() => _selectedDuration = v),
-        onStatusTap: () {
-          // Simple mock for status selection
-          setState(
-            () => _selectedStatus = _selectedStatus == 'Active'
-                ? 'Inactive'
-                : 'Active',
-          );
-        },
+        onStatusTap: (statusContext) => _showStatusMenu(statusContext),
         onCancel: () => Navigator.of(context).pop(),
         onCreate: _onCreate,
         isCreateEnabled: _isCreateEnabled,
@@ -230,13 +223,7 @@ class _CreatePlanModalState extends State<CreatePlanModal> {
         selectedStatus: _selectedStatus,
         onPickCustomDates: _pickCustomDate,
         onDurationChanged: (v) => setState(() => _selectedDuration = v),
-        onStatusTap: () {
-          setState(
-            () => _selectedStatus = _selectedStatus == 'Active'
-                ? 'Inactive'
-                : 'Active',
-          );
-        },
+        onStatusTap: (statusContext) => _showStatusMenu(statusContext),
         onCancel: () => Navigator.of(context).pop(),
         onCreate: _onCreate,
         isCreateEnabled: _isCreateEnabled,

@@ -31,7 +31,7 @@ class CreatePlanModalTabletView extends StatelessWidget {
   final String? selectedStatus;
   final VoidCallback onPickCustomDates;
   final ValueChanged<PlanDuration> onDurationChanged;
-  final VoidCallback onStatusTap;
+  final Future<void> Function(BuildContext) onStatusTap;
   final VoidCallback onCancel;
   final VoidCallback onCreate;
   final bool isCreateEnabled;
@@ -295,35 +295,37 @@ class CreatePlanModalTabletView extends StatelessWidget {
           child: AuthFormFieldSection(
             label: 'Status*',
             spacingAfterLabel: 8,
-            child: InkWell(
-              onTap: onStatusTap,
-              child: Container(
-                height: 44,
-                padding: const EdgeInsets.symmetric(horizontal: 14),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(_inputBorderRadius),
-                  border: Border.all(color: _inputBorderColor),
-                ),
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: Text(
-                        selectedStatus ?? 'Select Plan Status',
-                        style: Get.theme.textTheme.bodyMedium?.copyWith(
-                          fontSize: 14,
-                          color: selectedStatus != null
-                              ? _labelColor
-                              : _hintColor,
+            child: Builder(
+              builder: (statusContext) => InkWell(
+                onTap: () {
+                  onStatusTap(statusContext);
+                },
+                child: Container(
+                  height: 44,
+                  padding: const EdgeInsets.symmetric(horizontal: 14),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(_inputBorderRadius),
+                    border: Border.all(color: _inputBorderColor),
+                  ),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: Text(
+                          selectedStatus ?? 'Select Plan Status',
+                          style: Get.theme.textTheme.bodyMedium?.copyWith(
+                            fontSize: 14,
+                            color: selectedStatus != null ? _labelColor : _hintColor,
+                          ),
                         ),
                       ),
-                    ),
-                    const Icon(
-                      Icons.keyboard_arrow_down,
-                      size: 20,
-                      color: Color(0xFF64748B),
-                    ),
-                  ],
+                      const Icon(
+                        Icons.keyboard_arrow_down,
+                        size: 20,
+                        color: Color(0xFF64748B),
+                      ),
+                    ],
+                  ),
                 ),
               ),
             ),

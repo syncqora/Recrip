@@ -33,15 +33,17 @@ class MembersController extends GetxController {
     isLoading.value = true;
     errorMessage.value = null;
     try {
-      await _memberRepository.getMemberSchema();
-      final response = await _memberRepository.getMembers(
-        pageNumber: 1,
-        pageSize: 20,
-      );
-      tableData.assignAll(response.items.map(_memberRowFromAsset).toList());
+      // await _memberRepository.getMemberSchema();
+      // final response = await _memberRepository.getMembers(
+      //   pageNumber: 1,
+      //   pageSize: 20,
+      // );
+      // tableData.assignAll(response.items.map(_memberRowFromAsset).toList());
+      tableData.assignAll([_dummyMember(), _dummyMember(), _dummyMember()]);
     } catch (e) {
       errorMessage.value = _authService.messageForError(e);
       tableData.clear();
+      tableData.assignAll([_dummyMember(), _dummyMember(), _dummyMember()]);
     } finally {
       isLoading.value = false;
     }
@@ -76,6 +78,17 @@ class MembersController extends GetxController {
       plan: _capitalize((m.plan ?? '').trim()),
       expiry: _formatDate(m.expiresAt),
       status: _mapStatus(m.status),
+    );
+  }
+
+  MemberRow _dummyMember() {
+    return MemberRow(
+      name: 'Test Member',
+      phone: '9876543210',
+      email: 'test@example.com',
+      plan: 'Basic',
+      expiry: '31/12/2026',
+      status: MemberStatus.active,
     );
   }
 

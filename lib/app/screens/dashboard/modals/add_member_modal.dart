@@ -20,11 +20,13 @@ class AddMemberModal extends StatefulWidget {
     this.initialFullName,
     this.initialPhone,
     this.initialPlan,
+    this.isEditMode = false,
   });
 
   final String? initialFullName;
   final String? initialPhone;
   final String? initialPlan;
+  final bool isEditMode;
 
   @override
   State<AddMemberModal> createState() => _AddMemberModalState();
@@ -42,6 +44,7 @@ class _AddMemberModalState extends State<AddMemberModal> {
 
   bool get isRenewMode =>
       widget.initialFullName != null || widget.initialPhone != null;
+  bool get isEditMode => widget.isEditMode;
 
   @override
   void initState() {
@@ -132,8 +135,16 @@ class _AddMemberModalState extends State<AddMemberModal> {
         onCancel: () => Navigator.of(context).pop(),
         onSave: _onSave,
         isSaveEnabled: _isSaveEnabled,
-        title: isRenewMode ? 'Renew Member' : 'Add Member',
-        primaryButtonLabel: isRenewMode ? 'Renew' : 'Save Member',
+        title: isEditMode
+            ? 'Edit Member'
+            : isRenewMode
+            ? 'Renew Member'
+            : 'Add Member',
+        primaryButtonLabel: isEditMode
+            ? 'Save Changes'
+            : isRenewMode
+            ? 'Renew'
+            : 'Save Member',
       );
     }
 
@@ -153,8 +164,16 @@ class _AddMemberModalState extends State<AddMemberModal> {
         onCancel: () => Navigator.of(context).pop(),
         onSave: _onSave,
         isSaveEnabled: _isSaveEnabled,
-        title: isRenewMode ? 'Renew Member' : 'Add Member',
-        primaryButtonLabel: isRenewMode ? 'Renew' : 'Save Member',
+        title: isEditMode
+            ? 'Edit Member'
+            : isRenewMode
+            ? 'Renew Member'
+            : 'Add Member',
+        primaryButtonLabel: isEditMode
+            ? 'Save Changes'
+            : isRenewMode
+            ? 'Renew'
+            : 'Save Member',
       );
     }
 
@@ -222,7 +241,11 @@ class _AddMemberModalState extends State<AddMemberModal> {
           Expanded(
             child: Center(
               child: Text(
-                isRenewMode ? 'Renew Member' : 'Add Member',
+                isEditMode
+                    ? 'Edit Member'
+                    : isRenewMode
+                    ? 'Renew Member'
+                    : 'Add Member',
                 style: Get.textTheme.titleLarge?.copyWith(
                   fontWeight: FontWeight.bold,
                   color: Color(0xFF0F172A),

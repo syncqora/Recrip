@@ -30,7 +30,7 @@ class CreatePlanModalMobileView extends StatelessWidget {
   final String? selectedStatus;
   final VoidCallback onPickCustomDates;
   final ValueChanged<PlanDuration> onDurationChanged;
-  final VoidCallback onStatusTap;
+  final Future<void> Function(BuildContext) onStatusTap;
   final VoidCallback onCancel;
   final VoidCallback onCreate;
   final bool isCreateEnabled;
@@ -133,39 +133,43 @@ class CreatePlanModalMobileView extends StatelessWidget {
             AuthFormFieldSection(
               label: 'Status*',
               spacingAfterLabel: 8,
-              child: InkWell(
-                onTap: onStatusTap,
-                child: Container(
-                  height: 44,
-                  padding: const EdgeInsets.symmetric(horizontal: 14),
-                  decoration: BoxDecoration(
-                    color: selectedStatus != null
-                        ? _filledFieldColor
-                        : Colors.white,
-                    borderRadius: BorderRadius.circular(_inputBorderRadius),
-                    border: Border.all(color: _inputBorderColor),
-                  ),
-                  child: Row(
-                    children: [
-                      Expanded(
-                        child: Text(
-                          selectedStatus ?? 'Select Plan Status',
-                          style: Get.theme.textTheme.labelMedium?.copyWith(
-                            fontSize: 12,
-                            fontWeight: FontWeight.w500,
-                            height: 1,
-                            color: selectedStatus != null
-                                ? AppConstants.textColor
-                                : _dropdownPlaceholderColor,
+              child: Builder(
+                builder: (statusContext) => InkWell(
+                  onTap: () {
+                    onStatusTap(statusContext);
+                  },
+                  child: Container(
+                    height: 44,
+                    padding: const EdgeInsets.symmetric(horizontal: 14),
+                    decoration: BoxDecoration(
+                      color: selectedStatus != null
+                          ? _filledFieldColor
+                          : Colors.white,
+                      borderRadius: BorderRadius.circular(_inputBorderRadius),
+                      border: Border.all(color: _inputBorderColor),
+                    ),
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: Text(
+                            selectedStatus ?? 'Select Plan Status',
+                            style: Get.theme.textTheme.labelMedium?.copyWith(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w500,
+                              height: 1,
+                              color: selectedStatus != null
+                                  ? AppConstants.textColor
+                                  : _dropdownPlaceholderColor,
+                            ),
                           ),
                         ),
-                      ),
-                      const Icon(
-                        Icons.keyboard_arrow_down,
-                        size: 20,
-                        color: Color(0xFF64748B),
-                      ),
-                    ],
+                        const Icon(
+                          Icons.keyboard_arrow_down,
+                          size: 20,
+                          color: Color(0xFF64748B),
+                        ),
+                      ],
+                    ),
                   ),
                 ),
               ),

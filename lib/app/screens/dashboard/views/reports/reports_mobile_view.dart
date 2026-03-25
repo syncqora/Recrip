@@ -66,31 +66,25 @@ class ReportsMobileView extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
+        const Text(
+          AppStrings.revenueAnalysisTitle,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          style: TextStyle(
+            fontWeight: FontWeight.bold,
+            color: _textDark,
+            fontSize: 15,
+            height: 1,
+          ),
+        ),
+        const SizedBox(height: 12),
         Row(
-          crossAxisAlignment: CrossAxisAlignment.center,
           children: [
             const Expanded(
-              child: Text(
-                AppStrings.revenueAnalysisTitle,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: TextStyle(
-                  fontWeight: FontWeight.bold,
-                  color: _textDark,
-                  fontSize: 15,
-                  height: 1,
-                ),
-              ),
+              child: ReportPeriodDropdown(width: double.infinity, height: 40),
             ),
             const SizedBox(width: 8),
-            Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                _ExportButton(onPressed: onExport),
-                const SizedBox(width: 8),
-                const ReportPeriodDropdown(width: 122, height: 40),
-              ],
-            ),
+            Expanded(child: _ExportButton(onPressed: onExport)),
           ],
         ),
         const SizedBox(height: 12),
@@ -171,13 +165,11 @@ class _ExportButton extends StatelessWidget {
 
   final VoidCallback? onPressed;
 
-  static const double _width = 104;
   static const double _height = 40;
 
   @override
   Widget build(BuildContext context) {
     return SizedBox(
-      width: _width,
       height: _height,
       child: Material(
         color: Colors.white,
@@ -185,7 +177,7 @@ class _ExportButton extends StatelessWidget {
         child: InkWell(
           onTap: onPressed,
           borderRadius: BorderRadius.circular(10),
-            child: Container(
+          child: Container(
             padding: const EdgeInsets.symmetric(horizontal: 10),
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(10),
