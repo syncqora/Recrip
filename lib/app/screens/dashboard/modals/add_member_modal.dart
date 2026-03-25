@@ -279,9 +279,53 @@ class _AddMemberModalState extends State<AddMemberModal> {
           child: AuthFormFieldSection(
             label: 'Full Name*',
             spacingAfterLabel: 8,
-            child: AuthTextField(
-              controller: _fullNameController,
-              hint: 'E.g. John Doe',
+            child: SizedBox(
+              height: AppConstants.fieldHeight,
+              child: TextField(
+                controller: _fullNameController,
+                style: Get.theme.textTheme.bodySmall?.copyWith(
+                  color: AppConstants.textColor,
+                ),
+                cursorColor: Colors.black,
+                decoration: InputDecoration(
+                  hintText: 'E.g. John Doe',
+                  hintStyle: Get.theme.textTheme.labelMedium?.copyWith(
+                    color: AppConstants.hintColor,
+                    fontWeight: FontWeight.w400,
+                  ),
+                  filled: true,
+                  fillColor: AppConstants.fieldFillColor,
+                  hoverColor: AppConstants.lightGrayFillColor,
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(
+                      AppConstants.fieldBorderRadius,
+                    ),
+                    borderSide: const BorderSide(
+                      color: AppConstants.borderColor,
+                    ),
+                  ),
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(
+                      AppConstants.fieldBorderRadius,
+                    ),
+                    borderSide: const BorderSide(
+                      color: AppConstants.borderColor,
+                    ),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(
+                      AppConstants.fieldBorderRadius,
+                    ),
+                    borderSide: const BorderSide(
+                      color: AppConstants.focusedBorderColor,
+                    ),
+                  ),
+                  contentPadding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 10,
+                  ),
+                ),
+              ),
             ),
           ),
         ),
@@ -324,6 +368,7 @@ class _AddMemberModalState extends State<AddMemberModal> {
                   ),
                   filled: true,
                   fillColor: AppConstants.fieldFillColor,
+                  hoverColor: AppConstants.lightGrayFillColor,
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(
                       AppConstants.fieldBorderRadius,
@@ -362,9 +407,53 @@ class _AddMemberModalState extends State<AddMemberModal> {
           child: AuthFormFieldSection(
             label: 'Email Address*',
             spacingAfterLabel: 8,
-            child: AuthTextField(
-              controller: _emailController,
-              hint: 'E.g. John.doe@gmail.com',
+            child: SizedBox(
+              height: AppConstants.fieldHeight,
+              child: TextField(
+                controller: _emailController,
+                style: Get.theme.textTheme.bodySmall?.copyWith(
+                  color: AppConstants.textColor,
+                ),
+                cursorColor: Colors.black,
+                decoration: InputDecoration(
+                  hintText: 'E.g. John.doe@gmail.com',
+                  hintStyle: Get.theme.textTheme.labelMedium?.copyWith(
+                    color: AppConstants.hintColor,
+                    fontWeight: FontWeight.w400,
+                  ),
+                  filled: true,
+                  fillColor: AppConstants.fieldFillColor,
+                  hoverColor: AppConstants.lightGrayFillColor,
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(
+                      AppConstants.fieldBorderRadius,
+                    ),
+                    borderSide: const BorderSide(
+                      color: AppConstants.borderColor,
+                    ),
+                  ),
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(
+                      AppConstants.fieldBorderRadius,
+                    ),
+                    borderSide: const BorderSide(
+                      color: AppConstants.borderColor,
+                    ),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(
+                      AppConstants.fieldBorderRadius,
+                    ),
+                    borderSide: const BorderSide(
+                      color: AppConstants.focusedBorderColor,
+                    ),
+                  ),
+                  contentPadding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 10,
+                  ),
+                ),
+              ),
             ),
           ),
         ),
