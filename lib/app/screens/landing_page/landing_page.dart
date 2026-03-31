@@ -75,7 +75,6 @@ class _LandingPageState extends State<LandingPage> {
           children: [
             _HeroSection(
               padding: pad,
-              mobile: mobile,
               onFeatures: () => _scrollTo(_featuresKey),
               onSteps: () => _scrollTo(_stepsKey),
               onPricing: () => _scrollTo(_pricingKey),
@@ -96,7 +95,6 @@ class _LandingPageState extends State<LandingPage> {
 class _HeroSection extends StatelessWidget {
   const _HeroSection({
     required this.padding,
-    required this.mobile,
     required this.onFeatures,
     required this.onSteps,
     required this.onPricing,
@@ -104,7 +102,6 @@ class _HeroSection extends StatelessWidget {
   });
 
   final double padding;
-  final bool mobile;
   final VoidCallback onFeatures;
   final VoidCallback onSteps;
   final VoidCallback onPricing;
@@ -112,8 +109,13 @@ class _HeroSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final line1Size = mobile ? 34.0 : 50.0;
-    final line2Size = mobile ? 40.0 : 64.0;
+    const line1Size = 50.0;
+    const line2Size = 64.0;
+    final descriptionStyle = Get.theme.textTheme.bodyLarge?.copyWith(
+      fontWeight: FontWeight.w600,
+      color: const Color(0xFF475569),
+      height: 1.4,
+    );
 
     return Container(
       width: double.infinity,
@@ -127,16 +129,16 @@ class _HeroSection extends StatelessWidget {
       child: Stack(
         children: [
           Positioned(
-            top: 118,
-            right: mobile ? -70 : 0,
+            top: 122,
+            right: 0,
             child: Container(
-              width: mobile ? 260 : 1000,
-              height: mobile ? 320 : 323,
+              width: 950,
+              height: 290,
               decoration: const BoxDecoration(
                 color: Color(0xFF111C3B),
                 borderRadius: BorderRadius.only(
-                  topLeft: Radius.circular(176),
-                  bottomLeft: Radius.circular(176),
+                  topLeft: Radius.circular(160),
+                  bottomLeft: Radius.circular(160),
                 ),
               ),
             ),
@@ -146,84 +148,53 @@ class _HeroSection extends StatelessWidget {
             child: Column(
               children: [
                 _TopNav(
-                  compact: mobile,
+                  compact: false,
                   onFeatures: onFeatures,
                   onSteps: onSteps,
                   onPricing: onPricing,
                   onContact: onContact,
                 ),
                 const SizedBox(height: 34),
-                LayoutBuilder(
-                  builder: (context, constraints) {
-                    final stacked = constraints.maxWidth < 980;
-                    Widget leftChild = Padding(
-                      padding: EdgeInsets.only(
-                        right: stacked ? 0 : 32,
-                        bottom: stacked ? 24 : 0,
-                      ),
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    Expanded(
+                      flex: 5,
                       child: Column(
-                        crossAxisAlignment: stacked
-                            ? CrossAxisAlignment.center
-                            : CrossAxisAlignment.start,
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          Text(
-                            'Never Lose Revenue from',
-                            textAlign: stacked
-                                ? TextAlign.center
-                                : TextAlign.left,
-                            style: Theme.of(context).textTheme.headlineMedium
-                                ?.copyWith(
-                                  fontSize: line1Size,
-                                  fontWeight: FontWeight.w900,
-                                  color: const Color(0xFF111827),
-                                  height: 1.08,
-                                ),
+                          _HeroTextBlock(
+                            line1Size: line1Size,
+                            line2Size: line2Size,
                           ),
-                          SizedBox(height: mobile ? 6 : 10),
-                          Text(
-                            'Expired Subscriptions',
-                            textAlign: stacked
-                                ? TextAlign.center
-                                : TextAlign.left,
-                            style: Theme.of(context).textTheme.headlineMedium
-                                ?.copyWith(
-                                  fontSize: line2Size,
-                                  fontWeight: FontWeight.w900,
-                                  color: const Color(0xFF5C5BFF),
-                                  height: 1.05,
-                                ),
-                          ),
+                          const SizedBox(height: 18),
                           Text(
                             'Recrip helps businesses automate renewals, track customers, and recover missed payments — all from one powerful dashboard.',
-                            textAlign: stacked
-                                ? TextAlign.center
-                                : TextAlign.left,
-                            style: Get.theme.textTheme.bodyLarge?.copyWith(
-                              fontWeight: FontWeight.w600,
-                              color: const Color(0xFF475569),
-                            ),
+                            textAlign: TextAlign.left,
+                            style: descriptionStyle,
                           ),
                         ],
                       ),
-                    );
-                    Widget rightChild = const Center(
-                      child: _LandingHeroLoginCard(),
-                    );
-                    return Flex(
-                      direction: stacked ? Axis.vertical : Axis.horizontal,
-                      crossAxisAlignment: CrossAxisAlignment.center,
-                      children: [
-                        if (stacked)
-                          leftChild
-                        else
-                          Expanded(flex: 4, child: leftChild),
-                        if (stacked)
-                          rightChild
-                        else
-                          Expanded(flex: 8, child: rightChild),
-                      ],
-                    );
-                  },
+                    ),
+                    const SizedBox(width: 24),
+                    const Expanded(
+                      flex: 7,
+                      child: SizedBox(
+                        height: 470,
+                        child: Stack(
+                          clipBehavior: Clip.none,
+                          children: [
+                            Positioned(
+                              top: 44,
+                              right: 0,
+                              child: _LandingHeroLoginCard(),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
               ],
             ),
@@ -233,7 +204,45 @@ class _HeroSection extends StatelessWidget {
     );
   }
 }
+class _HeroTextBlock extends StatelessWidget {
+  const _HeroTextBlock({
+    required this.line1Size,
+    required this.line2Size,
+  });
 
+  final double line1Size;
+  final double line2Size;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'Never Lose\nRevenue from',
+          textAlign: TextAlign.left,
+          style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+            fontSize: line1Size,
+            fontWeight: FontWeight.w900,
+            color: const Color(0xFF111827),
+            height: 1.08,
+          ),
+        ),
+        const SizedBox(height: 6),
+        Text(
+          'Expired\nSubscriptions',
+          textAlign: TextAlign.left,
+          style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+            fontSize: line2Size,
+            fontWeight: FontWeight.w900,
+            color: const Color(0xFF5C5BFF),
+            height: 1.05,
+          ),
+        ),
+      ],
+    );
+  }
+}
 class _TopNav extends StatelessWidget {
   const _TopNav({
     required this.compact,
@@ -381,11 +390,10 @@ class _LandingHeroLoginCard extends StatelessWidget {
     final controller = Get.find<LandingPageController>(
       tag: LandingPage.heroControllerTag,
     );
-    final narrow = MediaQuery.sizeOf(context).width < 760;
 
     return Align(
       child: ConstrainedBox(
-        constraints: BoxConstraints(maxWidth: narrow ? 340 : 400),
+        constraints: const BoxConstraints.tightFor(width: 379, height: 430),
         child: AuthFormCard(
           compact: true,
           showLogo: false,
@@ -394,10 +402,16 @@ class _LandingHeroLoginCard extends StatelessWidget {
           cardColor: Colors.white,
           boxShadow: const [
             BoxShadow(
-              color: Color(0x180F172A),
-              offset: Offset(0, 12),
-              blurRadius: 32,
+              color: Color(0x120F172A),
+              offset: Offset(0, 8),
+              blurRadius: 18,
               spreadRadius: 0,
+            ),
+            BoxShadow(
+              color: Color(0x220F172A),
+              offset: Offset(0, 24),
+              blurRadius: 42,
+              spreadRadius: -8,
             ),
           ],
           customHeader: Column(
@@ -449,7 +463,7 @@ class _LandingHeroLoginCard extends StatelessWidget {
                   ),
                 ),
               ),
-              SizedBox(height: narrow ? 20 : AppConstants.spacingBetweenFields),
+              const SizedBox(height: 20),
               AuthFormFieldSection(
                 label: AppStrings.passwordLabel,
                 child: MouseRegion(
@@ -497,7 +511,7 @@ class _LandingHeroLoginCard extends StatelessWidget {
                   }),
                 ),
               ),
-              SizedBox(height: narrow ? 20 : AppConstants.spacingAfterLogo),
+              const SizedBox(height: 20),
               Obx(
                 () => AuthPrimaryButton(
                   text: AppStrings.loginTitle,
@@ -507,8 +521,8 @@ class _LandingHeroLoginCard extends StatelessWidget {
                   enabledBackgroundColor: const Color(0xFFC8CEFF),
                 ),
               ),
-              const SizedBox(height: 28),
-              AuthSupportFooter(onReachOut: controller.onReachOutTap),
+              // const SizedBox(height: 28),
+              // AuthSupportFooter(onReachOut: controller.onReachOutTap),
             ],
           ),
         ),
@@ -594,14 +608,16 @@ class _FeatureSection extends StatelessWidget {
                   : constraints.maxWidth > 640
                   ? 2
                   : 1;
-              final width = (constraints.maxWidth - (18 * (count - 1))) / count;
               return Wrap(
                 spacing: 18,
                 runSpacing: 18,
                 children: features
                     .map(
-                      (feature) =>
-                          SizedBox(width: width, child: _FeatureCard(feature)),
+                      (feature) => SizedBox(
+                        width: 384,
+                        height: 240,
+                        child: _FeatureCard(feature),
+                      ),
                     )
                     .toList(),
               );
@@ -621,11 +637,13 @@ class _FeatureCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
+      width: 384,
+      height: 240,
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: const Color(0xFFE6EAF6)),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: const Color(0xFFE6EAF6), width: 1),
         boxShadow: const [
           BoxShadow(
             color: Color(0x060F172A),
@@ -638,28 +656,27 @@ class _FeatureCard extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Container(
-            width: 38,
-            height: 38,
+            width: 66,
+            height: 66,
             decoration: BoxDecoration(
               color: feature.color,
               borderRadius: BorderRadius.circular(12),
             ),
-            child: Icon(feature.icon, size: 20, color: Colors.white),
+            child: Icon(feature.icon, size: 24, color: Colors.white),
           ),
           const SizedBox(height: 14),
           Text(
             feature.title,
-            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-              color: const Color(0xFF111827),
-              fontWeight: FontWeight.w800,
+            style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+              color: AppConstants.textColor,
             ),
           ),
           const SizedBox(height: 8),
           Text(
             feature.description,
-            style: Theme.of(context).textTheme.bodySmall?.copyWith(
-              color: const Color(0xFF6B7280),
-              height: 1.5,
+            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+              color: AppConstants.supportTextColor,
+              fontWeight: FontWeight.w500,
             ),
           ),
         ],
@@ -1493,37 +1510,37 @@ class _QuestionCard extends StatelessWidget {
 const features = [
   _Feature(
     'Smart Renewal Alerts',
-    'Get reminded before plans expire.',
+    'Automatically remind customers via WhatsApp, SMS, and email before they expire.',
     Icons.notifications_active_rounded,
     Color(0xFF7293FF),
   ),
   _Feature(
     'Payment Recovery',
-    'Spot overdue renewals and follow up fast.',
+    'Recover missed payments and reduce churn effortlessly with automated retries.',
     Icons.payments_rounded,
     Color(0xFF7CC7FF),
   ),
   _Feature(
     'Analytics Dashboard',
-    'Track trends, losses, and recovered revenue.',
+    'Track revenue, renewals, and customer behavior with deep visual insights.',
     Icons.analytics_rounded,
     Color(0xFF9D7CFF),
   ),
   _Feature(
     'Customer Management',
-    'Keep plans and member records organized.',
+    'All your subscription data in one place. Search, filter, and manage with ease.',
     Icons.people_alt_rounded,
     Color(0xFFE873FF),
   ),
   _Feature(
     'Auto Renewals',
-    'Reduce manual work with scheduled reminders.',
+    'Set it once and let Recrip handle the rest. Seamless recurring billing.',
     Icons.autorenew_rounded,
     Color(0xFF26C281),
   ),
   _Feature(
     'Business Insights',
-    'Turn renewal data into actions your team can take.',
+    'Track revenue, renewals, and customer behavior with deep visual insights.',
     Icons.bar_chart_rounded,
     Color(0xFFFFB547),
   ),
@@ -1582,3 +1599,5 @@ class _Faq {
   final String question;
   final String answer;
 }
+
+
