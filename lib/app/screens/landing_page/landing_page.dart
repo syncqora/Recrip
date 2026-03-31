@@ -1,10 +1,17 @@
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
+import 'package:saas/app/screens/authentication/widgets/auth_widgets.dart';
+import 'package:saas/app/screens/landing_page/landing_page_controller.dart';
 import 'package:saas/core/di/get_injector.dart';
 import 'package:saas/routes/app_pages.dart';
 import 'package:saas/shared/constants/app_icons.dart';
+import 'package:saas/shared/constants/app_strings.dart';
 
 class LandingPage extends StatefulWidget {
   const LandingPage({super.key});
+
+  /// GetX tag for [LandingPageController] (hero login only).
+  static const String heroControllerTag = 'landingPageHero';
 
   @override
   State<LandingPage> createState() => _LandingPageState();
@@ -15,6 +22,30 @@ class _LandingPageState extends State<LandingPage> {
   final _stepsKey = GlobalKey();
   final _pricingKey = GlobalKey();
   final _contactKey = GlobalKey();
+
+  @override
+  void initState() {
+    super.initState();
+    if (!Get.isRegistered<LandingPageController>(
+      tag: LandingPage.heroControllerTag,
+    )) {
+      Get.put(
+        LandingPageController(),
+        tag: LandingPage.heroControllerTag,
+        permanent: false,
+      );
+    }
+  }
+
+  @override
+  void dispose() {
+    if (Get.isRegistered<LandingPageController>(
+      tag: LandingPage.heroControllerTag,
+    )) {
+      Get.delete<LandingPageController>(tag: LandingPage.heroControllerTag);
+    }
+    super.dispose();
+  }
 
   Future<void> _scrollTo(GlobalKey key) async {
     final context = key.currentContext;
@@ -31,7 +62,11 @@ class _LandingPageState extends State<LandingPage> {
   Widget build(BuildContext context) {
     final width = MediaQuery.sizeOf(context).width;
     final mobile = width < 760;
-    final pad = width < 600 ? 20.0 : width < 1100 ? 40.0 : 72.0;
+    final pad = width < 600
+        ? 20.0
+        : width < 1100
+        ? 40.0
+        : 72.0;
 
     return Scaffold(
       backgroundColor: const Color(0xFFF5F7FF),
@@ -77,17 +112,8 @@ class _HeroSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final titleStyle = Theme.of(context).textTheme.headlineMedium?.copyWith(
-      fontSize: mobile ? 40 : 58,
-      fontWeight: FontWeight.w900,
-      color: const Color(0xFF111827),
-      height: 0.95,
-    );
-    final bodyStyle = Theme.of(context).textTheme.bodyMedium?.copyWith(
-      fontSize: 15,
-      color: const Color(0xFF6B7280),
-      height: 1.55,
-    );
+    final line1Size = mobile ? 34.0 : 50.0;
+    final line2Size = mobile ? 40.0 : 64.0;
 
     return Container(
       width: double.infinity,
@@ -104,13 +130,13 @@ class _HeroSection extends StatelessWidget {
             top: 118,
             right: mobile ? -70 : 0,
             child: Container(
-              width: mobile ? 220 : 360,
-              height: mobile ? 190 : 310,
+              width: mobile ? 260 : 1000,
+              height: mobile ? 320 : 323,
               decoration: const BoxDecoration(
                 color: Color(0xFF111C3B),
                 borderRadius: BorderRadius.only(
-                  topLeft: Radius.circular(120),
-                  bottomLeft: Radius.circular(120),
+                  topLeft: Radius.circular(176),
+                  bottomLeft: Radius.circular(176),
                 ),
               ),
             ),
@@ -141,28 +167,61 @@ class _HeroSection extends StatelessWidget {
                             : CrossAxisAlignment.start,
                         children: [
                           Text(
-                            'Never Lose\nRevenue from\nExpired\nSubscriptions',
-                            textAlign:
-                                stacked ? TextAlign.center : TextAlign.left,
-                            style: titleStyle,
+                            'Never Lose Revenue from',
+                            textAlign: stacked
+                                ? TextAlign.center
+                                : TextAlign.left,
+                            style: Theme.of(context).textTheme.headlineMedium
+                                ?.copyWith(
+                                  fontSize: line1Size,
+                                  fontWeight: FontWeight.w900,
+                                  color: const Color(0xFF111827),
+                                  height: 1.08,
+                                ),
                           ),
-                          const SizedBox(height: 12),
+                          SizedBox(height: mobile ? 6 : 10),
                           Text(
-                            'Recip helps businesses automate renewals, track customers, and recover missed payments all from one powerful dashboard.',
-                            textAlign:
-                                stacked ? TextAlign.center : TextAlign.left,
-                            style: bodyStyle,
+                            'Expired Subscriptions',
+                            textAlign: stacked
+                                ? TextAlign.center
+                                : TextAlign.left,
+                            style: Theme.of(context).textTheme.headlineMedium
+                                ?.copyWith(
+                                  fontSize: line2Size,
+                                  fontWeight: FontWeight.w900,
+                                  color: const Color(0xFF5C5BFF),
+                                  height: 1.05,
+                                ),
+                          ),
+                          const SizedBox(height: 18),
+                          Text(
+                            'Recrip helps businesses automate renewals, track customers, and recover missed payments — all from one powerful dashboard.',
+                            textAlign: stacked
+                                ? TextAlign.center
+                                : TextAlign.left,
+                            style: Get.theme.textTheme.bodyLarge?.copyWith(
+                              fontWeight: FontWeight.w600,
+                              color: Color(0xFF475569),
+                            ),
                           ),
                         ],
                       ),
                     );
-                    Widget rightChild = const Center(child: _HeroCard());
+                    Widget rightChild = const Center(
+                      child: _LandingHeroLoginCard(),
+                    );
                     return Flex(
                       direction: stacked ? Axis.vertical : Axis.horizontal,
                       crossAxisAlignment: CrossAxisAlignment.center,
                       children: [
-                        if (stacked) leftChild else Expanded(flex: 5, child: leftChild),
-                        if (stacked) rightChild else Expanded(flex: 6, child: rightChild),
+                        if (stacked)
+                          leftChild
+                        else
+                          Expanded(flex: 4, child: leftChild),
+                        if (stacked)
+                          rightChild
+                        else
+                          Expanded(flex: 8, child: rightChild),
                       ],
                     );
                   },
@@ -191,136 +250,268 @@ class _TopNav extends StatelessWidget {
   final VoidCallback onPricing;
   final VoidCallback onContact;
 
+  void _openMobileNav(BuildContext context) {
+    showModalBottomSheet<void>(
+      context: context,
+      showDragHandle: true,
+      builder: (ctx) => SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(8, 0, 8, 24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              ListTile(
+                title: const Text('Features'),
+                onTap: () {
+                  Navigator.pop(ctx);
+                  onFeatures();
+                },
+              ),
+              ListTile(
+                title: const Text('How it works'),
+                onTap: () {
+                  Navigator.pop(ctx);
+                  onSteps();
+                },
+              ),
+              ListTile(
+                title: const Text('Pricing'),
+                onTap: () {
+                  Navigator.pop(ctx);
+                  onPricing();
+                },
+              ),
+              ListTile(
+                title: const Text('Contact'),
+                onTap: () {
+                  Navigator.pop(ctx);
+                  onContact();
+                },
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     Widget link(String text, VoidCallback onTap) {
       return TextButton(
         onPressed: onTap,
+        style: TextButton.styleFrom(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          minimumSize: Size.zero,
+          tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+        ),
         child: Text(
           text,
           style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-            color: const Color(0xFF6B7280),
+            color: const Color(0xFF4B5563),
             fontWeight: FontWeight.w600,
+            fontSize: 14,
           ),
         ),
+      );
+    }
+
+    final cta = FilledButton(
+      onPressed: () => appNav.changePage(AppRoutes.login),
+      style: FilledButton.styleFrom(
+        backgroundColor: const Color(0xFF5C5BFF),
+        foregroundColor: Colors.white,
+        elevation: 0,
+        minimumSize: const Size(132, 44),
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      ),
+      child: const Text(
+        'Get Started',
+        style: TextStyle(fontWeight: FontWeight.w700),
+      ),
+    );
+
+    if (compact) {
+      return Row(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          Image.asset(AppIcons.recripLogo, height: 32, fit: BoxFit.contain),
+          const Spacer(),
+          cta,
+          const SizedBox(width: 4),
+          IconButton(
+            onPressed: () => _openMobileNav(context),
+            icon: const Icon(Icons.menu_rounded),
+            color: const Color(0xFF374151),
+          ),
+        ],
       );
     }
 
     return Row(
       crossAxisAlignment: CrossAxisAlignment.center,
       children: [
-        Image.asset(
-          AppIcons.recripLogo,
-          height: 36,
-          fit: BoxFit.contain,
-        ),
-        if (!compact) const SizedBox(width: 120),
-        if (!compact) ...[
-          link('Features', onFeatures),
-          const SizedBox(width: 28),
-          link('How it works', onSteps),
-          const SizedBox(width: 28),
-          link('Pricing', onPricing),
-          const SizedBox(width: 28),
-          link('Contact', onContact),
-          const Spacer(),
-          const SizedBox(width: 24),
-        ] else ...[
-          const Spacer(),
-        ],
-        FilledButton(
-          onPressed: () => appNav.changePage(AppRoutes.login),
-          style: FilledButton.styleFrom(
-            backgroundColor: const Color(0xFF5C5BFF),
-            minimumSize: const Size(156, 44),
-            padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 14),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(14),
-            ),
+        Image.asset(AppIcons.recripLogo, height: 36, fit: BoxFit.contain),
+        Expanded(
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              link('Features', onFeatures),
+              const SizedBox(width: 36),
+              link('How it works', onSteps),
+              const SizedBox(width: 36),
+              link('Pricing', onPricing),
+              const SizedBox(width: 36),
+              link('Contact', onContact),
+            ],
           ),
-          child: const Text('Get Started'),
         ),
+        cta,
       ],
     );
   }
 }
 
-class _HeroCard extends StatelessWidget {
-  const _HeroCard();
+/// Hero login panel: same fields and actions as [Login] desktop form, compact [AuthFormCard].
+class _LandingHeroLoginCard extends StatelessWidget {
+  const _LandingHeroLoginCard();
 
   @override
   Widget build(BuildContext context) {
-    final compact = MediaQuery.sizeOf(context).width < 760;
-    return Container(
-      width: compact ? 300 : 380,
-      padding: const EdgeInsets.all(18),
-      decoration: BoxDecoration(
-        color: const Color(0xFFE6E9FF),
-        borderRadius: BorderRadius.circular(28),
-        boxShadow: const [
-          BoxShadow(
-            color: Color(0x250F172A),
-            blurRadius: 30,
-            offset: Offset(0, 18),
-          ),
-        ],
-      ),
-      child: Container(
-        padding: const EdgeInsets.all(18),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(22),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'Already with us?',
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                color: const Color(0xFF111827),
-                fontWeight: FontWeight.w700,
-              ),
-            ),
-            const SizedBox(height: 4),
-            Text(
-              'Log in to manage renewals',
-              style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                color: const Color(0xFF9CA3AF),
-              ),
-            ),
-            const SizedBox(height: 18),
-            const _MockField(label: 'Email'),
-            const SizedBox(height: 12),
-            const _MockField(label: 'Password'),
-            const SizedBox(height: 10),
-            Align(
-              alignment: Alignment.centerRight,
-              child: Text(
-                'Forgot Password',
-                style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  color: const Color(0xFF5C5BFF),
-                  fontWeight: FontWeight.w700,
-                ),
-              ),
-            ),
-            const SizedBox(height: 14),
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.symmetric(vertical: 14),
-              decoration: BoxDecoration(
-                color: const Color(0xFFC8CEFF),
-                borderRadius: BorderRadius.circular(14),
-              ),
-              child: Text(
-                'Login',
-                textAlign: TextAlign.center,
-                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  color: Colors.white,
-                  fontWeight: FontWeight.w700,
-                ),
-              ),
+    final controller = Get.find<LandingPageController>(
+      tag: LandingPage.heroControllerTag,
+    );
+    final narrow = MediaQuery.sizeOf(context).width < 760;
+
+    return Align(
+      child: ConstrainedBox(
+        constraints: BoxConstraints(maxWidth: narrow ? 340 : 400),
+        child: AuthFormCard(
+          compact: true,
+          showLogo: false,
+          title: '',
+          cornerRadius: 50,
+          cardColor: Colors.white,
+          boxShadow: const [
+            BoxShadow(
+              color: Color(0x180F172A),
+              offset: Offset(0, 12),
+              blurRadius: 32,
+              spreadRadius: 0,
             ),
           ],
+          customHeader: Column(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              Text(
+                'Already with Us?',
+                textAlign: TextAlign.center,
+                style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                  fontWeight: FontWeight.w800,
+                  color: const Color(0xFF0F172A),
+                  fontSize: 18,
+                ),
+              ),
+              const SizedBox(height: 6),
+              Text(
+                'Login',
+                textAlign: TextAlign.center,
+                style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                  fontWeight: FontWeight.w800,
+                  color: const Color(0xFF5C5BFF),
+                  fontSize: 20,
+                ),
+              ),
+            ],
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              AuthFormFieldSection(
+                label: AppStrings.userNameLabel,
+                child: MouseRegion(
+                  onEnter: (_) => controller.setUsernameHovered(true),
+                  onExit: (_) => controller.setUsernameHovered(false),
+                  child: Obx(
+                    () => AuthTextField(
+                      controller: controller.emailController,
+                      focusNode: controller.emailFocusNode,
+                      hint: AppStrings.enterUsernameHint,
+                      isHovered: controller.isUsernameHovered.value,
+                      errorText: controller.emailError.value,
+                      keyboardType: TextInputType.emailAddress,
+                      autocorrect: false,
+                      textInputAction: TextInputAction.next,
+                      onSubmitted: (_) =>
+                          controller.passwordFocusNode.requestFocus(),
+                    ),
+                  ),
+                ),
+              ),
+              SizedBox(height: narrow ? 20 : AppConstants.spacingBetweenFields),
+              AuthFormFieldSection(
+                label: AppStrings.passwordLabel,
+                child: MouseRegion(
+                  onEnter: (_) => controller.setPasswordHovered(true),
+                  onExit: (_) => controller.setPasswordHovered(false),
+                  child: Obx(
+                    () => AuthPasswordField(
+                      controller: controller.passwordController,
+                      focusNode: controller.passwordFocusNode,
+                      obscureText: !controller.isPasswordVisible.value,
+                      onToggleVisibility: controller.togglePasswordVisibility,
+                      hint: AppStrings.enterPasswordHint,
+                      isHovered: controller.isPasswordHovered.value,
+                      errorText: controller.passwordError.value,
+                      textInputAction: TextInputAction.done,
+                      onSubmitted: (_) => controller.onLogin(),
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(height: AppConstants.spacingAfterLabel),
+              Align(
+                alignment: Alignment.centerRight,
+                child: MouseRegion(
+                  onEnter: (_) => controller.setForgotPasswordHovered(true),
+                  onExit: (_) => controller.setForgotPasswordHovered(false),
+                  child: Obx(() {
+                    final hovered = controller.isForgotPasswordHovered.value;
+                    final color = hovered
+                        ? AppConstants.titleColor
+                        : AppConstants.hintColor;
+                    return TextButton(
+                      onPressed: controller.onForgotPassword,
+                      child: Text(
+                        AppStrings.forgotPasswordTitle,
+                        style: Get.theme.textTheme.labelMedium!.copyWith(
+                          color: color,
+                          fontWeight: hovered ? FontWeight.w400 : null,
+                          decoration: TextDecoration.underline,
+                          decorationColor: color,
+                          decorationThickness: 1.2,
+                        ),
+                      ),
+                    );
+                  }),
+                ),
+              ),
+              SizedBox(height: narrow ? 20 : AppConstants.spacingAfterLogo),
+              Obx(
+                () => AuthPrimaryButton(
+                  text: AppStrings.loginTitle,
+                  onPressed: controller.onLogin,
+                  isEnabled: controller.isFormValid.value,
+                  isLoading: controller.isSubmitting.value,
+                  enabledBackgroundColor: const Color(0xFFC8CEFF),
+                ),
+              ),
+              const SizedBox(height: 28),
+              AuthSupportFooter(onReachOut: controller.onReachOutTap),
+            ],
+          ),
         ),
       ),
     );
@@ -388,7 +579,7 @@ class _FeatureSection extends StatelessWidget {
           ),
           const SizedBox(height: 10),
           Text(
-            'Stop manually tracking renewals. Recip structures the boring stuff so you can focus on growth.',
+            'Stop manually tracking renewals. Recrip automates the boring stuff so you can focus on growth.',
             textAlign: TextAlign.center,
             style: Theme.of(context).textTheme.bodyMedium?.copyWith(
               fontSize: 15,
@@ -409,7 +600,10 @@ class _FeatureSection extends StatelessWidget {
                 spacing: 18,
                 runSpacing: 18,
                 children: features
-                    .map((feature) => SizedBox(width: width, child: _FeatureCard(feature)))
+                    .map(
+                      (feature) =>
+                          SizedBox(width: width, child: _FeatureCard(feature)),
+                    )
                     .toList(),
               );
             },
@@ -433,6 +627,13 @@ class _FeatureCard extends StatelessWidget {
         color: Colors.white,
         borderRadius: BorderRadius.circular(18),
         border: Border.all(color: const Color(0xFFE6EAF6)),
+        boxShadow: const [
+          BoxShadow(
+            color: Color(0x060F172A),
+            blurRadius: 20,
+            offset: Offset(0, 8),
+          ),
+        ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -490,58 +691,57 @@ class _TeamSection extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  'Built for Modern\nTeams',
-                  style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                    fontSize: mobile ? 30 : 38,
-                    fontWeight: FontWeight.w800,
-                    color: const Color(0xFF111827),
-                    height: 1.1,
+                Text.rich(
+                  TextSpan(
+                    style:
+                        (Theme.of(context).textTheme.headlineMedium ??
+                                const TextStyle())
+                            .copyWith(
+                              fontSize: mobile ? 30 : 40,
+                              fontWeight: FontWeight.w800,
+                              color: const Color(0xFF111827),
+                              height: 1.12,
+                            ),
+                    children: const [
+                      TextSpan(text: 'Built for '),
+                      TextSpan(
+                        text: 'Modern Teams',
+                        style: TextStyle(color: Color(0xFF5C5BFF)),
+                      ),
+                    ],
                   ),
                 ),
-                const SizedBox(height: 18),
+                const SizedBox(height: 22),
                 Container(
-                  padding: const EdgeInsets.all(4),
+                  width: stacked ? double.infinity : 260,
+                  padding: const EdgeInsets.all(6),
                   decoration: BoxDecoration(
-                    color: const Color(0xFFE8EBFF),
+                    color: const Color(0xFFF0F2FF),
                     borderRadius: BorderRadius.circular(14),
+                    border: Border.all(color: const Color(0xFFE2E6F5)),
                   ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: const [
-                      _TabPill('Teams', true),
-                      _TabPill('Members', false),
-                      _TabPill('Renewals', false),
+                      _SideNavItem(label: 'Dashboard', selected: true),
+                      _SideNavItem(label: 'Members', selected: false),
+                      _SideNavItem(label: 'Subscriptions', selected: false),
+                      _SideNavItem(
+                        label: 'Renewals',
+                        selected: false,
+                        isLast: true,
+                      ),
                     ],
                   ),
                 ),
                 const SizedBox(height: 20),
-                for (final label in const [
-                  'Members',
-                  'Subscriptions',
-                  'Renewals',
-                ])
-                  Padding(
-                    padding: const EdgeInsets.only(bottom: 14),
-                    child: Row(
-                      children: [
-                        const Icon(
-                          Icons.check_box_outline_blank_rounded,
-                          size: 16,
-                          color: Color(0xFF9CA3AF),
-                        ),
-                        const SizedBox(width: 10),
-                        Text(
-                          label,
-                          style: Theme.of(context).textTheme.bodyMedium
-                              ?.copyWith(
-                                color: const Color(0xFF6B7280),
-                                fontWeight: FontWeight.w600,
-                              ),
-                        ),
-                      ],
-                    ),
+                Text(
+                  'One workspace for members, renewals, and revenue — with statuses and reminders that keep your team aligned.',
+                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                    color: const Color(0xFF6B7280),
+                    height: 1.55,
                   ),
+                ),
               ],
             ),
           );
@@ -566,26 +766,48 @@ class _TeamSection extends StatelessWidget {
   }
 }
 
-class _TabPill extends StatelessWidget {
-  const _TabPill(this.label, this.active);
+class _SideNavItem extends StatelessWidget {
+  const _SideNavItem({
+    required this.label,
+    required this.selected,
+    this.isLast = false,
+  });
 
   final String label;
-  final bool active;
+  final bool selected;
+  final bool isLast;
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 2),
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-      decoration: BoxDecoration(
-        color: active ? Colors.white : Colors.transparent,
+    return Padding(
+      padding: EdgeInsets.only(bottom: isLast ? 0 : 4),
+      child: Material(
+        color: selected ? Colors.white : Colors.transparent,
         borderRadius: BorderRadius.circular(10),
-      ),
-      child: Text(
-        label,
-        style: Theme.of(context).textTheme.bodySmall?.copyWith(
-          color: active ? const Color(0xFF5C5BFF) : const Color(0xFF6B7280),
-          fontWeight: FontWeight.w700,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+          child: Row(
+            children: [
+              Icon(
+                Icons.circle,
+                size: 8,
+                color: selected
+                    ? const Color(0xFF5C5BFF)
+                    : const Color(0xFFD1D5DB),
+              ),
+              const SizedBox(width: 10),
+              Text(
+                label,
+                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                  color: selected
+                      ? const Color(0xFF5C5BFF)
+                      : const Color(0xFF6B7280),
+                  fontWeight: FontWeight.w700,
+                  fontSize: 14,
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -613,9 +835,13 @@ class _DashboardMock extends StatelessWidget {
           children: [
             Row(
               children: const [
-                Expanded(child: _StatChip('Revenue', '+18%', Color(0xFFDCFCE7))),
+                Expanded(
+                  child: _StatChip('Revenue', '+18%', Color(0xFFDCFCE7)),
+                ),
                 SizedBox(width: 12),
-                Expanded(child: _StatChip('Renewals', '124', Color(0xFFE0E7FF))),
+                Expanded(
+                  child: _StatChip('Renewals', '124', Color(0xFFE0E7FF)),
+                ),
                 SizedBox(width: 12),
                 Expanded(child: _StatChip('Alerts', '8', Color(0xFFFDE68A))),
               ],
@@ -725,11 +951,17 @@ class _StatChip extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(color: color, borderRadius: BorderRadius.circular(14)),
+      decoration: BoxDecoration(
+        color: color,
+        borderRadius: BorderRadius.circular(14),
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(label, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700)),
+          Text(
+            label,
+            style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700),
+          ),
           const SizedBox(height: 10),
           Text(
             value,
@@ -746,11 +978,7 @@ class _StatChip extends StatelessWidget {
 }
 
 class _StepSection extends StatelessWidget {
-  const _StepSection({
-    super.key,
-    required this.padding,
-    required this.mobile,
-  });
+  const _StepSection({super.key, required this.padding, required this.mobile});
 
   final double padding;
   final bool mobile;
@@ -768,7 +996,7 @@ class _StepSection extends StatelessWidget {
             style: Theme.of(context).textTheme.headlineMedium?.copyWith(
               fontSize: mobile ? 28 : 34,
               fontWeight: FontWeight.w800,
-              color: const Color(0xFF111827),
+              color: const Color(0xFF5C5BFF),
             ),
           ),
           const SizedBox(height: 28),
@@ -776,7 +1004,9 @@ class _StepSection extends StatelessWidget {
             spacing: 20,
             runSpacing: 20,
             alignment: WrapAlignment.center,
-            children: steps.map((step) => SizedBox(width: 280, child: _StepCard(step))).toList(),
+            children: steps
+                .map((step) => SizedBox(width: 280, child: _StepCard(step)))
+                .toList(),
           ),
         ],
       ),
@@ -796,13 +1026,13 @@ class _StepCard extends StatelessWidget {
       child: Column(
         children: [
           Container(
-            width: 42,
-            height: 42,
-            decoration: BoxDecoration(
-              color: const Color(0xFFE3E7FF),
-              borderRadius: BorderRadius.circular(14),
+            width: 48,
+            height: 48,
+            decoration: const BoxDecoration(
+              color: Color(0xFF5C5BFF),
+              shape: BoxShape.circle,
             ),
-            child: Icon(step.icon, color: const Color(0xFF5C5BFF)),
+            child: Icon(step.icon, color: Colors.white, size: 24),
           ),
           const SizedBox(height: 14),
           Text(
@@ -840,9 +1070,9 @@ class _CtaSection extends StatelessWidget {
       color: const Color(0xFF101934),
       child: Center(
         child: ConstrainedBox(
-          constraints: const BoxConstraints(
+          constraints: BoxConstraints(
             maxWidth: 1440,
-            minHeight: 647,
+            minHeight: MediaQuery.sizeOf(context).width < 600 ? 420 : 560,
           ),
           child: Padding(
             padding: EdgeInsets.fromLTRB(padding, 54, padding, 54),
@@ -862,7 +1092,7 @@ class _CtaSection extends StatelessWidget {
                         'Start Automating\nYour Renewals Today',
                         style: Theme.of(context).textTheme.headlineMedium
                             ?.copyWith(
-                              fontSize: 38,
+                              fontSize: stacked ? 28 : 38,
                               fontWeight: FontWeight.w900,
                               color: Colors.white,
                               height: 1.05,
@@ -971,7 +1201,7 @@ class _LeadCard extends StatelessWidget {
               borderRadius: BorderRadius.circular(14),
             ),
             child: Text(
-              'Request Demo',
+              'Request enquiry',
               textAlign: TextAlign.center,
               style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                 color: Colors.white,
@@ -1025,11 +1255,7 @@ class _DarkField extends StatelessWidget {
 }
 
 class _FaqSection extends StatelessWidget {
-  const _FaqSection({
-    super.key,
-    required this.padding,
-    required this.mobile,
-  });
+  const _FaqSection({super.key, required this.padding, required this.mobile});
 
   final double padding;
   final bool mobile;
@@ -1043,7 +1269,7 @@ class _FaqSection extends StatelessWidget {
         builder: (context, constraints) {
           final stacked = constraints.maxWidth < 900;
           Widget leftChild = Column(
-            children: faqs.map((faq) => _FaqCard(faq)).toList(),
+            children: faqs.map((faq) => _ExpandableFaqCard(faq)).toList(),
           );
           const rightChild = _QuestionCard();
           return Column(
@@ -1061,9 +1287,15 @@ class _FaqSection extends StatelessWidget {
                 direction: stacked ? Axis.vertical : Axis.horizontal,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  if (stacked) leftChild else Expanded(flex: 5, child: leftChild),
+                  if (stacked)
+                    leftChild
+                  else
+                    Expanded(flex: 5, child: leftChild),
                   SizedBox(width: stacked ? 0 : 18, height: stacked ? 18 : 0),
-                  if (stacked) rightChild else const Expanded(flex: 6, child: rightChild),
+                  if (stacked)
+                    rightChild
+                  else
+                    const Expanded(flex: 6, child: rightChild),
                 ],
               ),
               const SizedBox(height: 38),
@@ -1081,7 +1313,7 @@ class _FaqSection extends StatelessWidget {
                     ),
                     const SizedBox(height: 8),
                     Text(
-                      'Most powerful subscription renewal management software, built for businesses that hate to leak revenue.',
+                      'Most powerful subscription renewal management platform — built for businesses that hate leaking revenue.',
                       style: Theme.of(context).textTheme.bodySmall?.copyWith(
                         color: const Color(0xFF6B7280),
                         height: 1.5,
@@ -1105,39 +1337,80 @@ class _FaqSection extends StatelessWidget {
   }
 }
 
-class _FaqCard extends StatelessWidget {
-  const _FaqCard(this.faq);
+class _ExpandableFaqCard extends StatefulWidget {
+  const _ExpandableFaqCard(this.faq);
 
   final _Faq faq;
+
+  @override
+  State<_ExpandableFaqCard> createState() => _ExpandableFaqCardState();
+}
+
+class _ExpandableFaqCardState extends State<_ExpandableFaqCard> {
+  bool _open = false;
 
   @override
   Widget build(BuildContext context) {
     return Container(
       width: double.infinity,
       margin: const EdgeInsets.only(bottom: 12),
-      padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(18),
+        borderRadius: BorderRadius.circular(16),
         border: Border.all(color: const Color(0xFFE6EAF6)),
+        boxShadow: const [
+          BoxShadow(
+            color: Color(0x080F172A),
+            blurRadius: 16,
+            offset: Offset(0, 6),
+          ),
+        ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            faq.question,
-            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-              color: const Color(0xFF111827),
-              fontWeight: FontWeight.w800,
+          InkWell(
+            onTap: () => setState(() => _open = !_open),
+            borderRadius: BorderRadius.circular(16),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      widget.faq.question,
+                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                        color: const Color(0xFF111827),
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
+                  ),
+                  Icon(
+                    _open
+                        ? Icons.expand_less_rounded
+                        : Icons.expand_more_rounded,
+                    color: const Color(0xFF6B7280),
+                  ),
+                ],
+              ),
             ),
           ),
-          const SizedBox(height: 8),
-          Text(
-            faq.answer,
-            style: Theme.of(context).textTheme.bodySmall?.copyWith(
-              color: const Color(0xFF6B7280),
-              height: 1.5,
+          AnimatedCrossFade(
+            firstChild: const SizedBox(width: double.infinity),
+            secondChild: Padding(
+              padding: const EdgeInsets.fromLTRB(18, 0, 18, 16),
+              child: Text(
+                widget.faq.answer,
+                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                  color: const Color(0xFF6B7280),
+                  height: 1.55,
+                ),
+              ),
             ),
+            crossFadeState: _open
+                ? CrossFadeState.showSecond
+                : CrossFadeState.showFirst,
+            duration: const Duration(milliseconds: 200),
           ),
         ],
       ),
@@ -1167,9 +1440,19 @@ class _QuestionCard extends StatelessWidget {
               fontWeight: FontWeight.w800,
             ),
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: 14),
+          const _MockField(label: 'Email Address'),
+          const SizedBox(height: 14),
+          Text(
+            'Message',
+            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+              color: const Color(0xFF6B7280),
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+          const SizedBox(height: 6),
           Container(
-            height: 156,
+            height: 120,
             width: double.infinity,
             padding: const EdgeInsets.all(14),
             decoration: BoxDecoration(
@@ -1180,26 +1463,26 @@ class _QuestionCard extends StatelessWidget {
             alignment: Alignment.topLeft,
             child: Text(
               'Type your message here...',
-              style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                color: const Color(0xFF9CA3AF),
-              ),
+              style: Theme.of(
+                context,
+              ).textTheme.bodySmall?.copyWith(color: const Color(0xFF9CA3AF)),
             ),
           ),
-          const SizedBox(height: 14),
-          Container(
-            width: double.infinity,
-            padding: const EdgeInsets.symmetric(vertical: 14),
-            decoration: BoxDecoration(
-              color: const Color(0xFFC8CEFF),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Text(
-              'Send',
-              textAlign: TextAlign.center,
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                color: Colors.white,
-                fontWeight: FontWeight.w700,
+          const SizedBox(height: 16),
+          FilledButton(
+            onPressed: () {},
+            style: FilledButton.styleFrom(
+              backgroundColor: const Color(0xFF5C5BFF),
+              foregroundColor: Colors.white,
+              elevation: 0,
+              minimumSize: const Size(double.infinity, 48),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
               ),
+            ),
+            child: const Text(
+              'Send',
+              style: TextStyle(fontWeight: FontWeight.w700),
             ),
           ),
         ],
@@ -1209,24 +1492,75 @@ class _QuestionCard extends StatelessWidget {
 }
 
 const features = [
-  _Feature('Smart Renewal Alerts', 'Get reminded before plans expire.', Icons.notifications_active_rounded, Color(0xFF7293FF)),
-  _Feature('Payment Recovery', 'Spot overdue renewals and follow up fast.', Icons.payments_rounded, Color(0xFF7CC7FF)),
-  _Feature('Analytics Dashboard', 'Track trends, losses, and recovered revenue.', Icons.analytics_rounded, Color(0xFF9D7CFF)),
-  _Feature('Customer Management', 'Keep plans and member records organized.', Icons.people_alt_rounded, Color(0xFFE873FF)),
-  _Feature('Auto Renewals', 'Reduce manual work with scheduled reminders.', Icons.autorenew_rounded, Color(0xFF26C281)),
-  _Feature('Business Insights', 'Turn renewal data into actions your team can take.', Icons.bar_chart_rounded, Color(0xFFFFB547)),
+  _Feature(
+    'Smart Renewal Alerts',
+    'Get reminded before plans expire.',
+    Icons.notifications_active_rounded,
+    Color(0xFF7293FF),
+  ),
+  _Feature(
+    'Payment Recovery',
+    'Spot overdue renewals and follow up fast.',
+    Icons.payments_rounded,
+    Color(0xFF7CC7FF),
+  ),
+  _Feature(
+    'Analytics Dashboard',
+    'Track trends, losses, and recovered revenue.',
+    Icons.analytics_rounded,
+    Color(0xFF9D7CFF),
+  ),
+  _Feature(
+    'Customer Management',
+    'Keep plans and member records organized.',
+    Icons.people_alt_rounded,
+    Color(0xFFE873FF),
+  ),
+  _Feature(
+    'Auto Renewals',
+    'Reduce manual work with scheduled reminders.',
+    Icons.autorenew_rounded,
+    Color(0xFF26C281),
+  ),
+  _Feature(
+    'Business Insights',
+    'Turn renewal data into actions your team can take.',
+    Icons.bar_chart_rounded,
+    Color(0xFFFFB547),
+  ),
 ];
 
 const steps = [
-  _Step('Add your customers', 'Import your existing members and their plans in minutes.', Icons.person_add_alt_1_rounded),
-  _Step('Set renewal schedules', 'Define when your team should follow up before expiries.', Icons.calendar_month_rounded),
-  _Step('Automate & track revenue', 'Recover more income with reminders and insights.', Icons.sync_alt_rounded),
+  _Step(
+    'Add your customers',
+    'Import your existing members and their plans in minutes.',
+    Icons.person_add_alt_1_rounded,
+  ),
+  _Step(
+    'Set renewal schedules',
+    'Define when your team should follow up before expiries.',
+    Icons.calendar_month_rounded,
+  ),
+  _Step(
+    'Automate & track revenue',
+    'Recover more income with reminders and insights.',
+    Icons.sync_alt_rounded,
+  ),
 ];
 
 const faqs = [
-  _Faq('Can I customize the notification messages?', 'Yes. Teams can tailor reminder content so follow-ups feel aligned with their business tone.'),
-  _Faq('Is my customer data secure?', 'The platform is designed around business account workflows, clear access control, and protected records.'),
-  _Faq('What businesses is Recrip best for?', 'It works well for gyms, agencies, service teams, and any business built on recurring renewals.'),
+  _Faq(
+    'Can I customize the notification messages?',
+    'Yes. Teams can tailor reminder content so follow-ups feel aligned with their business tone.',
+  ),
+  _Faq(
+    'Is my customer data secure?',
+    'The platform is designed around business account workflows, clear access control, and protected records.',
+  ),
+  _Faq(
+    'What businesses is Recrip best for?',
+    'It works well for gyms, agencies, service teams, and any business built on recurring renewals.',
+  ),
 ];
 
 class _Feature {

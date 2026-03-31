@@ -11,12 +11,15 @@ class AuthPrimaryButton extends StatelessWidget {
     required this.onPressed,
     required this.isEnabled,
     this.isLoading = false,
+    this.enabledBackgroundColor,
   });
 
   final String text;
   final VoidCallback? onPressed;
   final bool isEnabled;
   final bool isLoading;
+  /// When provided and [isEnabled], used instead of [AppConstants.buttonEnabledColor].
+  final Color? enabledBackgroundColor;
 
   @override
   Widget build(BuildContext context) {
@@ -27,7 +30,7 @@ class AuthPrimaryButton extends StatelessWidget {
         elevation: 0,
         minimumSize: Size(double.infinity, AppConstants.buttonHeight),
         backgroundColor: active
-            ? AppConstants.buttonEnabledColor
+            ? (enabledBackgroundColor ?? AppConstants.buttonEnabledColor)
             : AppConstants.buttonDisabledColor,
         disabledBackgroundColor: AppConstants.buttonDisabledColor,
         foregroundColor: Colors.white,

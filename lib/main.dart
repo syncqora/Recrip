@@ -137,7 +137,7 @@ class _MyAppState extends State<MyApp> {
               //   MiniSwaggerProtocolGestures.longPress,
               // );
             },
-            child: Saas(title: "Saas"),
+            child: Saas(title: "Recrip"),
           );
         }
       },
