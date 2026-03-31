@@ -193,7 +193,6 @@ class _HeroSection extends StatelessWidget {
                                   height: 1.05,
                                 ),
                           ),
-                          const SizedBox(height: 18),
                           Text(
                             'Recrip helps businesses automate renewals, track customers, and recover missed payments — all from one powerful dashboard.',
                             textAlign: stacked
@@ -201,7 +200,7 @@ class _HeroSection extends StatelessWidget {
                                 : TextAlign.left,
                             style: Get.theme.textTheme.bodyLarge?.copyWith(
                               fontWeight: FontWeight.w600,
-                              color: Color(0xFF475569),
+                              color: const Color(0xFF475569),
                             ),
                           ),
                         ],
