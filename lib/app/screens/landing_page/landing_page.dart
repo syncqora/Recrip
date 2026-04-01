@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:get/get.dart';
 import 'package:saas/app/screens/authentication/widgets/auth_widgets.dart';
@@ -23,6 +23,7 @@ class _LandingPageState extends State<LandingPage> {
   final _stepsKey = GlobalKey();
   final _pricingKey = GlobalKey();
   final _contactKey = GlobalKey();
+  _TopNavTab _activeNavTab = _TopNavTab.features;
 
   @override
   void initState() {
@@ -59,6 +60,11 @@ class _LandingPageState extends State<LandingPage> {
     );
   }
 
+  Future<void> _onNavTap(_TopNavTab tab, GlobalKey key) async {
+    setState(() => _activeNavTab = tab);
+    await _scrollTo(key);
+  }
+
   @override
   Widget build(BuildContext context) {
     final width = MediaQuery.sizeOf(context).width;
@@ -71,42 +77,50 @@ class _LandingPageState extends State<LandingPage> {
 
     return Scaffold(
       backgroundColor: const Color(0xFFF5F7FF),
-      body: SingleChildScrollView(
-        child: Column(
-          children: [
-            _HeroSection(
-              padding: pad,
-              onFeatures: () => _scrollTo(_featuresKey),
-              onSteps: () => _scrollTo(_stepsKey),
-              onPricing: () => _scrollTo(_pricingKey),
-              onContact: () => _scrollTo(_contactKey),
+      body: Column(
+        children: [
+          Container(
+            width: double.infinity,
+            padding: EdgeInsets.fromLTRB(pad, 18, pad, 14),
+            decoration: const BoxDecoration(
+              color: Colors.white,
+              border: Border(
+                bottom: BorderSide(color: Color(0xFFE7EBF3)),
+              ),
             ),
-            _FeatureSection(key: _featuresKey, padding: pad, mobile: mobile),
-            _TeamSection(padding: pad, mobile: mobile),
-            _StepSection(key: _stepsKey, padding: pad, mobile: mobile),
-            _CtaSection(key: _pricingKey, padding: pad),
-            _FaqSection(key: _contactKey, padding: pad, mobile: mobile),
-          ],
-        ),
+            child: _TopNav(
+              compact: mobile,
+              selectedTab: _activeNavTab,
+              onFeatures: () => _onNavTap(_TopNavTab.features, _featuresKey),
+              onSteps: () => _onNavTap(_TopNavTab.howItWorks, _stepsKey),
+              onPricing: () => _onNavTap(_TopNavTab.pricing, _pricingKey),
+              onContact: () => _onNavTap(_TopNavTab.contact, _contactKey),
+            ),
+          ),
+          Expanded(
+            child: SingleChildScrollView(
+              child: Column(
+                children: [
+                  _HeroSection(padding: pad),
+                  _FeatureSection(key: _featuresKey, padding: pad, mobile: mobile),
+                  _TeamSection(padding: pad, mobile: mobile),
+                  _StepSection(key: _stepsKey, padding: pad, mobile: mobile),
+                  _CtaSection(key: _pricingKey, padding: pad),
+                  _FaqSection(key: _contactKey, padding: pad, mobile: mobile),
+                ],
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
 }
 
 class _HeroSection extends StatelessWidget {
-  const _HeroSection({
-    required this.padding,
-    required this.onFeatures,
-    required this.onSteps,
-    required this.onPricing,
-    required this.onContact,
-  });
+  const _HeroSection({required this.padding});
 
   final double padding;
-  final VoidCallback onFeatures;
-  final VoidCallback onSteps;
-  final VoidCallback onPricing;
-  final VoidCallback onContact;
 
   @override
   Widget build(BuildContext context) {
@@ -148,14 +162,7 @@ class _HeroSection extends StatelessWidget {
             padding: EdgeInsets.fromLTRB(padding, 26, padding, 54),
             child: Column(
               children: [
-                _TopNav(
-                  compact: false,
-                  onFeatures: onFeatures,
-                  onSteps: onSteps,
-                  onPricing: onPricing,
-                  onContact: onContact,
-                ),
-                const SizedBox(height: 34),
+                const SizedBox(height: 10),
                 Row(
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
@@ -243,9 +250,12 @@ class _HeroTextBlock extends StatelessWidget {
   }
 }
 
-class _TopNav extends StatelessWidget {
+enum _TopNavTab { features, howItWorks, pricing, contact }
+
+class _TopNav extends StatefulWidget {
   const _TopNav({
     required this.compact,
+    required this.selectedTab,
     required this.onFeatures,
     required this.onSteps,
     required this.onPricing,
@@ -253,10 +263,18 @@ class _TopNav extends StatelessWidget {
   });
 
   final bool compact;
+  final _TopNavTab selectedTab;
   final VoidCallback onFeatures;
   final VoidCallback onSteps;
   final VoidCallback onPricing;
   final VoidCallback onContact;
+
+  @override
+  State<_TopNav> createState() => _TopNavState();
+}
+
+class _TopNavState extends State<_TopNav> {
+  _TopNavTab? _hoveredTab;
 
   void _openMobileNav(BuildContext context) {
     showModalBottomSheet<void>(
@@ -272,28 +290,28 @@ class _TopNav extends StatelessWidget {
                 title: const Text('Features'),
                 onTap: () {
                   Navigator.pop(ctx);
-                  onFeatures();
+                  widget.onFeatures();
                 },
               ),
               ListTile(
                 title: const Text('How it works'),
                 onTap: () {
                   Navigator.pop(ctx);
-                  onSteps();
+                  widget.onSteps();
                 },
               ),
               ListTile(
                 title: const Text('Pricing'),
                 onTap: () {
                   Navigator.pop(ctx);
-                  onPricing();
+                  widget.onPricing();
                 },
               ),
               ListTile(
                 title: const Text('Contact'),
                 onTap: () {
                   Navigator.pop(ctx);
-                  onContact();
+                  widget.onContact();
                 },
               ),
             ],
@@ -305,20 +323,34 @@ class _TopNav extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    Widget link(String text, VoidCallback onTap) {
-      return TextButton(
-        onPressed: onTap,
-        style: TextButton.styleFrom(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-          minimumSize: Size.zero,
-          tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-        ),
-        child: Text(
-          text,
-          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-            color: const Color(0xFF4B5563),
-            fontWeight: FontWeight.w600,
-            fontSize: 14,
+    Widget link({
+      required _TopNavTab tab,
+      required String text,
+      required VoidCallback onTap,
+    }) {
+      final isActive = widget.selectedTab == tab;
+      final isHovered = _hoveredTab == tab;
+      final color = (isActive || isHovered)
+          ? const Color(0xFF4F46E5)
+          : const Color(0xFF4B5563);
+
+      return MouseRegion(
+        onEnter: (_) => setState(() => _hoveredTab = tab),
+        onExit: (_) => setState(() => _hoveredTab = null),
+        child: TextButton(
+          onPressed: onTap,
+          style: TextButton.styleFrom(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            minimumSize: Size.zero,
+            tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+          ),
+          child: Text(
+            text,
+            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+              color: color,
+              fontWeight: FontWeight.w700,
+              fontSize: 14,
+            ),
           ),
         ),
       );
@@ -340,7 +372,7 @@ class _TopNav extends StatelessWidget {
       ),
     );
 
-    if (compact) {
+    if (widget.compact) {
       return Row(
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
@@ -365,13 +397,29 @@ class _TopNav extends StatelessWidget {
           child: Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              link('Features', onFeatures),
+              link(
+                tab: _TopNavTab.features,
+                text: 'Features',
+                onTap: widget.onFeatures,
+              ),
               const SizedBox(width: 36),
-              link('How it works', onSteps),
+              link(
+                tab: _TopNavTab.howItWorks,
+                text: 'How it works',
+                onTap: widget.onSteps,
+              ),
               const SizedBox(width: 36),
-              link('Pricing', onPricing),
+              link(
+                tab: _TopNavTab.pricing,
+                text: 'Pricing',
+                onTap: widget.onPricing,
+              ),
               const SizedBox(width: 36),
-              link('Contact', onContact),
+              link(
+                tab: _TopNavTab.contact,
+                text: 'Contact',
+                onTap: widget.onContact,
+              ),
             ],
           ),
         ),
@@ -724,6 +772,13 @@ class _TeamSection extends StatefulWidget {
 class _TeamSectionState extends State<_TeamSection> {
   _PreviewTab _selectedTab = _PreviewTab.dashboard;
 
+  _PreviewTab _previewTabForStack(_PreviewTab tab) {
+    if (tab == _PreviewTab.subscriptions) {
+      return _PreviewTab.members;
+    }
+    return tab;
+  }
+
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -760,7 +815,7 @@ class _TeamSectionState extends State<_TeamSection> {
                           color: AppConstants.textColor,
                         ),
                       ),
-                       TextSpan(
+                      TextSpan(
                         text: 'Modern\nTeams',
                         style: Get.textTheme.bodyLarge?.copyWith(
                           fontSize: 40,
@@ -775,17 +830,13 @@ class _TeamSectionState extends State<_TeamSection> {
                 const SizedBox(height: 22),
                 Container(
                   width: stacked ? double.infinity : 260,
-                  padding: const EdgeInsets.all(6),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFF0F2FF),
-                    borderRadius: BorderRadius.circular(14),
-                    border: Border.all(color: const Color(0xFFE2E6F5)),
-                  ),
+                  padding: const EdgeInsets.symmetric(vertical: 2),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
                       _SideNavItem(
                         label: 'Dashboard',
+                        iconAsset: AppIcons.dashboard,
                         selected: _selectedTab == _PreviewTab.dashboard,
                         onTap: () => setState(
                           () => _selectedTab = _PreviewTab.dashboard,
@@ -793,16 +844,22 @@ class _TeamSectionState extends State<_TeamSection> {
                       ),
                       _SideNavItem(
                         label: 'Members',
+                        iconAsset: AppIcons.usersRound,
                         selected: _selectedTab == _PreviewTab.members,
                         onTap: () =>
                             setState(() => _selectedTab = _PreviewTab.members),
                       ),
-                      const _SideNavItem(
+                      _SideNavItem(
                         label: 'Subscriptions',
-                        selected: false,
+                        iconAsset: AppIcons.calendarDays,
+                        selected: _selectedTab == _PreviewTab.subscriptions,
+                        onTap: () => setState(
+                          () => _selectedTab = _PreviewTab.subscriptions,
+                        ),
                       ),
                       _SideNavItem(
                         label: 'Renewals',
+                        iconAsset: AppIcons.calendarSync,
                         selected: _selectedTab == _PreviewTab.renewals,
                         onTap: () =>
                             setState(() => _selectedTab = _PreviewTab.renewals),
@@ -822,10 +879,17 @@ class _TeamSectionState extends State<_TeamSection> {
               ],
             ),
           );
-          final rightChild = _DashboardMock(selectedTab: _selectedTab);
+          final rightChild = _DashboardMock(
+            selectedTab: _previewTabForStack(_selectedTab),
+          );
+          // Do not use CrossAxisAlignment.stretch here: this Row lives in a
+          // scrollable Column with unbounded height; stretch + Expanded yields
+          // infinite cross-axis constraints and breaks layout / hit testing.
           return Flex(
             direction: stacked ? Axis.vertical : Axis.horizontal,
-            crossAxisAlignment: CrossAxisAlignment.start,
+            crossAxisAlignment: stacked
+                ? CrossAxisAlignment.center
+                : CrossAxisAlignment.start,
             children: [
               if (stacked) leftChild else Expanded(flex: 4, child: leftChild),
               if (stacked)
@@ -846,12 +910,14 @@ class _TeamSectionState extends State<_TeamSection> {
 class _SideNavItem extends StatelessWidget {
   const _SideNavItem({
     required this.label,
+    required this.iconAsset,
     required this.selected,
     this.isLast = false,
     this.onTap,
   });
 
   final String label;
+  final String iconAsset;
   final bool selected;
   final bool isLast;
   final VoidCallback? onTap;
@@ -859,31 +925,33 @@ class _SideNavItem extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: EdgeInsets.only(bottom: isLast ? 0 : 4),
+      padding: EdgeInsets.only(bottom: isLast ? 0 : 14),
       child: Material(
-        color: selected ? Colors.white : Colors.transparent,
-        borderRadius: BorderRadius.circular(10),
+        color: selected ? const Color(0xFFE9ECFA) : Colors.transparent,
+        borderRadius: BorderRadius.circular(999),
         child: InkWell(
           onTap: onTap,
-          borderRadius: BorderRadius.circular(10),
+          borderRadius: BorderRadius.circular(999),
           child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
             child: Row(
               children: [
-                Icon(
-                  Icons.circle,
-                  size: 8,
-                  color: selected
-                      ? const Color(0xFF5C5BFF)
-                      : const Color(0xFFD1D5DB),
+                SvgPicture.asset(
+                  iconAsset,
+                  width: 24,
+                  height: 24,
+                  colorFilter: ColorFilter.mode(
+                    selected ? const Color(0xFF4F46E5) : const Color(0xFF64748B),
+                    BlendMode.srcIn,
+                  ),
                 ),
-                const SizedBox(width: 10),
+                const SizedBox(width: 14),
                 Text(
                   label,
                   style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                     color: selected
-                        ? const Color(0xFF5C5BFF)
-                        : const Color(0xFF6B7280),
+                        ? const Color(0xFF4F46E5)
+                        : const Color(0xFF475569),
                     fontWeight: FontWeight.w700,
                     fontSize: 14,
                   ),
@@ -897,12 +965,18 @@ class _SideNavItem extends StatelessWidget {
   }
 }
 
-enum _PreviewTab { dashboard, members, renewals }
+enum _PreviewTab { dashboard, members, subscriptions, renewals }
 
 class _DashboardMock extends StatelessWidget {
   const _DashboardMock({required this.selectedTab});
 
   final _PreviewTab selectedTab;
+
+  /// Fallback aspect when the row does not give a finite max height.
+  static const double _aspect = 392 / 792;
+
+  /// Inset between the navy frame and the stacked previews (all sides).
+  static const double _innerPadding = 10;
 
   @override
   Widget build(BuildContext context) {
@@ -912,25 +986,57 @@ class _DashboardMock extends StatelessWidget {
       selectedTab,
     ];
 
-    return Container(
-      width: 792,
-      height: 392,
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: const Color(0xFF0F1835),
-        borderRadius: BorderRadius.circular(26),
-      ),
-      child: Stack(
-        clipBehavior: Clip.none,
-        children: [
-          for (var index = 0; index < orderedCards.length; index++)
-            _PreviewCard(
-              tab: orderedCards[index],
-              layerIndex: index,
-              isFront: orderedCards[index] == selectedTab,
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final w = constraints.maxWidth.isFinite && constraints.maxWidth > 0
+            ? constraints.maxWidth
+            : 792.0;
+        final aspectH = w * _aspect;
+        final maxH = constraints.maxHeight;
+        // With unbounded height (scroll), maxHeight is infinity — only aspect
+        // height is valid. If a finite max is ever passed, stay within it.
+        final h = maxH.isFinite && maxH > 0
+            ? aspectH.clamp(0.0, maxH)
+            : aspectH;
+
+        return SizedBox(
+          width: w,
+          height: h,
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(26),
+            child: ColoredBox(
+              color: const Color(0xFF0F1835),
+              child: Padding(
+                padding: const EdgeInsets.all(_innerPadding),
+                child: LayoutBuilder(
+                  builder: (context, inner) {
+                    final iw = inner.maxWidth;
+                    final ih = inner.maxHeight;
+                    return Stack(
+                      clipBehavior: Clip.hardEdge,
+                      fit: StackFit.expand,
+                      children: [
+                        for (
+                          var index = 0;
+                          index < orderedCards.length;
+                          index++
+                        )
+                          _PreviewCard(
+                            tab: orderedCards[index],
+                            layerIndex: index,
+                            isFront: orderedCards[index] == selectedTab,
+                            stackW: iw,
+                            stackH: ih,
+                          ),
+                      ],
+                    );
+                  },
+                ),
+              ),
             ),
-        ],
-      ),
+          ),
+        );
+      },
     );
   }
 }
@@ -940,68 +1046,87 @@ class _PreviewCard extends StatelessWidget {
     required this.tab,
     required this.layerIndex,
     required this.isFront,
+    required this.stackW,
+    required this.stackH,
   });
 
   final _PreviewTab tab;
   final int layerIndex;
   final bool isFront;
+  final double stackW;
+  final double stackH;
 
   @override
   Widget build(BuildContext context) {
-    final specs = [
-      const _PreviewSpec(top: 46, right: 8, width: 232, height: 250),
-      const _PreviewSpec(top: 18, right: 58, width: 314, height: 288),
-      const _PreviewSpec(top: -2, right: 154, width: 592, height: 328),
-    ];
-    final spec = specs[layerIndex];
+    final w = stackW;
+    final h = stackH;
+
+    // Same-size cards, stacked like physical paper: front is leftmost & on top;
+    // middle & back shift right so their right edges peek out (reference UI).
+    final cardW = (w - (w * 0.012) - 8).clamp(0.0, 766.0);
+    final cardH = h * 0.91;
+    final top = (h - cardH) / 2;
+    final baseLeft = w * 0.012;
+    final staggerMid = w * 0.12;
+    final staggerBack = w * 0.24;
+
+    final double left;
+    final double depthScale;
+    switch (layerIndex) {
+      case 0:
+        left = baseLeft + staggerBack;
+        depthScale = 0.87;
+      case 1:
+        left = baseLeft + staggerMid;
+        depthScale = 0.93;
+      case 2:
+        left = baseLeft;
+        depthScale = 1.0;
+      default:
+        return const SizedBox.shrink();
+    }
 
     return Positioned(
-      top: spec.top,
-      right: spec.right,
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 220),
-        curve: Curves.easeOut,
-        width: spec.width,
-        height: spec.height,
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(22),
-          border: Border.all(
-            color: isFront ? const Color(0x150F172A) : Colors.transparent,
-          ),
-          boxShadow: [
-            BoxShadow(
-              color: isFront
-                  ? const Color(0x300F172A)
-                  : const Color(0x1A0F172A),
-              blurRadius: isFront ? 28 : 18,
-              offset: Offset(0, isFront ? 12 : 8),
-            ),
-          ],
-        ),
-        clipBehavior: Clip.antiAlias,
-        child: Image.asset(
-          _previewImageFor(tab),
-          fit: BoxFit.cover,
-          alignment: Alignment.topLeft,
-        ),
+      left: left,
+      top: top,
+      width: cardW,
+      height: cardH,
+      child: Transform.scale(
+        scale: depthScale,
+        alignment: Alignment.center,
+        child: _previewCardBody(context),
       ),
     );
   }
-}
 
-class _PreviewSpec {
-  const _PreviewSpec({
-    required this.top,
-    required this.right,
-    required this.width,
-    required this.height,
-  });
-
-  final double top;
-  final double right;
-  final double width;
-  final double height;
+  Widget _previewCardBody(BuildContext context) {
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 220),
+      curve: Curves.easeOut,
+      width: double.infinity,
+      height: double.infinity,
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(22),
+        border: Border.all(
+          color: isFront ? const Color(0x150F172A) : Colors.transparent,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: isFront ? const Color(0x300F172A) : const Color(0x1A0F172A),
+            blurRadius: isFront ? 28 : 18,
+            offset: Offset(0, isFront ? 12 : 8),
+          ),
+        ],
+      ),
+      clipBehavior: Clip.antiAlias,
+      child: Image.asset(
+        _previewImageFor(tab),
+        fit: BoxFit.cover,
+        alignment: Alignment.topLeft,
+      ),
+    );
+  }
 }
 
 String _previewImageFor(_PreviewTab tab) {
@@ -1009,6 +1134,8 @@ String _previewImageFor(_PreviewTab tab) {
     case _PreviewTab.dashboard:
       return 'assets/images/Dashboard.png';
     case _PreviewTab.members:
+      return 'assets/images/Members.png';
+    case _PreviewTab.subscriptions:
       return 'assets/images/Members.png';
     case _PreviewTab.renewals:
       return 'assets/images/Renewals.png';
@@ -1088,15 +1215,41 @@ class _StepSection extends StatelessWidget {
             ),
             textAlign: TextAlign.center,
           ),
-          const SizedBox(height: 28),
-          Wrap(
-            spacing: 20,
-            runSpacing: 20,
-            alignment: WrapAlignment.center,
-            children: steps
-                .map((step) => SizedBox(width: 280, child: _StepCard(step)))
-                .toList(),
-          ),
+          const SizedBox(height: 60),
+          if (mobile)
+            Wrap(
+              spacing: 20,
+              runSpacing: 20,
+              alignment: WrapAlignment.center,
+              children: steps
+                  .map((step) => SizedBox(width: 280, child: _StepCard(step)))
+                  .toList(),
+            )
+          else
+            SizedBox(
+              width: 1060,
+              child: Stack(
+                children: [
+                  Positioned(
+                    left: 120,
+                    right: 120,
+                    top: 25,
+                    child: Container(height: 1, color: const Color(0xFFE1E5EE)),
+                  ),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Expanded(child: _StepCard(steps[0])),
+                      const SizedBox(width: 40),
+                      Expanded(child: _StepCard(steps[1])),
+                      const SizedBox(width: 40),
+                      Expanded(child: _StepCard(steps[2])),
+                    ],
+                  ),
+                ],
+              ),
+            ),
         ],
       ),
     );
@@ -1110,39 +1263,54 @@ class _StepCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.all(6),
-      child: Column(
-        children: [
-          Container(
-            width: 48,
-            height: 48,
-            decoration: const BoxDecoration(
-              color: Color(0xFF5C5BFF),
-              shape: BoxShape.circle,
-            ),
-            child: Icon(step.icon, color: Colors.white, size: 24),
+    return Column(
+      children: [
+        Container(
+          width: 50,
+          height: 50,
+          decoration: const BoxDecoration(
+            color: Color(0xFF5C5BFF),
+            borderRadius: BorderRadius.all(Radius.circular(10)),
+            boxShadow: [
+              BoxShadow(
+                color: Color(0x40383737),
+                offset: Offset(0, 13),
+                blurRadius: 11.1,
+                spreadRadius: 0,
+              ),
+            ],
           ),
-          const SizedBox(height: 14),
-          Text(
-            step.title,
-            textAlign: TextAlign.center,
-            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-              color: const Color(0xFF111827),
-              fontWeight: FontWeight.w800,
-            ),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            step.description,
-            textAlign: TextAlign.center,
-            style: Theme.of(context).textTheme.bodySmall?.copyWith(
-              color: const Color(0xFF6B7280),
-              height: 1.5,
+          child: Center(
+            child: SvgPicture.asset(
+              step.iconAsset,
+              width: 22,
+              height: 22,
+              colorFilter: const ColorFilter.mode(
+                Colors.white,
+                BlendMode.srcIn,
+              ),
             ),
           ),
-        ],
-      ),
+        ),
+        const SizedBox(height: 22),
+        Text(
+          step.title,
+          textAlign: TextAlign.center,
+          style: Theme.of(
+            context,
+          ).textTheme.bodyLarge?.copyWith(color: AppConstants.textColor),
+        ),
+        const SizedBox(height: 8),
+        Text(
+          step.description,
+          textAlign: TextAlign.center,
+          maxLines: 3,
+          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+            fontWeight: FontWeight.w500,
+            color: AppConstants.supportTextColor,
+          ),
+        ),
+      ],
     );
   }
 }
@@ -1177,22 +1345,35 @@ class _CtaSection extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Text(
-                        'Start Automating\nYour Renewals Today',
-                        style: Theme.of(context).textTheme.headlineMedium
-                            ?.copyWith(
-                              fontSize: stacked ? 28 : 38,
-                              fontWeight: FontWeight.w900,
-                              color: Colors.white,
-                              height: 1.05,
+                      Text.rich(
+                        TextSpan(
+                          children: [
+                            TextSpan(
+                              text: 'Start Automating\n',
+                              style: Get.textTheme.bodyLarge?.copyWith(
+                                fontSize: 40,
+                                fontWeight: FontWeight.w900,
+                                color: Colors.white,
+                                height: 0.95,
+                              ),
                             ),
+                            TextSpan(
+                              text: 'Your Renewals Today',
+                              style: Get.textTheme.bodyLarge?.copyWith(
+                                fontSize: 40,
+                                fontWeight: FontWeight.w900,
+                                color: const Color(0xFF4F46E5),
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
                       const SizedBox(height: 14),
                       Text(
-                        'Hundreds of businesses use this to recover lost payments and stay on top of subscription health.',
-                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                          color: const Color(0xFFB8C1E0),
-                          height: 1.6,
+                        'Join hundreds of businesses that are recovering lost revenue every single day. No credit card required to start.',
+                        style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                          color: AppConstants.supportTextColor,
+                          height: 1.2,
                         ),
                       ),
                       const SizedBox(height: 26),
@@ -1206,17 +1387,26 @@ class _CtaSection extends StatelessWidget {
                           padding: const EdgeInsets.only(bottom: 12),
                           child: Row(
                             children: [
-                              const Icon(
-                                Icons.check_circle,
-                                size: 18,
-                                color: Color(0xFF6C7BFF),
+                              Container(
+                                width: 32,
+                                height: 32,
+                                decoration: const BoxDecoration(
+                                  color: Color(0xFF4F46E5),
+                                  shape: BoxShape.circle,
+                                ),
+                                alignment: Alignment.center,
+                                child: SvgPicture.asset(
+                                  AppIcons.circleCheck,
+                                  width: 18,
+                                  height: 18,
+                                ),
                               ),
                               const SizedBox(width: 10),
                               Text(
                                 item,
-                                style: const TextStyle(
-                                  color: Color(0xFFDCE3FF),
+                                style: Get.textTheme.bodyLarge?.copyWith(
                                   fontWeight: FontWeight.w600,
+                                  color: AppConstants.supportTextColor,
                                 ),
                               ),
                             ],
@@ -1622,18 +1812,18 @@ const features = [
 const steps = [
   _Step(
     'Add your customers',
-    'Import your existing members and their plans in minutes.',
-    Icons.person_add_alt_1_rounded,
+    'Import your existing customer list or sync with your current CRM in seconds.',
+    AppIcons.addCustomer,
   ),
   _Step(
     'Set renewal schedules',
-    'Define when your team should follow up before expiries.',
-    Icons.calendar_month_rounded,
+    'Define when and how you want to notify customers about their upcoming renewals.',
+    AppIcons.clock,
   ),
   _Step(
     'Automate & track revenue',
-    'Recover more income with reminders and insights.',
-    Icons.sync_alt_rounded,
+    'Sit back while Recrip handles the follow-ups and provides real-time growth data.',
+    AppIcons.trendingUp,
   ),
 ];
 
@@ -1662,11 +1852,11 @@ class _Feature {
 }
 
 class _Step {
-  const _Step(this.title, this.description, this.icon);
+  const _Step(this.title, this.description, this.iconAsset);
 
   final String title;
   final String description;
-  final IconData icon;
+  final String iconAsset;
 }
 
 class _Faq {

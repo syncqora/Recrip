@@ -32,4 +32,8 @@ class AppIcons {
   static const String upload = 'assets/icons/upload.svg';
   static const String usersRound = 'assets/icons/users-round.svg';
   static const String usersTab = 'assets/icons/users_tab.svg';
+  static const String addCustomer = 'assets/icons/add-customer.svg';
+  static const String trendingUp = 'assets/icons/trending-up.svg';
+  static const String clock = 'assets/icons/clock.svg';
+  static const String circleCheck = 'assets/icons/circle-check.svg';
 }
