@@ -3,6 +3,7 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:get/get.dart';
 import 'package:saas/app/screens/authentication/widgets/auth_widgets.dart';
 import 'package:saas/app/screens/landing_page/landing_page_controller.dart';
+import 'package:saas/app/screens/landing_page/landing_page_mobile_view.dart';
 import 'package:saas/app/screens/landing_page/landing_page_tablet_view.dart';
 import 'package:saas/core/di/get_injector.dart';
 import 'package:saas/routes/app_pages.dart';
@@ -72,6 +73,10 @@ class _LandingPageState extends State<LandingPage> {
   Widget build(BuildContext context) {
     final width = MediaQuery.sizeOf(context).width;
     final mobile = width < 760;
+
+    if (width < LandingPage.mobileBreakpoint) {
+      return const LandingPageMobileView();
+    }
 
     if (width >= LandingPage.mobileBreakpoint &&
         width < LandingPage.tabletBreakpoint) {
