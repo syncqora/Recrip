@@ -226,11 +226,11 @@ class _MobileHeroSection extends StatelessWidget {
       child: Stack(
         children: [
           Positioned(
-            top: 42,
+            top: 460,
             right: -90,
             child: Container(
-              width: 250,
-              height: 160,
+              width: 580,
+              height: 460,
               decoration: const BoxDecoration(
                 color: Color(0xFF111C3B),
                 borderRadius: BorderRadius.only(
@@ -293,13 +293,6 @@ class _MobileHeroSection extends StatelessWidget {
                   ],
                 ),
                 const SizedBox(height: 14),
-                Row(
-                  children: const [
-                    _HeroMetric(label: '14-day trial'),
-                    SizedBox(width: 10),
-                    _HeroMetric(label: 'No setup fee'),
-                  ],
-                ),
                 const SizedBox(height: 24),
                 const _MobileHeroLoginCard(),
               ],
@@ -394,8 +387,7 @@ class _MobileHeroLoginCard extends StatelessWidget {
                 keyboardType: TextInputType.emailAddress,
                 autocorrect: false,
                 textInputAction: TextInputAction.next,
-                onSubmitted: (_) =>
-                    controller.passwordFocusNode.requestFocus(),
+                onSubmitted: (_) => controller.passwordFocusNode.requestFocus(),
               ),
             ),
           ),
@@ -672,12 +664,13 @@ class _MobilePreviewSection extends StatelessWidget {
                         const SizedBox(width: 8),
                         Text(
                           _mobilePreviewLabel(tab),
-                          style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                            color: selected
-                                ? Colors.white
-                                : const Color(0xFF334155),
-                            fontWeight: FontWeight.w700,
-                          ),
+                          style: Theme.of(context).textTheme.bodySmall
+                              ?.copyWith(
+                                color: selected
+                                    ? Colors.white
+                                    : const Color(0xFF334155),
+                                fontWeight: FontWeight.w700,
+                              ),
                         ),
                       ],
                     ),
@@ -1186,9 +1179,9 @@ class _MobileInputField extends StatelessWidget {
         textAlignVertical: TextAlignVertical.top,
         decoration: InputDecoration(
           hintText: hint,
-          hintStyle: Theme.of(context).textTheme.bodySmall?.copyWith(
-            color: const Color(0xFF9CA3AF),
-          ),
+          hintStyle: Theme.of(
+            context,
+          ).textTheme.bodySmall?.copyWith(color: const Color(0xFF9CA3AF)),
           filled: true,
           fillColor: Colors.white,
           contentPadding: EdgeInsets.fromLTRB(
@@ -1437,7 +1430,12 @@ const _mobileFaqs = [
 ];
 
 class _MobileFeature {
-  const _MobileFeature(this.title, this.description, this.iconAsset, this.color);
+  const _MobileFeature(
+    this.title,
+    this.description,
+    this.iconAsset,
+    this.color,
+  );
 
   final String title;
   final String description;
