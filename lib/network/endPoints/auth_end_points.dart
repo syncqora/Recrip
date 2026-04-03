@@ -1,4 +1,4 @@
-/// Auth-related path fragments (relative to [ApiEndPoints.baseUrl]).
+/// Auth-related path fragments (relative to [ApiEndPoints.authBaseUrl]).
 abstract final class AuthEndPoints {
   AuthEndPoints._();
 

@@ -57,8 +57,19 @@ Future<void> setupGlobalServices() async {
     di.registerLazySingleton<ThemeService>(() => ThemeService());
   }
 
-  if (!Get.isRegistered<ApiServices>()) {
-    Get.put<ApiServices>(ApiServices(), permanent: true);
+  if (!Get.isRegistered<ApiServices>(tag: ApiServicesTag.auth)) {
+    Get.put<ApiServices>(
+      ApiServices(ApiEndPoints.authBaseUrl),
+      tag: ApiServicesTag.auth,
+      permanent: true,
+    );
+  }
+  if (!Get.isRegistered<ApiServices>(tag: ApiServicesTag.dataManagement)) {
+    Get.put<ApiServices>(
+      ApiServices(ApiEndPoints.dataManagementBaseUrl),
+      tag: ApiServicesTag.dataManagement,
+      permanent: true,
+    );
   }
   if (!Get.isRegistered<AuthRepository>()) {
     Get.put<AuthRepository>(

@@ -5,17 +5,32 @@ import 'package:get_storage/get_storage.dart';
 
 import '../../shared/constants/box_constants.dart';
 import '../../shared/utils/app_exceptions.dart';
-import 'api_end_points.dart';
 
 /// HTTP verbs for [ApiServices.callApi] (CoffeeWeb-style).
 enum HttpMethod { get, post, put, delete, patch }
 
+/// [Get.find] tags for the two HTTP clients (auth vs data-management hosts).
+abstract final class ApiServicesTag {
+  ApiServicesTag._();
+
+  static const auth = 'api_auth';
+  static const dataManagement = 'api_data_management';
+}
+
 /// Shared HTTP layer: GetConnect + [callApi], auth header, single entry for REST.
+///
+/// Each instance is pinned to one API host; use [ApiServicesTag] when calling
+/// [Get.find].
 class ApiServices extends GetConnect {
+  ApiServices(String rootUrl)
+      : _rootUrl = rootUrl.replaceAll(RegExp(r'/+$'), '');
+
+  final String _rootUrl;
+
   @override
   void onInit() {
     super.onInit();
-    baseUrl = ApiEndPoints.baseUrl.replaceAll(RegExp(r'/+$'), '');
+    baseUrl = _rootUrl;
     timeout = const Duration(seconds: 30);
     defaultContentType = 'application/json';
 

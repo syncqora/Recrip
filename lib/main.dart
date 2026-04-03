@@ -1,7 +1,6 @@
 import 'dart:developer';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:saas/network/services/api_end_points.dart';
 import 'package:saas/shared/themes/design.dart';
 import 'app.dart';
 import 'core/controllers/app_settings_controller.dart';
@@ -10,12 +9,22 @@ import 'core/services/network_checker.dart';
 import 'core/url_strategy_stub.dart'
     if (dart.library.html) 'core/url_strategy_web.dart'
     as url_strategy;
+import 'network/services/api_end_points.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  const apiBase = String.fromEnvironment('API_BASE_URL');
-  if (apiBase.isNotEmpty) {
-    ApiEndPoints.baseUrl = apiBase;
+  const legacyBase = String.fromEnvironment('API_BASE_URL');
+  const authBase = String.fromEnvironment('API_AUTH_BASE_URL');
+  const dataBase = String.fromEnvironment('API_DATA_BASE_URL');
+  if (legacyBase.isNotEmpty) {
+    ApiEndPoints.authBaseUrl = legacyBase;
+    ApiEndPoints.dataManagementBaseUrl = legacyBase;
+  }
+  if (authBase.isNotEmpty) {
+    ApiEndPoints.authBaseUrl = authBase;
+  }
+  if (dataBase.isNotEmpty) {
+    ApiEndPoints.dataManagementBaseUrl = dataBase;
   }
   url_strategy.setUpUrlStrategy();
   setupBaseAppServices();

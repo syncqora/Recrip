@@ -1,4 +1,4 @@
-/// Subscription / asset schema paths (relative to [ApiEndPoints.baseUrl]).
+/// Subscription / asset schema paths (relative to [ApiEndPoints.dataManagementBaseUrl]).
 abstract final class SubscriptionEndPoints {
   SubscriptionEndPoints._();
 

@@ -14,7 +14,7 @@ import '../services/services.dart';
 /// Feature API: builds endpoint, calls [ApiServices], maps JSON → models.
 class AuthServices {
   Future<LoginResponse> login(LoginRequest request) async {
-    final ApiServices api = Get.find<ApiServices>();
+    final ApiServices api = Get.find<ApiServices>(tag: ApiServicesTag.auth);
     final Response<dynamic> res = await api.callApi(
       httpMethod: HttpMethod.post,
       endPoint: AuthEndPoints.login,
@@ -49,7 +49,7 @@ class AuthServices {
 
   /// POST `/auth/revoke` — returns parsed JSON body if present, otherwise `null`.
   Future<Map<String, dynamic>?> revoke(RevokeTokenRequest request) async {
-    final ApiServices api = Get.find<ApiServices>();
+    final ApiServices api = Get.find<ApiServices>(tag: ApiServicesTag.auth);
     final Response<dynamic> res = await api.callApi(
       httpMethod: HttpMethod.post,
       endPoint: AuthEndPoints.revoke,
@@ -72,7 +72,7 @@ class AuthServices {
 
   /// POST `/auth/introspect` — whether the access token is still active.
   Future<IntrospectResponse> introspect(IntrospectRequest request) async {
-    final ApiServices api = Get.find<ApiServices>();
+    final ApiServices api = Get.find<ApiServices>(tag: ApiServicesTag.auth);
     final Response<dynamic> res = await api.callApi(
       httpMethod: HttpMethod.post,
       endPoint: AuthEndPoints.introspect,

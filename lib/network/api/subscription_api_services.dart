@@ -19,7 +19,8 @@ import '../services/services.dart';
 class SubscriptionServices {
   Future<SubscriptionSchemaResponse> getSubscriptionSchema() async {
     debugPrint('[SubscriptionSchema] getSubscriptionSchema() start');
-    final ApiServices api = Get.find<ApiServices>();
+    final ApiServices api =
+        Get.find<ApiServices>(tag: ApiServicesTag.dataManagement);
     final headers = <String, String>{
       'X-Tracking-Id': newTrackingId(),
       'X-Tenant-Id': ApiEndPoints.tenantId,
@@ -71,7 +72,8 @@ class SubscriptionServices {
     debugPrint(
       '[SubscriptionContent] getSubscriptions() start pageNumber=$pageNumber pageSize=$pageSize',
     );
-    final ApiServices api = Get.find<ApiServices>();
+    final ApiServices api =
+        Get.find<ApiServices>(tag: ApiServicesTag.dataManagement);
     final headers = <String, String>{
       'X-Tracking-Id': newTrackingId(),
       'X-Tenant-Id': ApiEndPoints.tenantId,

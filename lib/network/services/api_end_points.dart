@@ -1,13 +1,17 @@
-/// Central base URL and shared path catalog (set `baseUrl` at app startup per flavor).
+/// Central base URLs and shared path catalog (override in `main.dart` via `--dart-define`).
 class ApiEndPoints {
   ApiEndPoints._();
 
-  /// Assign before the first [ApiServices] request, e.g. in `main.dart` / flavor entrypoints.
+  /// Auth service (login, introspect, revoke). Used by [AuthServices].
   ///
-  /// **Web:** Browsers enforce CORS. Either enable CORS on the API, or for local dev run
-  /// `./scripts/dev_web_with_cors_proxy.sh`, or `dart run tool/web_cors_proxy.dart` plus
-  /// `--dart-define=API_BASE_URL=http://127.0.0.1:8081` (see `tool/web_cors_proxy.dart`).
-  static String baseUrl = 'http://localhost:8080';
+  /// **Web:** CORS must allow this host. For local dev, `API_BASE_URL` sets both
+  /// URLs to one origin in `main.dart`.
+  static String authBaseUrl = 'https://auth-service.recrip.com';
+
+  /// Data / content APIs (members, subscriptions, schema). Used by [MemberServices],
+  /// [SubscriptionServices].
+  static String dataManagementBaseUrl =
+      'https://data-management-service.recrip.com';
 
   /// Sent as `X-Tenant-Id` on asset/schema API calls.
   static String tenantId = 'test-property-001';

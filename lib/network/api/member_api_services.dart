@@ -12,7 +12,8 @@ import '../services/services.dart';
 class MemberServices {
   Future<MemberSchemaResponse> getMemberSchema() async {
     debugPrint('[MemberSchema] getMemberSchema() start');
-    final ApiServices api = Get.find<ApiServices>();
+    final ApiServices api =
+        Get.find<ApiServices>(tag: ApiServicesTag.dataManagement);
     final headers = <String, String>{
       'X-Tracking-Id': newTrackingId(),
       'X-Tenant-Id': ApiEndPoints.tenantId,
@@ -55,7 +56,8 @@ class MemberServices {
     debugPrint(
       '[MemberContent] getMembers() start pageNumber=$pageNumber pageSize=$pageSize',
     );
-    final ApiServices api = Get.find<ApiServices>();
+    final ApiServices api =
+        Get.find<ApiServices>(tag: ApiServicesTag.dataManagement);
     final headers = <String, String>{
       'X-Tracking-Id': newTrackingId(),
       'X-Tenant-Id': ApiEndPoints.tenantId,

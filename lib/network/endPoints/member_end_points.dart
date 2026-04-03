@@ -1,4 +1,4 @@
-/// Member asset paths (relative to [ApiEndPoints.baseUrl]).
+/// Member asset paths (relative to [ApiEndPoints.dataManagementBaseUrl]).
 abstract final class MemberEndPoints {
   MemberEndPoints._();
 
