@@ -99,7 +99,7 @@ jobs:
     - name: 🔧 Verify build integrity
       run: |
         cd build/web
-        REQUIRED_FILES=("index.html" "main.dart.js" "flutter.js" "manifest.json")
+        REQUIRED_FILES=("index.html" "main.dart.js" "flutter.js" "manifest.json" "sitemap.xml" "robots.txt")
         MISSING_FILES=()
         
         for file in "${REQUIRED_FILES[@]}"; do
