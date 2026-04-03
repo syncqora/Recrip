@@ -1,3 +1,6 @@
+# Env (Jira script credentials – do not commit)
+.env
+
 # Miscellaneous
 *.class
 *.log

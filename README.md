@@ -1,6 +1,10 @@
 # saas
 
-A Flutter application (mobile + web).
+A Flutter SaaS website (web).
+
+## Docs
+
+- **[Jira setup](docs/JIRA_SETUP_GUIDE.md)** — Company-style: new project, Epics, and **UI vs Functionality** breakdown. Run `node scripts/setup-jira-full.mjs` (see guide for new project **SAAS** or use existing S1).
 
 ## Getting Started
 

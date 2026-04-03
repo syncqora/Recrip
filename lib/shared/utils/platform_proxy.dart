@@ -6,10 +6,10 @@ import 'dart:io' if (dart.library.html) 'platform_stub.dart' as io;
 bool get isAndroid {
   // Always return false on web
   if (kIsWeb) return false;
-  
+
   // Use override if set
   if (_isAndroid != null) return _isAndroid!;
-  
+
   // On non-web platforms, try to access Platform from dart:io
   // The conditional import ensures io is dart:io on non-web
   try {
@@ -33,10 +33,10 @@ bool? _isAndroid;
 bool get isIOS {
   // Always return false on web
   if (kIsWeb) return false;
-  
+
   // Use override if set
   if (_isIOS != null) return _isIOS!;
-  
+
   // On non-web platforms, try to access Platform from dart:io
   try {
     if (!kIsWeb) {

@@ -1,6 +1,6 @@
 // Barrel file for authentication widgets.
 
-export 'auth_constants.dart';
+export 'app_constants.dart';
 export 'auth_form_card.dart';
 export 'auth_form_field_label.dart';
 export 'auth_form_field_section.dart';

@@ -3,11 +3,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:saas/app/screens/authentication/forgot_password/forgot_password.dart';
+import 'package:saas/app/screens/landing_page/landing_page.dart';
 import 'package:saas/core/web_url_helper.dart';
 import '../app/screens/authentication/login/login.dart';
 import '../app/screens/authentication/otp_authentication/otp_authentication.dart';
 import '../app/screens/authentication/reset_password/reset_password.dart';
-import '../app/screens/dashboard/dashboard.dart';
+import '../app/screens/dashboard/views/dashboard/dashboard.dart';
+import '../app/screens/admin/dashboard/admin_dashboard.dart';
 import '../core/di/get_injector.dart';
 import '../routes/app_pages.dart';
 import '../shared/constants/app.dart';
@@ -48,6 +50,8 @@ class NavigationService extends GetxService with NavigationMixin {
     switch (path) {
       case AppRoutes.home:
         return PageTitles.home;
+      case AppRoutes.login:
+        return PageTitles.login;
       case AppRoutes.forgotPassword:
         return PageTitles.forgotPassword;
       case AppRoutes.otp:
@@ -56,6 +60,8 @@ class NavigationService extends GetxService with NavigationMixin {
         return PageTitles.resetPassword;
       case AppRoutes.dashboard:
         return PageTitles.dashboard;
+      case AppRoutes.adminDashboard:
+        return 'Admin Dashboard';
       // case AppRoutes.home:
       //   return PageTitles.home;
       // case AppRoutes.onBoarding:
@@ -95,6 +101,8 @@ class NavigationService extends GetxService with NavigationMixin {
   Widget getViewForPath(String path) {
     switch (path) {
       case AppRoutes.home:
+        return const LandingPage();
+      case AppRoutes.login:
         return Login();
       case AppRoutes.forgotPassword:
         return ForgotPassword();
@@ -104,6 +112,8 @@ class NavigationService extends GetxService with NavigationMixin {
         return ResetPassword();
       case AppRoutes.dashboard:
         return Dashboard();
+      case AppRoutes.adminDashboard:
+        return const AdminDashboard();
       // case AppRoutes.onBoarding:
       //   return OnboardingScreen();
       // case AppRoutes.login:

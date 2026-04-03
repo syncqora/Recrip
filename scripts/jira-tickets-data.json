@@ -1,0 +1,25 @@
+{
+  "epics": [
+    { "name": "Authentication", "description": "Login, OTP, forgot/reset password, session handling" },
+    { "name": "Dashboard", "description": "Main site home, navigation, base layout" },
+    { "name": "User & account", "description": "Profile, settings, members" },
+    { "name": "Subscriptions & billing", "description": "Plans, renewals, payment" },
+    { "name": "Notifications & reminders", "description": "Browser/email, on-site reminders" },
+    { "name": "Reports & analytics", "description": "Reporting screens" }
+  ],
+  "stories": [
+    { "epic": "Authentication", "summary": "User can log in with email and password" },
+    { "epic": "Authentication", "summary": "User can request password reset and set a new password via email" },
+    { "epic": "Authentication", "summary": "User can sign in with OTP (if you support it)" },
+    { "epic": "Authentication", "summary": "Session persists when user returns to the site (e.g. across tabs or refreshes)" },
+    { "epic": "Dashboard", "summary": "User sees the dashboard/home page with main sections" },
+    { "epic": "Dashboard", "summary": "User can navigate to main areas from the dashboard" },
+    { "epic": "User & account", "summary": "User can update profile and settings" },
+    { "epic": "User & account", "summary": "Admin can manage members (if applicable)" },
+    { "epic": "Subscriptions & billing", "summary": "User can view current plan and subscription" },
+    { "epic": "Subscriptions & billing", "summary": "User can see renewal date and history (if applicable)" },
+    { "epic": "Notifications & reminders", "summary": "User receives browser/email notifications (if applicable)" },
+    { "epic": "Notifications & reminders", "summary": "User can manage reminders or alerts on the site (if applicable)" },
+    { "epic": "Reports & analytics", "summary": "User or admin can view reports on the site (if applicable)" }
+  ]
+}

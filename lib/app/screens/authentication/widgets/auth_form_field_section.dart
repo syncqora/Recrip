@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import 'auth_constants.dart';
+import 'app_constants.dart';
 import 'auth_form_field_label.dart';
 
 /// Reusable form field section with label and spacing.
@@ -9,7 +9,7 @@ class AuthFormFieldSection extends StatelessWidget {
     super.key,
     required this.label,
     required this.child,
-    this.spacingAfterLabel = AuthConstants.spacingAfterLabel,
+    this.spacingAfterLabel = AppConstants.spacingAfterLabel,
   });
 
   final String label;

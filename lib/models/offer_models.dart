@@ -339,4 +339,3 @@ class BrandAttentionModel {
 
   Map<String, dynamic> toJson() => _$BrandAttentionModelToJson(this);
 }
-

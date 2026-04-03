@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
-import 'package:saas/app/screens/base_page/base_page_view.dart';
-import 'package:saas/app/screens/authentication/login/login.dart';
 import 'package:saas/shared/themes/app_theme.dart';
 import 'core/di/get_injector.dart';
 import 'core/locale/localization_services.dart';

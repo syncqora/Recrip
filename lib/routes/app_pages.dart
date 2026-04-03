@@ -1,6 +1,6 @@
 import 'package:get/get.dart';
-import '../app/screens/base_page/base_binding.dart';
-import '../app/screens/base_page/base_page_view.dart';
+import '../app/screens/base_page/views/base_binding.dart';
+import '../app/screens/base_page/views/base_page_view.dart';
 import '../app/screens/authentication/forgot_password/forgot_password.dart';
 import '../middlewares/app_middleware.dart';
 

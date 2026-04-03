@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import 'auth_constants.dart';
+import 'app_constants.dart';
 
 /// Reusable authentication screen layout with background image and gradient overlay.
 class AuthScreenLayout extends StatelessWidget {
@@ -25,15 +25,15 @@ class AuthScreenLayout extends StatelessWidget {
         ),
         Positioned.fill(
           child: Opacity(
-            opacity: AuthConstants.overlayOpacity,
+            opacity: AppConstants.overlayOpacity,
             child: Container(
               decoration: const BoxDecoration(
                 gradient: LinearGradient(
                   begin: Alignment.topCenter,
                   end: Alignment.bottomCenter,
                   colors: [
-                    AuthConstants.gradientStart,
-                    AuthConstants.gradientEnd,
+                    AppConstants.gradientStart,
+                    AppConstants.gradientEnd,
                   ],
                 ),
               ),
@@ -41,10 +41,7 @@ class AuthScreenLayout extends StatelessWidget {
           ),
         ),
         Center(
-          child: SingleChildScrollView(
-            padding: padding,
-            child: child,
-          ),
+          child: SingleChildScrollView(padding: padding, child: child),
         ),
       ],
     );

@@ -68,7 +68,7 @@ class FirebaseServices with RemoteConfigService, PushNotificationService {
     // Check if Firebase is already initialized
     if (Firebase.apps.isEmpty) {
       FirebaseOptions options;
-      
+
       // Check for web platform first to avoid any platform detection issues
       if (kIsWeb) {
         options = DefaultFirebaseOptions.web;
@@ -79,7 +79,7 @@ class FirebaseServices with RemoteConfigService, PushNotificationService {
           // If platform detection fails, try to use platform_proxy as fallback
           // This can happen when Platform._operatingSystem is unavailable
           log("Platform detection failed, attempting fallback: $e");
-          
+
           try {
             // Try to determine platform using platform_proxy (only works on mobile/desktop, not web)
             if (isAndroid) {
@@ -95,7 +95,9 @@ class FirebaseServices with RemoteConfigService, PushNotificationService {
             } else {
               // If platform_proxy also fails, default to Android
               if (kDebugMode) {
-                log("Platform detection completely failed, defaulting to Android");
+                log(
+                  "Platform detection completely failed, defaulting to Android",
+                );
               }
               options = DefaultFirebaseOptions.android;
             }

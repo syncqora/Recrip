@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
-import 'auth_constants.dart';
+import 'app_constants.dart';
 
 /// Reusable styled text field for authentication screens.
 class AuthTextField extends StatelessWidget {
@@ -10,46 +10,79 @@ class AuthTextField extends StatelessWidget {
     required this.controller,
     required this.hint,
     this.isHovered = false,
+    this.fillColor = AppConstants.fieldFillColor,
+    this.dismissKeyboardOnTapOutside = true,
+    this.errorText,
+    this.keyboardType,
+    this.autocorrect = true,
+    this.focusNode,
+    this.textInputAction,
+    this.onSubmitted,
+    this.readOnly = false,
   });
 
   final TextEditingController controller;
   final String hint;
   final bool isHovered;
+  final Color fillColor;
+  final bool dismissKeyboardOnTapOutside;
+  final String? errorText;
+  final TextInputType? keyboardType;
+  final bool autocorrect;
+  final FocusNode? focusNode;
+  final TextInputAction? textInputAction;
+  final void Function(String)? onSubmitted;
+  final bool readOnly;
 
   @override
   Widget build(BuildContext context) {
-    return SizedBox(
-      height: AuthConstants.fieldHeight,
-      child: TextField(
-        controller: controller,
-        style: Get.theme.textTheme.bodySmall?.copyWith(
-          color: AuthConstants.textColor,
+    return TextField(
+      controller: controller,
+      focusNode: focusNode,
+      textInputAction: textInputAction,
+      onSubmitted: onSubmitted,
+      readOnly: readOnly,
+      keyboardType: keyboardType,
+      autocorrect: autocorrect,
+      onTapOutside: dismissKeyboardOnTapOutside
+          ? (_) => FocusManager.instance.primaryFocus?.unfocus()
+          : (_) {},
+      style: Get.theme.textTheme.bodySmall?.copyWith(
+        color: AppConstants.textColor,
+      ),
+      cursorColor: Colors.black,
+      decoration: InputDecoration(
+        errorText: errorText,
+        errorMaxLines: 3,
+        isDense: true,
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 12,
+          vertical: 14,
         ),
-        cursorColor: AuthConstants.textColor,
-        decoration: InputDecoration(
-          hintText: hint,
-          hintStyle: Get.theme.textTheme.labelMedium!.copyWith(
-            color: AuthConstants.hintColor,
+        constraints: BoxConstraints(minHeight: AppConstants.fieldHeight),
+        hintText: hint,
+        hintStyle: Get.theme.textTheme.labelMedium!.copyWith(
+          color: AppConstants.hintColor,
+          fontWeight: FontWeight.w400,
+        ),
+        filled: true,
+        fillColor: fillColor,
+        hoverColor: fillColor,
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(AppConstants.fieldBorderRadius),
+          borderSide: const BorderSide(color: AppConstants.borderColor),
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(AppConstants.fieldBorderRadius),
+          borderSide: BorderSide(
+            color: isHovered
+                ? AppConstants.focusedBorderColor
+                : AppConstants.borderColor,
           ),
-          filled: true,
-          fillColor: AuthConstants.fieldFillColor,
-          hoverColor: AuthConstants.fieldFillColor,
-          border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(AuthConstants.fieldBorderRadius),
-            borderSide: const BorderSide(color: AuthConstants.borderColor),
-          ),
-          enabledBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(AuthConstants.fieldBorderRadius),
-            borderSide: BorderSide(
-              color: isHovered
-                  ? AuthConstants.focusedBorderColor
-                  : AuthConstants.borderColor,
-            ),
-          ),
-          focusedBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(AuthConstants.fieldBorderRadius),
-            borderSide: const BorderSide(color: AuthConstants.focusedBorderColor),
-          ),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(AppConstants.fieldBorderRadius),
+          borderSide: const BorderSide(color: AppConstants.focusedBorderColor),
         ),
       ),
     );

@@ -47,7 +47,7 @@ class AppFunctions {
     if (kIsWeb) {
       return "WEB_UNKNOWN";
     }
-    
+
     try {
       final DeviceInfoPlugin deviceInfoPlugin = DeviceInfoPlugin();
       if (isAndroid) {
@@ -96,7 +96,7 @@ class AppFunctions {
       );
       return "";
     }
-    
+
     try {
       final DeviceInfoPlugin deviceInfoPlugin = DeviceInfoPlugin();
       // Use platform_proxy which handles platform detection safely
@@ -144,7 +144,7 @@ class AppFunctions {
     if (kIsWeb) {
       return null;
     }
-    
+
     try {
       final DeviceInfoPlugin deviceInfoPlugin = DeviceInfoPlugin();
       // Use platform_proxy which handles platform detection safely

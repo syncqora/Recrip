@@ -22,7 +22,9 @@ class DefaultFirebaseOptions {
     // Safety check: if somehow we're on web, return a default (should never happen)
     if (kIsWeb) {
       if (kDebugMode) {
-        print('Warning: _detectPlatform called on web platform. This should not happen.');
+        print(
+          'Warning: _detectPlatform called on web platform. This should not happen.',
+        );
       }
       // Return Android as fallback, but web should be handled in currentPlatform
       return TargetPlatform.android;
@@ -32,7 +34,7 @@ class DefaultFirebaseOptions {
     // This is the most reliable cross-platform method
     try {
       final platform = defaultTargetPlatform;
-      
+
       // Map the detected platform
       switch (platform) {
         case TargetPlatform.android:
@@ -45,7 +47,9 @@ class DefaultFirebaseOptions {
         default:
           // Unknown platform, default to Android
           if (kDebugMode) {
-            print('Unknown platform detected: $platform. Defaulting to Android.');
+            print(
+              'Unknown platform detected: $platform. Defaulting to Android.',
+            );
           }
           return TargetPlatform.android;
       }
@@ -53,7 +57,9 @@ class DefaultFirebaseOptions {
       // If platform detection fails completely, default to Android
       // This can happen in test environments or when Platform._operatingSystem is unavailable
       if (kDebugMode) {
-        print('Platform detection via defaultTargetPlatform failed: $e. Defaulting to Android.');
+        print(
+          'Platform detection via defaultTargetPlatform failed: $e. Defaulting to Android.',
+        );
       }
       return TargetPlatform.android;
     }
@@ -63,12 +69,12 @@ class DefaultFirebaseOptions {
     if (kIsWeb) {
       return web;
     }
-    
+
     // Wrap everything in try-catch to handle any platform detection errors
     try {
       // Use safe platform detection
       final platform = _detectPlatform();
-      
+
       // TODO find a way to get production or developmenrt
       switch (platform) {
         case TargetPlatform.android:
@@ -95,20 +101,26 @@ class DefaultFirebaseOptions {
           // This is common for development/testing purposes
           // You can configure proper desktop options later if needed
           if (kDebugMode) {
-            print('Using Android Firebase options for desktop platform: $platform');
+            print(
+              'Using Android Firebase options for desktop platform: $platform',
+            );
           }
           return android;
         default:
           // For any other platform, default to Android
           if (kDebugMode) {
-            print('Unknown platform detected: $platform. Defaulting to Android.');
+            print(
+              'Unknown platform detected: $platform. Defaulting to Android.',
+            );
           }
           return android;
       }
     } catch (e) {
       // If anything goes wrong with platform detection, default to Android
       if (kDebugMode) {
-        print('Error in currentPlatform getter: $e. Defaulting to Android Firebase options.');
+        print(
+          'Error in currentPlatform getter: $e. Defaulting to Android Firebase options.',
+        );
       }
       return android;
     }

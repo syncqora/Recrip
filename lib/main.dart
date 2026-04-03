@@ -1,15 +1,22 @@
 import 'dart:developer';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:saas/network/services/api_end_points.dart';
 import 'package:saas/shared/themes/design.dart';
 import 'app.dart';
 import 'core/controllers/app_settings_controller.dart';
 import 'core/di/get_injector.dart';
 import 'core/services/network_checker.dart';
 import 'core/url_strategy_stub.dart'
-    if (dart.library.html) 'core/url_strategy_web.dart' as url_strategy;
+    if (dart.library.html) 'core/url_strategy_web.dart'
+    as url_strategy;
 
 Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  const apiBase = String.fromEnvironment('API_BASE_URL');
+  if (apiBase.isNotEmpty) {
+    ApiEndPoints.baseUrl = apiBase;
+  }
   url_strategy.setUpUrlStrategy();
   setupBaseAppServices();
   runApp(const MyApp());
@@ -130,7 +137,7 @@ class _MyAppState extends State<MyApp> {
               //   MiniSwaggerProtocolGestures.longPress,
               // );
             },
-            child: Saas(title: "Saas"),
+            child: Saas(title: "Recrip"),
           );
         }
       },
