@@ -81,7 +81,9 @@ jobs:
         flutter build web \
           --release \
           --base-href "/" \
-          --source-maps \
+          --optimization-level=4 \
+          --no-source-maps \
+          --no-wasm-dry-run \
           --dart-define=ENVIRONMENT=production
           
     - name: 📊 Analyze build output
@@ -108,6 +110,10 @@ jobs:
           fi
         done
         
+        if [ ! -f .nojekyll ]; then
+          MISSING_FILES+=(".nojekyll")
+        fi
+
         if [ ${#MISSING_FILES[@]} -gt 0 ]; then
           echo "❌ Missing required files: ${MISSING_FILES[*]}"
           exit 1
