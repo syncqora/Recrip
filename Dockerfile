@@ -10,11 +10,9 @@ COPY . .
 RUN flutter build web \
   --release \
   --base-href "/" \
-  --web-renderer html \
   --pwa-strategy=offline-first \
   --optimization-level=4 \
   --no-source-maps \
-  --no-wasm-dry-run \
   --dart-define=ENVIRONMENT=production
 
 FROM caddy:2.9.1-alpine
