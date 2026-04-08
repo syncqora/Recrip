@@ -1,3 +1,10 @@
+# One-time repo setup (required before deploy works):
+# Settings → Pages → Build and deployment → Source: "GitHub Actions" (not "Deploy from a branch").
+# https://docs.github.com/en/pages/getting-started-with-github-pages/configuring-a-publishing-source-for-your-github-pages-site#publishing-with-a-custom-github-actions-workflow
+#
+# Optional: use actions/configure-pages with enablement: auto + a PAT (not GITHUB_TOKEN) if you must enable Pages from CI.
+# See https://github.com/actions/configure-pages#inputs
+
 name: Build and Deploy Flutter Web
 
 on:
@@ -84,7 +91,9 @@ jobs:
           --optimization-level=4 \
           --no-source-maps \
           --no-wasm-dry-run \
+          --pwa-strategy=offline-first \
           --dart-define=ENVIRONMENT=production
+        cp web/_headers build/web/_headers
           
     - name: 📊 Analyze build output
       run: |
@@ -137,9 +146,6 @@ jobs:
       url: ${{ steps.deployment.outputs.page_url }}
       
     steps:
-    - name: 🔧 Setup Pages
-      uses: actions/configure-pages@v5
-      
     - name: 🚀 Deploy to GitHub Pages
       id: deployment
       uses: actions/deploy-pages@v4

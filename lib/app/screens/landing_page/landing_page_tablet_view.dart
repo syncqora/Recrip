@@ -711,25 +711,27 @@ class _TabletDashboardMock extends StatelessWidget {
                   builder: (context, inner) {
                     final iw = inner.maxWidth;
                     final ih = inner.maxHeight;
-                    return Stack(
-                      clipBehavior: Clip.hardEdge,
-                      fit: StackFit.expand,
-                      children: [
-                        for (
-                          var index = 0;
-                          index < orderedCards.length;
-                          index++
-                        )
-                          _TabletPreviewCard(
-                            key: ValueKey<_TabletPreviewTab>(orderedCards[index]),
-                            tab: orderedCards[index],
-                            layerIndex: index,
-                            layerCount: orderedCards.length,
-                            isFront: orderedCards[index] == selectedTab,
-                            stackW: iw,
-                            stackH: ih,
-                          ),
-                      ],
+                    return RepaintBoundary(
+                      child: Stack(
+                        clipBehavior: Clip.hardEdge,
+                        fit: StackFit.expand,
+                        children: [
+                          for (
+                            var index = 0;
+                            index < orderedCards.length;
+                            index++
+                          )
+                            _TabletPreviewCard(
+                              key: ValueKey<_TabletPreviewTab>(orderedCards[index]),
+                              tab: orderedCards[index],
+                              layerIndex: index,
+                              layerCount: orderedCards.length,
+                              isFront: orderedCards[index] == selectedTab,
+                              stackW: iw,
+                              stackH: ih,
+                            ),
+                        ],
+                      ),
                     );
                   },
                 ),
@@ -829,6 +831,7 @@ Widget _tabletStackPreviewImage({
     path,
     fit: BoxFit.cover,
     alignment: Alignment.topLeft,
+    cacheWidth: isFront ? 1400 : 1000,
     filterQuality: isFront ? FilterQuality.high : FilterQuality.medium,
     isAntiAlias: true,
   );
@@ -1456,13 +1459,13 @@ class _TabletFooterSection extends StatelessWidget {
 String _previewImageFor(_TabletPreviewTab tab) {
   switch (tab) {
     case _TabletPreviewTab.dashboard:
-      return 'assets/images/Dashboard.png';
+      return 'assets/images/Dashboard.webp';
     case _TabletPreviewTab.members:
-      return 'assets/images/Members.png';
+      return 'assets/images/Members.webp';
     case _TabletPreviewTab.subscriptions:
-      return 'assets/images/Members.png';
+      return 'assets/images/Members.webp';
     case _TabletPreviewTab.renewals:
-      return 'assets/images/Renewals.png';
+      return 'assets/images/Renewals.webp';
   }
 }
 

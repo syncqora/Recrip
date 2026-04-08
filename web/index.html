@@ -17,7 +17,10 @@
   <base href="$FLUTTER_BASE_HREF">
 
   <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta content="IE=Edge" http-equiv="X-UA-Compatible">
+
+  <link rel="preload" as="image" href="assets/assets/images/Dashboard.webp" type="image/webp" fetchpriority="high">
   <meta name="description" content="Recrip is a membership and renewal dashboard: track plans, expiring members, and send reminders—built for teams with recurring subscriptions or access.">
 
   <meta property="og:type" content="website">
@@ -31,13 +34,32 @@
   <meta name="apple-mobile-web-app-title" content="Recrip">
   <link rel="apple-touch-icon" href="recrip-icon.png">
 
-  <!-- Tab / PWA icon: sync with assets/images/recrip-icon.png -->
+  <!-- Tab / PWA icon: sync with assets/images/recrip-icon.webp (web/recrip-icon.png for HTML link targets) -->
   <link rel="icon" type="image/png" href="recrip-icon.png"/>
 
   <title>Recrip – Memberships, renewals & reminders</title>
   <link rel="manifest" href="manifest.json">
 </head>
 <body>
+  <style>
+    body.flutter-loading { margin: 0; min-height: 100vh; display: flex; align-items: center; justify-content: center; background: #f5f7ff; }
+    body.flutter-loading .boot-spinner { width: 36px; height: 36px; border: 3px solid #e7ebf3; border-top-color: #4f46e5; border-radius: 50%; animation: flutter-boot-spin 0.8s linear infinite; }
+    @keyframes flutter-boot-spin { to { transform: rotate(360deg); } }
+  </style>
+  <script>
+    document.body.classList.add('flutter-loading');
+    window.addEventListener('flutter-first-frame', function () {
+      document.body.classList.remove('flutter-loading');
+      var s = document.querySelector('.boot-spinner');
+      if (s) s.remove();
+    });
+    window.setTimeout(function () {
+      document.body.classList.remove('flutter-loading');
+      var s = document.querySelector('.boot-spinner');
+      if (s) s.remove();
+    }, 15000);
+  </script>
+  <div class="boot-spinner" aria-hidden="true"></div>
   <script src="flutter_bootstrap.js" async></script>
 </body>
 </html>

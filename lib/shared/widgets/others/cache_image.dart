@@ -39,14 +39,14 @@ class CacheImage extends StatelessWidget {
           opacity: 0.3,
           child: Padding(
             padding: const EdgeInsets.all(16.0),
-            child: Image.asset('assets/images/logo.png'),
+            child: Image.asset('assets/images/logo.webp'),
           ),
         ),
         errorWidget: (context, url, error) => Opacity(
           opacity: 0.3,
           child: Padding(
             padding: const EdgeInsets.all(16.0),
-            child: Image.asset('assets/images/logo.png'),
+            child: Image.asset('assets/images/logo.webp'),
           ),
         ),
       );
@@ -62,7 +62,7 @@ class CacheImage extends StatelessWidget {
       opacity: 0.3,
       child: Padding(
         padding: const EdgeInsets.all(16.0),
-        child: Image.asset('assets/images/logo.png'),
+        child: Image.asset('assets/images/logo.webp'),
       ),
     );
   }

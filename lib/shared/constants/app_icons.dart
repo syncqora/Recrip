@@ -1,7 +1,7 @@
 class AppIcons {
   AppIcons._();
 
-  static const String recripLogo = 'assets/images/recrip.png';
+  static const String recripLogo = 'assets/images/recrip.webp';
   static const String whatsappLogo = 'assets/icons/WhatsappLogo.svg';
   static const String alarmClockTab = 'assets/icons/alarm-clock_tab.svg';
   static const String backButton = 'assets/icons/back-button.svg';

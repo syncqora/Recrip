@@ -164,7 +164,7 @@ class Dashboard extends GetView<DashboardController> {
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
                             Image.asset(
-                              'assets/images/recrip.png',
+                              'assets/images/recrip.webp',
                               height: 36,
                             ),
                           ],
@@ -355,7 +355,7 @@ class Dashboard extends GetView<DashboardController> {
           const SizedBox(width: 32),
           CircleAvatar(
             backgroundColor: const Color(0xFFEEF2FF),
-            child: Image.asset('assets/images/profile-icon.png'),
+            child: Image.asset('assets/images/profile-icon.webp'),
           ),
         ],
       ),

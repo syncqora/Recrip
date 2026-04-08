@@ -34,6 +34,16 @@ class _LandingPageState extends State<LandingPage> {
   void initState() {
     super.initState();
     LoginController.registerHeroIfNeeded();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      for (final path in const [
+        AppIcons.recripLogo,
+        'assets/images/Dashboard.webp',
+        'assets/images/logo.webp',
+      ]) {
+        precacheImage(AssetImage(path), context);
+      }
+    });
   }
 
   @override
@@ -932,25 +942,27 @@ class _DashboardMock extends StatelessWidget {
                   builder: (context, inner) {
                     final iw = inner.maxWidth;
                     final ih = inner.maxHeight;
-                    return Stack(
-                      clipBehavior: Clip.hardEdge,
-                      fit: StackFit.expand,
-                      children: [
-                        for (
-                          var index = 0;
-                          index < orderedCards.length;
-                          index++
-                        )
-                          _PreviewCard(
-                            key: ValueKey<_PreviewTab>(orderedCards[index]),
-                            tab: orderedCards[index],
-                            layerIndex: index,
-                            layerCount: orderedCards.length,
-                            isFront: orderedCards[index] == selectedTab,
-                            stackW: iw,
-                            stackH: ih,
-                          ),
-                      ],
+                    return RepaintBoundary(
+                      child: Stack(
+                        clipBehavior: Clip.hardEdge,
+                        fit: StackFit.expand,
+                        children: [
+                          for (
+                            var index = 0;
+                            index < orderedCards.length;
+                            index++
+                          )
+                            _PreviewCard(
+                              key: ValueKey<_PreviewTab>(orderedCards[index]),
+                              tab: orderedCards[index],
+                              layerIndex: index,
+                              layerCount: orderedCards.length,
+                              isFront: orderedCards[index] == selectedTab,
+                              stackW: iw,
+                              stackH: ih,
+                            ),
+                        ],
+                      ),
                     );
                   },
                 ),
@@ -1064,6 +1076,7 @@ Widget _stackPreviewImage({required _PreviewTab tab, required bool isFront}) {
     path,
     fit: BoxFit.cover,
     alignment: Alignment.topLeft,
+    cacheWidth: isFront ? 1500 : 1100,
     filterQuality: isFront ? FilterQuality.high : FilterQuality.medium,
     isAntiAlias: true,
   );
@@ -1079,13 +1092,13 @@ Widget _stackPreviewImage({required _PreviewTab tab, required bool isFront}) {
 String _previewImageFor(_PreviewTab tab) {
   switch (tab) {
     case _PreviewTab.dashboard:
-      return 'assets/images/Dashboard.png';
+      return 'assets/images/Dashboard.webp';
     case _PreviewTab.members:
-      return 'assets/images/Members.png';
+      return 'assets/images/Members.webp';
     case _PreviewTab.subscriptions:
-      return 'assets/images/Members.png';
+      return 'assets/images/Members.webp';
     case _PreviewTab.renewals:
-      return 'assets/images/Renewals.png';
+      return 'assets/images/Renewals.webp';
   }
 }
 

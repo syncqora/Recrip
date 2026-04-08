@@ -1,4 +1,6 @@
+import 'dart:async';
 import 'dart:developer';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:saas/shared/themes/design.dart';
@@ -101,7 +103,7 @@ class _MyAppState extends State<MyApp> {
                         horizontal: 80,
                         vertical: 24,
                       ),
-                      child: Image.asset('assets/images/logo.png'),
+                      child: Image.asset('assets/images/logo.webp'),
                     ),
                     const SizedBox(height: 16),
                     const Icon(
@@ -157,25 +159,39 @@ class _MyAppState extends State<MyApp> {
 /// Custom function to check network and ensure all services are ready before rendering the app.
 Future<bool> checkNetworkAndServices() async {
   try {
-    // Initialize the application.
-    await initializeApp();
-    // Check if network is connected
-    final networkChecker = Get.find<NetworkChecker>();
-    await networkChecker.getConnectionStatus();
+    await initializeApp().timeout(const Duration(seconds: 8));
 
-    if (!networkChecker.isConnected.value) {
+    final networkChecker = Get.find<NetworkChecker>();
+    try {
+      await networkChecker.getConnectionStatus().timeout(
+        const Duration(seconds: 2),
+      );
+    } on TimeoutException {
+      if (kIsWeb) {
+        networkChecker.isConnected.value = true;
+      }
+    }
+
+    if (!kIsWeb && !networkChecker.isConnected.value) {
       print("No internet connection");
-      //TODO show toast
       return false;
     }
-    // Check if AppSettingsController is initialized
-    final appSettingsController = Get.find<AppSettingsController>();
-    await appSettingsController
-        .initializeSettings(); // Initialize your AppSettingsController
 
+    final appSettingsController = Get.find<AppSettingsController>();
+    await appSettingsController.initializeSettings().timeout(
+      const Duration(seconds: 5),
+      onTimeout: () async {},
+    );
+
+    if (kIsWeb) {
+      return true;
+    }
     return networkChecker.isConnected.value;
-  } catch (e) {
-    log('Error during initialization: $e');
+  } catch (e, st) {
+    log('Error during initialization: $e', stackTrace: st);
+    if (kIsWeb) {
+      return true;
+    }
     return false;
   }
 }

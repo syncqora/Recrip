@@ -155,7 +155,7 @@ class AdminDashboardTabletView extends StatelessWidget {
               radius: 16,
               backgroundColor: const Color(0xFFF1F5F9),
               child: Image.asset(
-                'assets/images/profile-icon.png',
+                'assets/images/profile-icon.webp',
                 errorBuilder: (context, error, stackTrace) =>
                     const Icon(Icons.person, color: _textMuted, size: 16),
               ),

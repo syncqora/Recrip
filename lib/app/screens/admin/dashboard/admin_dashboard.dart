@@ -372,7 +372,7 @@ class _AdminDashboardState extends State<AdminDashboard> {
             backgroundColor: const Color(0xFFF1F5F9),
             radius: 20,
             child: Image.asset(
-              'assets/images/profile-icon.png',
+              'assets/images/profile-icon.webp',
               errorBuilder: (context, error, stackTrace) =>
                   const Icon(Icons.person, color: _textMuted),
             ),

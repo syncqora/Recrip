@@ -702,27 +702,29 @@ class _MobileDashboardMock extends StatelessWidget {
                   builder: (context, inner) {
                     final iw = inner.maxWidth;
                     final ih = inner.maxHeight;
-                    return Stack(
-                      clipBehavior: Clip.hardEdge,
-                      fit: StackFit.expand,
-                      children: [
-                        for (
-                          var index = 0;
-                          index < orderedCards.length;
-                          index++
-                        )
-                          _MobilePreviewCard(
-                            key: ValueKey<_MobilePreviewTab>(
-                              orderedCards[index],
+                    return RepaintBoundary(
+                      child: Stack(
+                        clipBehavior: Clip.hardEdge,
+                        fit: StackFit.expand,
+                        children: [
+                          for (
+                            var index = 0;
+                            index < orderedCards.length;
+                            index++
+                          )
+                            _MobilePreviewCard(
+                              key: ValueKey<_MobilePreviewTab>(
+                                orderedCards[index],
+                              ),
+                              tab: orderedCards[index],
+                              layerIndex: index,
+                              layerCount: orderedCards.length,
+                              isFront: orderedCards[index] == selectedTab,
+                              stackW: iw,
+                              stackH: ih,
                             ),
-                            tab: orderedCards[index],
-                            layerIndex: index,
-                            layerCount: orderedCards.length,
-                            isFront: orderedCards[index] == selectedTab,
-                            stackW: iw,
-                            stackH: ih,
-                          ),
-                      ],
+                        ],
+                      ),
                     );
                   },
                 ),
@@ -821,6 +823,7 @@ Widget _mobileStackPreviewImage({
     path,
     fit: BoxFit.contain,
     alignment: Alignment.center,
+    cacheWidth: isFront ? 720 : 520,
     filterQuality: isFront ? FilterQuality.high : FilterQuality.medium,
     isAntiAlias: true,
   );
@@ -1437,13 +1440,13 @@ class _MobileFooterSection extends StatelessWidget {
 String _mobilePreviewImage(_MobilePreviewTab tab) {
   switch (tab) {
     case _MobilePreviewTab.dashboard:
-      return 'assets/images/Dashboard.png';
+      return 'assets/images/Dashboard.webp';
     case _MobilePreviewTab.members:
-      return 'assets/images/Members.png';
+      return 'assets/images/Members.webp';
     case _MobilePreviewTab.subscriptions:
-      return 'assets/images/Members.png';
+      return 'assets/images/Members.webp';
     case _MobilePreviewTab.renewals:
-      return 'assets/images/Renewals.png';
+      return 'assets/images/Renewals.webp';
   }
 }
 

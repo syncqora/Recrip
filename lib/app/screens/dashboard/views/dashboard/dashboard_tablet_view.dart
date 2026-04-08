@@ -121,7 +121,7 @@ class DashboardTabletView extends StatelessWidget {
         title: Center(
           child: Row(
             mainAxisSize: MainAxisSize.min,
-            children: [Image.asset('assets/images/recrip.png', height: 36)],
+            children: [Image.asset('assets/images/recrip.webp', height: 36)],
           ),
         ),
         actions: [
@@ -148,7 +148,7 @@ class DashboardTabletView extends StatelessWidget {
             child: CircleAvatar(
               radius: 18,
               backgroundColor: const Color(0xFFEEF2FF),
-              child: Image.asset('assets/images/profile-icon.png'),
+              child: Image.asset('assets/images/profile-icon.webp'),
             ),
           ),
         ],

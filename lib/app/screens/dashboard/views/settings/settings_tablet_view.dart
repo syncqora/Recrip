@@ -386,7 +386,7 @@ class _SettingsTabletViewState extends State<SettingsTabletView> {
               padding: const EdgeInsets.all(12),
               child: Center(
                 child: Image.asset(
-                  'assets/images/recrip.png',
+                  'assets/images/recrip.webp',
                   height: 40,
                   fit: BoxFit.contain,
                 ),
