@@ -74,70 +74,51 @@ class _MyAppState extends State<MyApp> {
       valueListenable: _appLoadState,
       builder: (context, snapshot, child) {
         if (snapshot.connectionState == ConnectionState.waiting) {
-          return MaterialApp(
-            debugShowCheckedModeBanner: false,
-            home: Scaffold(
-              backgroundColor: Colors.white,
-              // themeServices.isDarkMode()
-              //     ? Colors.black
-              //     : Colors.white,
-              body: const Center(
-                child: CircularProgressIndicator(),
-              ), // Loading indicator
+          return _buildFallbackApp(
+            backgroundColor: Colors.white,
+            body: const Center(
+              child: CircularProgressIndicator(),
             ),
           );
         } else if (snapshot.hasError || snapshot.data == false) {
-          return MaterialApp(
-            debugShowCheckedModeBanner: false,
-            home: Scaffold(
-              backgroundColor: Colors.black,
-              // themeServices.isDarkMode()
-              //     ? Colors.black
-              //     : Colors.white,
-              body: Center(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Padding(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 80,
-                        vertical: 24,
-                      ),
-                      child: Image.asset('assets/images/logo.webp'),
+          return _buildFallbackApp(
+            backgroundColor: Colors.black,
+            body: Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 80,
+                      vertical: 24,
                     ),
-                    const SizedBox(height: 16),
-                    const Icon(
-                      Icons.signal_wifi_statusbar_connected_no_internet_4,
-                      size: 40,
-                      color: AppColors.appPrimaryColorLight,
-                    ),
-                    const SizedBox(height: 8),
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 8),
-                      child: Text(
-                        "Oops! We can't seem to reach our services right now. "
-                        "Check your internet connection and tap 'Retry' to try again.",
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
-                          fontSize: 16,
-                          color: Get.theme.dividerColor,
-                        ),
+                    child: Image.asset('assets/images/logo.webp'),
+                  ),
+                  const SizedBox(height: 16),
+                  const Icon(
+                    Icons.signal_wifi_statusbar_connected_no_internet_4,
+                    size: 40,
+                    color: AppColors.appPrimaryColorLight,
+                  ),
+                  const SizedBox(height: 8),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 8),
+                    child: Text(
+                      "Oops! We can't seem to reach our services right now. "
+                      "Check your internet connection and tap 'Retry' to try again.",
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        fontSize: 16,
+                        color: Get.theme.dividerColor,
                       ),
                     ),
-                    const SizedBox(height: 20),
-                    // AppButton(
-                    //   text: "Retry",
-                    //   appButtonType: AppButtonType.regular,
-                    //   isEnabled: true,
-                    //   onTap: _retryLoadApp,
-                    //   icon: Icons.autorenew,
-                    // ),
-                    ElevatedButton(
-                      onPressed: _retryLoadApp,
-                      child: const Text("Retry"),
-                    ),
-                  ],
-                ),
+                  ),
+                  const SizedBox(height: 20),
+                  ElevatedButton(
+                    onPressed: _retryLoadApp,
+                    child: const Text("Retry"),
+                  ),
+                ],
               ),
             ),
           );
@@ -152,6 +133,18 @@ class _MyAppState extends State<MyApp> {
           );
         }
       },
+    );
+  }
+
+  MaterialApp _buildFallbackApp({
+    required Color backgroundColor,
+    required Widget body,
+  }) {
+    return MaterialApp(
+      debugShowCheckedModeBanner: false,
+      onGenerateRoute: (_) => MaterialPageRoute<void>(
+        builder: (_) => Scaffold(backgroundColor: backgroundColor, body: body),
+      ),
     );
   }
 }
