@@ -43,110 +43,101 @@ concurrency:
   cancel-in-progress: false
 
 env:
-  # Must ship Dart >= 3.10.7 (see pubspec environment.sdk)
-  FLUTTER_VERSION: "3.41.6"
+  FLUTTER_VERSION: "3.35.3"
 
 jobs:
   # Build and test job
   build:
     runs-on: ubuntu-latest
-    
-    steps:
-    - name: 📚 Checkout repository
-      uses: actions/checkout@v4
-      
-    - name: 🐦 Setup Flutter SDK
-      uses: subosito/flutter-action@v2
-      with:
-        flutter-version: ${{ env.FLUTTER_VERSION }}
-        channel: 'stable'
-        cache: true
-        
-    - name: 📦 Cache pub dependencies
-      uses: actions/cache@v4
-      with:
-        path: |
-          ${{ env.PUB_CACHE }}
-          **/.packages
-          **/.flutter-plugins
-          **/.flutter-plugin-dependencies
-          **/.dart_tool/package_config.json
-        key: pub-cache-${{ runner.os }}-${{ hashFiles('**/pubspec.yaml') }}
-        restore-keys: |
-          pub-cache-${{ runner.os }}-
-        
-    - name: 🔍 Verify Flutter installation
-      run: |
-        flutter doctor -v
-        flutter --version
-        
-    - name: 📥 Install dependencies
-      run: flutter pub get
-      
-    - name: 📊 Analyze project source
-      run: flutter analyze --fatal-infos
-      continue-on-error: true
-      
-    - name: 🧪 Run tests
-      run: |
-        if [ -d "test" ] && [ -n "$(find test -name "*.dart" -type f)" ]; then
-          flutter test --coverage
-        else
-          echo "No tests found, skipping test execution"
-        fi
-      continue-on-error: true
-      
-    - name: 🏗️ Build Flutter Web
-      run: |
-        flutter build web \
-          --release \
-          --base-href "/" \
-          --optimization-level=4 \
-          --no-source-maps \
-          --no-wasm-dry-run \
-          --pwa-strategy=offline-first \
-          --dart-define=ENVIRONMENT=production
-        cp web/_headers build/web/_headers
-          
-    - name: 📊 Analyze build output
-      run: |
-        echo "📦 Build Analysis:"
-        echo "================="
-        ls -la build/web/
-        echo ""
-        echo "📁 Main files:"
-        du -h build/web/*.js build/web/*.html 2>/dev/null || echo "Build files not found"
-        echo ""
-        echo "🎯 Total build size:"
-        du -sh build/web/
-        
-    - name: 🔧 Verify build integrity
-      run: |
-        cd build/web
-        REQUIRED_FILES=("index.html" "main.dart.js" "flutter.js" "manifest.json" "sitemap.xml" "robots.txt")
-        MISSING_FILES=()
-        
-        for file in "${REQUIRED_FILES[@]}"; do
-          if [ ! -f "$file" ]; then
-            MISSING_FILES+=("$file")
-          fi
-        done
-        
-        if [ ! -f .nojekyll ]; then
-          MISSING_FILES+=(".nojekyll")
-        fi
 
-        if [ ${#MISSING_FILES[@]} -gt 0 ]; then
-          echo "❌ Missing required files: ${MISSING_FILES[*]}"
-          exit 1
-        else
-          echo "✅ All required files are present!"
-        fi
-        
-    - name: 🚀 Upload build artifacts
-      uses: actions/upload-pages-artifact@v3
-      with:
-        path: build/web
+    steps:
+      - name: 📚 Checkout repository
+        uses: actions/checkout@v4
+
+      - name: 🐦 Setup Flutter SDK
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          channel: 'stable'
+          cache: true
+
+      - name: 📦 Cache pub dependencies
+        uses: actions/cache@v4
+        with:
+          path: |
+            ${{ env.PUB_CACHE }}
+            **/.packages
+            **/.flutter-plugins
+            **/.flutter-plugin-dependencies
+            **/.dart_tool/package_config.json
+          key: pub-cache-${{ runner.os }}-${{ hashFiles('**/pubspec.yaml') }}
+          restore-keys: |
+            pub-cache-${{ runner.os }}-
+
+      - name: 🔍 Verify Flutter installation
+        run: |
+          flutter doctor -v
+          flutter --version
+
+      - name: 📥 Install dependencies
+        run: flutter pub get
+
+      - name: 📊 Analyze project source
+        run: flutter analyze --fatal-infos
+        continue-on-error: true
+
+      - name: 🧪 Run tests
+        run: |
+          if [ -d "test" ] && [ -n "$(find test -name "*.dart" -type f)" ]; then
+            flutter test --coverage
+          else
+            echo "No tests found, skipping test execution"
+          fi
+        continue-on-error: true
+
+      - name: 🏗️ Build Flutter Web
+        run: |
+          flutter build web \
+            --release \
+            --base-href "/" \
+            --source-maps \
+            --dart-define=ENVIRONMENT=production
+
+      - name: 📊 Analyze build output
+        run: |
+          echo "📦 Build Analysis:"
+          echo "================="
+          ls -la build/web/
+          echo ""
+          echo "📁 Main files:"
+          du -h build/web/*.js build/web/*.html 2>/dev/null || echo "Build files not found"
+          echo ""
+          echo "🎯 Total build size:"
+          du -sh build/web/
+
+      - name: 🔧 Verify build integrity
+        run: |
+          cd build/web
+          REQUIRED_FILES=("index.html" "main.dart.js" "flutter.js" "manifest.json")
+          MISSING_FILES=()
+          
+          for file in "${REQUIRED_FILES[@]}"; do
+            if [ ! -f "$file" ]; then
+              MISSING_FILES+=("$file")
+            fi
+          done
+          
+          if [ ${#MISSING_FILES[@]} -gt 0 ]; then
+            echo "❌ Missing required files: ${MISSING_FILES[*]}"
+            exit 1
+          else
+            echo "✅ All required files are present!"
+          fi
+
+      - name: 🚀 Upload build artifacts
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: build/web
 
   # Deploy job (only for main branch)
   deploy:
@@ -154,62 +145,26 @@ jobs:
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/main' && (github.event_name == 'push' || github.event.inputs.force_deploy == 'true')
 
-    # Required for OIDC + Pages deployment API (repeat on deploy job per GitHub docs).
-    permissions:
-      contents: read
-      pages: write
-      id-token: write
-
-    # Requires matching rules on Settings → Environments → github-pages (allow branch `main`).
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
 
     steps:
-    - name: Verify Pages API (GitHub Actions source)
-      env:
-        GH_TOKEN: ${{ github.token }}
-      run: |
-        set -euo pipefail
-        api="https://api.github.com/repos/${{ github.repository }}/pages"
-        code=$(curl -sS -o resp.json -w "%{http_code}" \
-          -H "Authorization: Bearer $GH_TOKEN" \
-          -H "Accept: application/vnd.github+json" \
-          -H "X-GitHub-Api-Version: 2022-11-28" \
-          "$api")
-        if [ "$code" = "404" ]; then
-          echo "::error title=GitHub Pages not enabled::The Pages API returned 404 — no site exists for this repo yet."
-          echo "Fix: open https://github.com/${{ github.repository }}/settings/pages"
-          echo "Under Build and deployment → Source, choose GitHub Actions (not 'Deploy from a branch')."
-          echo "Org owners: ensure Pages is allowed under Organization settings → Pages."
-          exit 1
-        fi
-        if [ "$code" != "200" ]; then
-          echo "::error::GET /pages failed with HTTP $code"
-          cat resp.json
-          exit 1
-        fi
-        build_type=$(jq -r '.build_type // empty' resp.json)
-        if [ "$build_type" != "workflow" ]; then
-          echo "::error title=Wrong Pages source::deploy-pages only works when Pages uses GitHub Actions."
-          echo "Current API build_type: '${build_type:-unknown}' (need 'workflow')."
-          echo "Fix: https://github.com/${{ github.repository }}/settings/pages → Source → GitHub Actions."
-          exit 1
-        fi
-        echo "Pages site exists with build_type=workflow — OK to deploy."
+      - name: 🔧 Setup Pages
+        uses: actions/configure-pages@v5
 
-    - name: 🚀 Deploy to GitHub Pages
-      id: deployment
-      uses: actions/deploy-pages@v5
+      - name: 🚀 Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
 
-    - name: 📝 Create deployment summary
-      run: |
-        echo "## 🚀 Deployment Summary" >> $GITHUB_STEP_SUMMARY
-        echo "" >> $GITHUB_STEP_SUMMARY
-        echo "✅ **Status**: Deployed successfully" >> $GITHUB_STEP_SUMMARY
-        echo "🔗 **URL**: ${{ steps.deployment.outputs.page_url }}" >> $GITHUB_STEP_SUMMARY
-        echo "📦 **Commit**: \`${{ github.sha }}\`" >> $GITHUB_STEP_SUMMARY
-        echo "🏷️ **Branch**: \`${{ github.ref_name }}\`" >> $GITHUB_STEP_SUMMARY
-        echo "👤 **Actor**: @${{ github.actor }}" >> $GITHUB_STEP_SUMMARY
-        echo "⏰ **Time**: $(date -u)" >> $GITHUB_STEP_SUMMARY
-        echo "🐦 **Flutter**: ${{ env.FLUTTER_VERSION }}" >> $GITHUB_STEP_SUMMARY
+      - name: 📝 Create deployment summary
+        run: |
+          echo "## 🚀 Deployment Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "✅ **Status**: Deployed successfully" >> $GITHUB_STEP_SUMMARY
+          echo "🔗 **URL**: ${{ steps.deployment.outputs.page_url }}" >> $GITHUB_STEP_SUMMARY
+          echo "📦 **Commit**: \`${{ github.sha }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "🏷️ **Branch**: \`${{ github.ref_name }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "👤 **Actor**: @${{ github.actor }}" >> $GITHUB_STEP_SUMMARY
+          echo "⏰ **Time**: $(date -u)" >> $GITHUB_STEP_SUMMARY
+          echo "🐦 **Flutter**: ${{ env.FLUTTER_VERSION }}" >> $GITHUB_STEP_SUMMARY
