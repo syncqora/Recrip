@@ -158,6 +158,38 @@ jobs:
       url: ${{ steps.deployment.outputs.page_url }}
 
     steps:
+    - name: Verify Pages API (GitHub Actions source)
+      env:
+        GH_TOKEN: ${{ github.token }}
+      run: |
+        set -euo pipefail
+        api="https://api.github.com/repos/${{ github.repository }}/pages"
+        code=$(curl -sS -o resp.json -w "%{http_code}" \
+          -H "Authorization: Bearer $GH_TOKEN" \
+          -H "Accept: application/vnd.github+json" \
+          -H "X-GitHub-Api-Version: 2022-11-28" \
+          "$api")
+        if [ "$code" = "404" ]; then
+          echo "::error title=GitHub Pages not enabled::The Pages API returned 404 — no site exists for this repo yet."
+          echo "Fix: open https://github.com/${{ github.repository }}/settings/pages"
+          echo "Under Build and deployment → Source, choose GitHub Actions (not 'Deploy from a branch')."
+          echo "Org owners: ensure Pages is allowed under Organization settings → Pages."
+          exit 1
+        fi
+        if [ "$code" != "200" ]; then
+          echo "::error::GET /pages failed with HTTP $code"
+          cat resp.json
+          exit 1
+        fi
+        build_type=$(jq -r '.build_type // empty' resp.json)
+        if [ "$build_type" != "workflow" ]; then
+          echo "::error title=Wrong Pages source::deploy-pages only works when Pages uses GitHub Actions."
+          echo "Current API build_type: '${build_type:-unknown}' (need 'workflow')."
+          echo "Fix: https://github.com/${{ github.repository }}/settings/pages → Source → GitHub Actions."
+          exit 1
+        fi
+        echo "Pages site exists with build_type=workflow — OK to deploy."
+
     - name: 🚀 Deploy to GitHub Pages
       id: deployment
       uses: actions/deploy-pages@v5
