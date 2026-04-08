@@ -1,8 +1,14 @@
-# One-time repo setup (required before deploy works):
-# Settings → Pages → Build and deployment → Source: "GitHub Actions" (not "Deploy from a branch").
-# https://docs.github.com/en/pages/getting-started-with-github-pages/configuring-a-publishing-source-for-your-github-pages-site#publishing-with-a-custom-github-actions-workflow
+# One-time setup (without this, deploy-pages returns HTTP 404 "Not Found"):
 #
-# Optional: use actions/configure-pages with enablement: auto + a PAT (not GITHUB_TOKEN) if you must enable Pages from CI.
+# Repository: Settings → Pages → Build and deployment → Source: "GitHub Actions".
+#   https://github.com/syncqora/Recrip/settings/pages
+#
+# Organization (syncqora): If Pages is disabled org-wide, an org owner must allow it:
+#   Organization Settings → Code, planning, and automation → Pages → enable policy for this repo.
+#
+# Docs: https://docs.github.com/en/pages/getting-started-with-github-pages/configuring-a-publishing-source-for-your-github-pages-site#publishing-with-a-custom-github-actions-workflow
+#
+# Optional: actions/configure-pages with enablement: auto + PAT (not GITHUB_TOKEN) to enable Pages from CI.
 # See https://github.com/actions/configure-pages#inputs
 
 name: Build and Deploy Flutter Web
@@ -140,16 +146,22 @@ jobs:
     needs: build
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/main' && (github.event_name == 'push' || github.event.inputs.force_deploy == 'true')
-    
+
+    # Required for OIDC + Pages deployment API (repeat on deploy job per GitHub docs).
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
+
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
-      
+
     steps:
     - name: 🚀 Deploy to GitHub Pages
       id: deployment
-      uses: actions/deploy-pages@v4
-        
+      uses: actions/deploy-pages@v5
+
     - name: 📝 Create deployment summary
       run: |
         echo "## 🚀 Deployment Summary" >> $GITHUB_STEP_SUMMARY
