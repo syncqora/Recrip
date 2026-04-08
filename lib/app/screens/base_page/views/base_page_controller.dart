@@ -14,15 +14,8 @@ import '../../dashboard/views/dashboard/dashboard.dart';
 
 class BasePageController extends BaseController {
   BasePageController() {
-    final auth = Get.find<AuthService>();
-    final token = auth.accessToken;
-    if (token != null && token.isNotEmpty) {
-      final path = AuthLanding.path(persistedEmail: auth.loggedInEmail);
-      _setShellAndNavForPath(path);
-    } else {
-      currentPage = const LandingPage();
-      appBarTitle = ''.obs;
-    }
+    currentPage = const LandingPage();
+    appBarTitle = ''.obs;
   }
 
   void _setShellAndNavForPath(String path) {
@@ -64,12 +57,20 @@ class BasePageController extends BaseController {
       final auth = Get.find<AuthService>();
       final token = auth.accessToken;
 
+      final requestedPath = _requestedWebPath();
+
       if (token != null && token.isNotEmpty) {
         try {
           final intro = await auth.introspect();
           if (intro.active) {
             appSettingsController.isUserLoggedIn.value = true;
             boxDb.writeBoolValue(key: BoxConstants.isUserLoggedIn, value: true);
+            if (requestedPath != null && _isSupportedPath(requestedPath)) {
+              if (_isProtectedPath(requestedPath) || _isPublicPath(requestedPath)) {
+                _applyLandingPath(_normalizePublicPath(requestedPath));
+                return;
+              }
+            }
             _applyLandingPath(
               AuthLanding.path(intro: intro, persistedEmail: auth.loggedInEmail),
             );
@@ -84,6 +85,12 @@ class BasePageController extends BaseController {
           } else {
             appSettingsController.isUserLoggedIn.value = true;
             boxDb.writeBoolValue(key: BoxConstants.isUserLoggedIn, value: true);
+            if (requestedPath != null && _isSupportedPath(requestedPath)) {
+              if (_isProtectedPath(requestedPath) || _isPublicPath(requestedPath)) {
+                _applyLandingPath(_normalizePublicPath(requestedPath));
+                return;
+              }
+            }
             _applyLandingPath(
               AuthLanding.path(persistedEmail: auth.loggedInEmail),
             );
@@ -92,6 +99,12 @@ class BasePageController extends BaseController {
         } catch (_) {
           appSettingsController.isUserLoggedIn.value = true;
           boxDb.writeBoolValue(key: BoxConstants.isUserLoggedIn, value: true);
+          if (requestedPath != null && _isSupportedPath(requestedPath)) {
+            if (_isProtectedPath(requestedPath) || _isPublicPath(requestedPath)) {
+              _applyLandingPath(_normalizePublicPath(requestedPath));
+              return;
+            }
+          }
           _applyLandingPath(
             AuthLanding.path(persistedEmail: auth.loggedInEmail),
           );
@@ -106,11 +119,52 @@ class BasePageController extends BaseController {
         appSettingsController.isUserLogout.value = false;
       }
 
+      if (requestedPath != null && _isSupportedPath(requestedPath)) {
+        if (_isProtectedPath(requestedPath)) {
+          _applyLandingPath(AppRoutes.home);
+          return;
+        }
+        if (_isPublicPath(requestedPath)) {
+          _applyLandingPath(_normalizePublicPath(requestedPath));
+          return;
+        }
+      }
       _applyLandingPath(AppRoutes.home);
     } catch (e) {
       log("Error setDefaultLanding: $e");
       _applyLandingPath(AppRoutes.home);
     }
+  }
+
+  String? _requestedWebPath() {
+    if (!GetPlatform.isWeb) return null;
+    final raw = Uri.base.path;
+    if (raw.isEmpty || raw == '/') return AppRoutes.basePage;
+    return raw.replaceFirst(RegExp(r'/+$'), '');
+  }
+
+  bool _isSupportedPath(String path) {
+    return _isProtectedPath(path) || _isPublicPath(path);
+  }
+
+  bool _isProtectedPath(String path) {
+    return path == AppRoutes.dashboard || path == AppRoutes.adminDashboard;
+  }
+
+  bool _isPublicPath(String path) {
+    return path == AppRoutes.basePage ||
+        path == AppRoutes.home ||
+        path == AppRoutes.login ||
+        path == AppRoutes.forgotPassword ||
+        path == AppRoutes.resetPassword ||
+        path == AppRoutes.otp;
+  }
+
+  String _normalizePublicPath(String path) {
+    if (path == AppRoutes.basePage) {
+      return AppRoutes.home;
+    }
+    return path;
   }
 
   void _applyLandingPath(String path) {

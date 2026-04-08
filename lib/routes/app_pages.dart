@@ -9,7 +9,19 @@ part 'app_routes.dart';
 class AppPages {
   AppPages._();
 
-  static const initial = _Paths.basePage;
+  static String get initial {
+    if (GetPlatform.isWeb) {
+      final rawPath = Uri.base.path;
+      final normalizedPath = rawPath == '/' || rawPath.isEmpty
+          ? _Paths.basePage
+          : rawPath.replaceFirst(RegExp(r'/+$'), '');
+      final hasRegisteredRoute = routes.any((route) => route.name == normalizedPath);
+      if (hasRegisteredRoute) {
+        return normalizedPath;
+      }
+    }
+    return _Paths.basePage;
+  }
 
   static GetPage get unknownPage => routes.first;
 
