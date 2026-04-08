@@ -10,6 +10,13 @@
 #
 # Optional: actions/configure-pages with enablement: auto + PAT (not GITHUB_TOKEN) to enable Pages from CI.
 # See https://github.com/actions/configure-pages#inputs
+#
+# If deploy fails with: Branch "main" is not allowed to deploy to github-pages (environment protection):
+#   Repo → Settings → Environments → github-pages
+#   https://github.com/syncqora/Recrip/settings/environments
+#   Under "Deployment branches", allow `main` (e.g. "Selected branches" → add `main`, or matching rule).
+#   If "Required reviewers" is enabled, approve the pending deployment in the Actions run.
+# Org: check Organization → Environments / rulesets that override repo settings.
 
 name: Build and Deploy Flutter Web
 
@@ -153,6 +160,7 @@ jobs:
       pages: write
       id-token: write
 
+    # Requires matching rules on Settings → Environments → github-pages (allow branch `main`).
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
