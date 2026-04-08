@@ -43,7 +43,7 @@ concurrency:
   cancel-in-progress: false
 
 env:
-  FLUTTER_VERSION: "3.35.3"
+  FLUTTER_VERSION: "3.41.6"
 
 jobs:
   # Build and test job
