@@ -13,9 +13,10 @@ class ApiEndPoints {
   static String dataManagementBaseUrl =
       'https://data-management-service.recrip.com';
 
-  /// Sent as `X-Tenant-Id` on asset/schema API calls.
+  /// Tenant header is temporarily disabled in API services.
+  /// Keep this for future re-enable if backend requires it again.
   static String tenantId = 'test-property-001';
 
   /// Sent as `X-Client-Id` on content/subscription API calls.
-  static String clientId = 'syncquora-recrip-web';
+  static String clientId = 'syncqora-recrip-web';
 }

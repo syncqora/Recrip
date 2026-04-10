@@ -7,6 +7,11 @@ abstract class MemberRepository {
     int pageNumber,
     int pageSize,
   });
+  Future<MemberAsset?> createMember({required Map<String, dynamic> body});
+  Future<MemberAsset?> updateMember({
+    required String contentId,
+    required Map<String, dynamic> body,
+  });
 }
 
 class MemberRepo implements MemberRepository {
@@ -22,4 +27,14 @@ class MemberRepo implements MemberRepository {
     int pageNumber = 1,
     int pageSize = 20,
   }) => services.getMembers(pageNumber: pageNumber, pageSize: pageSize);
+
+  @override
+  Future<MemberAsset?> createMember({required Map<String, dynamic> body}) =>
+      services.createMember(body: body);
+
+  @override
+  Future<MemberAsset?> updateMember({
+    required String contentId,
+    required Map<String, dynamic> body,
+  }) => services.updateMember(contentId: contentId, body: body);
 }

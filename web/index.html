@@ -61,6 +61,35 @@
     }, 15000);
   </script>
   <div class="boot-spinner" aria-hidden="true"></div>
+  <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+  <script>
+    // Bridge for Flutter web: opens Razorpay Checkout and resolves with a JSON string.
+    window._rzpCheckoutOpen = function (optionsJson) {
+      return new Promise(function (resolve) {
+        try {
+          var o = JSON.parse(optionsJson);
+          o.handler = function (response) {
+            resolve(JSON.stringify({
+              kind: 'success',
+              paymentId: response.razorpay_payment_id,
+              orderId: response.razorpay_order_id,
+              signature: response.razorpay_signature
+            }));
+          };
+          var rzp = new Razorpay(o);
+          rzp.on('payment.failed', function (response) {
+            resolve(JSON.stringify({ kind: 'failed', payload: response.error }));
+          });
+          rzp.on('modal.dismiss', function () {
+            resolve(JSON.stringify({ kind: 'dismissed' }));
+          });
+          rzp.open();
+        } catch (e) {
+          resolve(JSON.stringify({ kind: 'error', message: String(e) }));
+        }
+      });
+    };
+  </script>
   <script src="flutter_bootstrap.js" async></script>
 </body>
 </html>

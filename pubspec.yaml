@@ -91,6 +91,8 @@ dependencies:
   pdf: ^3.11.1
   # Share and print PDF.
   printing: ^5.13.4
+  # HTTP client (Razorpay order creation via local dev server).
+  http: ^1.6.0
 
 dev_dependencies:
   flutter_test:
@@ -111,7 +113,6 @@ dev_dependencies:
   json_serializable: ^6.11.1
 
   web: ^1.1.1
-  http: ^1.6.0
   html: ^0.15.6
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec

@@ -16,7 +16,6 @@ class MemberServices {
         Get.find<ApiServices>(tag: ApiServicesTag.dataManagement);
     final headers = <String, String>{
       'X-Tracking-Id': newTrackingId(),
-      'X-Tenant-Id': ApiEndPoints.tenantId,
     };
 
     final Response<dynamic> res = await api.callApi(
@@ -60,7 +59,6 @@ class MemberServices {
         Get.find<ApiServices>(tag: ApiServicesTag.dataManagement);
     final headers = <String, String>{
       'X-Tracking-Id': newTrackingId(),
-      'X-Tenant-Id': ApiEndPoints.tenantId,
       'X-Client-Id': ApiEndPoints.clientId,
     };
     final query = <String, dynamic>{
@@ -97,5 +95,85 @@ class MemberServices {
       if (e is ApiException || e is JSONException) rethrow;
       throw JSONException(e.toString());
     }
+  }
+
+  /// POST `/content/asset/member`
+  /// Creates a member asset and returns parsed created asset (if present).
+  Future<MemberAsset?> createMember({
+    required Map<String, dynamic> body,
+  }) async {
+    final ApiServices api =
+        Get.find<ApiServices>(tag: ApiServicesTag.dataManagement);
+    final headers = <String, String>{
+      'X-Client-Id': ApiEndPoints.clientId,
+      'Content-Type': 'application/json',
+    };
+
+    final Response<dynamic> res = await api.callApi(
+      httpMethod: HttpMethod.post,
+      endPoint: MemberEndPoints.contentMember,
+      headers: headers,
+      body: body,
+    );
+    debugPrint(
+      '[MemberCreate] status=${res.statusCode} bodyString=\n${res.bodyString}',
+    );
+
+    final raw = res.bodyString;
+    Map<String, dynamic>? map;
+    final responseBody = res.body;
+    if (responseBody is Map<String, dynamic>) {
+      map = responseBody;
+    } else if (raw != null && raw.isNotEmpty) {
+      final decoded = jsonDecode(raw);
+      if (decoded is Map<String, dynamic>) map = decoded;
+    }
+    if (map == null) return null;
+    final parsed = MemberSchemaResponse.fromJson(map);
+    if (parsed.items.isNotEmpty) return parsed.items.first;
+    final data = map['data'];
+    if (data is Map<String, dynamic>) {
+      return MemberAsset.fromJson(data);
+    }
+    return null;
+  }
+
+  /// PUT `/content/asset/member/{contentId}`
+  Future<MemberAsset?> updateMember({
+    required String contentId,
+    required Map<String, dynamic> body,
+  }) async {
+    final ApiServices api =
+        Get.find<ApiServices>(tag: ApiServicesTag.dataManagement);
+    final headers = <String, String>{
+      'X-Tracking-Id': newTrackingId(),
+      'X-Client-Id': ApiEndPoints.clientId,
+      'Content-Type': 'application/json',
+    };
+    final Response<dynamic> res = await api.callApi(
+      httpMethod: HttpMethod.put,
+      endPoint: MemberEndPoints.contentMemberById(contentId),
+      headers: headers,
+      body: body,
+    );
+    debugPrint(
+      '[MemberUpdate] id=$contentId status=${res.statusCode} bodyString=\n${res.bodyString}',
+    );
+
+    final raw = res.bodyString;
+    Map<String, dynamic>? map;
+    final responseBody = res.body;
+    if (responseBody is Map<String, dynamic>) {
+      map = responseBody;
+    } else if (raw != null && raw.isNotEmpty) {
+      final decoded = jsonDecode(raw);
+      if (decoded is Map<String, dynamic>) map = decoded;
+    }
+    if (map == null) return null;
+    final parsed = MemberSchemaResponse.fromJson(map);
+    if (parsed.items.isNotEmpty) return parsed.items.first;
+    final data = map['data'];
+    if (data is Map<String, dynamic>) return MemberAsset.fromJson(data);
+    return null;
   }
 }

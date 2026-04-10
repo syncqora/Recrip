@@ -533,10 +533,12 @@ class MembersView extends GetView<MembersController> {
       context,
       ViewMemberModal(
         member: ViewMemberData(
+          contentId: row.contentId,
           name: row.name,
           phone: row.phone,
           email: row.email,
           plan: row.plan,
+          startDate: row.startDate,
           expiry: row.expiry,
           statusLabel: label,
           statusColor: color,

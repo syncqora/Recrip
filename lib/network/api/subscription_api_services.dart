@@ -9,11 +9,11 @@ import '../../shared/utils/tracking_id.dart';
 import '../endPoints/end_points.dart';
 import '../services/services.dart';
 
-/// Subscription / asset schema API (GET with tenant + tracking headers).
+/// Subscription / asset schema API.
 ///
 /// On **Flutter web**, these headers trigger a CORS preflight. If login works but this
 /// call shows `XMLHttpRequest error`, your API likely allows `Content-Type` on `/auth/login`
-/// but does not list `Authorization`, `X-Tenant-Id`, and `X-Tracking-Id` in
+/// but does not list `Authorization` and custom headers in
 /// `Access-Control-Allow-Headers` for `/schema/*` (or global OPTIONS). Fix CORS on the
 /// server or use `tool/web_cors_proxy.dart` with `--dart-define=API_BASE_URL=…`.
 class SubscriptionServices {
@@ -23,7 +23,6 @@ class SubscriptionServices {
         Get.find<ApiServices>(tag: ApiServicesTag.dataManagement);
     final headers = <String, String>{
       'X-Tracking-Id': newTrackingId(),
-      'X-Tenant-Id': ApiEndPoints.tenantId,
     };
 
     debugPrint('[SubscriptionSchema] calling callApi GET ${SubscriptionEndPoints.schemaSubscription}');
@@ -76,7 +75,6 @@ class SubscriptionServices {
         Get.find<ApiServices>(tag: ApiServicesTag.dataManagement);
     final headers = <String, String>{
       'X-Tracking-Id': newTrackingId(),
-      'X-Tenant-Id': ApiEndPoints.tenantId,
       'X-Client-Id': ApiEndPoints.clientId,
     };
     final query = <String, dynamic>{

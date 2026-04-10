@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/flutter_svg.dart';
 import 'package:get/get.dart';
 
 import '../../../../shared/widgets/app_close_button.dart';
@@ -8,7 +7,7 @@ import '../../../../shared/widgets/app_modal_primary_button.dart';
 import '../../../../shared/widgets/success_toast.dart';
 import '../../authentication/widgets/app_constants.dart';
 import '../../authentication/widgets/auth_form_field_section.dart';
-import '../../authentication/widgets/auth_text_field.dart';
+import '../views/members/members_controller.dart';
 import 'add_member_modal_mobile_view.dart';
 import 'add_member_modal_tablet_view.dart';
 import 'subscription_utils.dart';
@@ -17,15 +16,23 @@ import 'package:saas/shared/utils/app_date_picker.dart';
 class AddMemberModal extends StatefulWidget {
   const AddMemberModal({
     super.key,
+    this.initialContentId,
     this.initialFullName,
     this.initialPhone,
+    this.initialEmail,
     this.initialPlan,
+    this.initialStartDate,
+    this.initialExpiryDate,
     this.isEditMode = false,
   });
 
+  final String? initialContentId;
   final String? initialFullName;
   final String? initialPhone;
+  final String? initialEmail;
   final String? initialPlan;
+  final String? initialStartDate;
+  final String? initialExpiryDate;
   final bool isEditMode;
 
   @override
@@ -39,8 +46,11 @@ class _AddMemberModalState extends State<AddMemberModal> {
 
   String? _selectedPlan;
   DateTime? _startDate;
+  DateTime? _initialStartDate;
+  DateTime? _initialExpiryDate;
   bool _whatsApp = false;
   bool _email = false;
+  bool _isSubmitting = false;
 
   bool get isRenewMode =>
       widget.initialFullName != null || widget.initialPhone != null;
@@ -55,7 +65,11 @@ class _AddMemberModalState extends State<AddMemberModal> {
       _phoneController.text = (widget.initialPhone ?? '')
           .replaceFirst(RegExp(r'^\+91\s*'), '')
           .trim();
+      _emailController.text = widget.initialEmail ?? '';
       _selectedPlan = widget.initialPlan;
+      _initialStartDate = _parseDate(widget.initialStartDate);
+      _initialExpiryDate = _parseDate(widget.initialExpiryDate);
+      _startDate = _initialStartDate;
     }
     _fullNameController.addListener(_onFormChanged);
     _phoneController.addListener(_onFormChanged);
@@ -78,8 +92,11 @@ class _AddMemberModalState extends State<AddMemberModal> {
   bool get _isSaveEnabled =>
       _fullNameController.text.trim().isNotEmpty &&
       _emailController.text.trim().isNotEmpty &&
+      _isValidEmail(_emailController.text.trim()) &&
+      _isValidPhone(_phoneController.text.trim()) &&
       _selectedPlan != null &&
-      _startDate != null;
+      _startDate != null &&
+      !_isSubmitting;
 
   Future<void> _pickStartDate() async {
     final date = await showAppDatePicker(
@@ -92,28 +109,122 @@ class _AddMemberModalState extends State<AddMemberModal> {
     if (date != null) setState(() => _startDate = date);
   }
 
-  void _onSave() {
-    if (_fullNameController.text.trim().isEmpty) {
+  Future<void> _onSave() async {
+    final name = _fullNameController.text.trim();
+    final email = _emailController.text.trim();
+    final phoneRaw = _phoneController.text.trim();
+    final plan = _selectedPlan;
+    final startDate = _startDate;
+
+    if (name.isEmpty) {
       Get.snackbar('Required', 'Please enter Full Name');
       return;
     }
-    if (_emailController.text.trim().isEmpty) {
+    if (email.isEmpty) {
       Get.snackbar('Required', 'Please enter Email Address');
       return;
     }
-    if (_selectedPlan == null) {
+    if (!_isValidEmail(email)) {
+      Get.snackbar('Invalid Email', 'Please enter a valid email address');
+      return;
+    }
+    if (!_isValidPhone(phoneRaw)) {
+      Get.snackbar('Invalid Phone', 'Please enter a valid phone number');
+      return;
+    }
+    if (plan == null) {
       Get.snackbar('Required', 'Please choose a Plan');
       return;
     }
-    if (_startDate == null) {
+    if (startDate == null) {
       Get.snackbar('Required', 'Please select Start Date');
       return;
     }
-    SuccessToast.show(
-      context,
-      title: 'Member Added Successfully!',
-      popRoute: true,
-    );
+    final expiresAt = calculateExpiryDate(plan, startDate);
+    if (expiresAt == null) {
+      Get.snackbar('Invalid Plan', 'Unable to calculate expiry date');
+      return;
+    }
+
+    final controller = Get.find<MembersController>();
+    setState(() => _isSubmitting = true);
+    try {
+      final normalizedPhone = _normalizePhone(phoneRaw);
+      if (isEditMode) {
+        final contentId = widget.initialContentId;
+        if (contentId == null || contentId.isEmpty) {
+          Get.snackbar('Edit Failed', 'Missing member content id');
+          return;
+        }
+        await controller.updateMember(
+          contentId: contentId,
+          name: name,
+          email: email,
+          phone: normalizedPhone,
+          plan: plan,
+          startDate: startDate,
+          expiresAt: expiresAt,
+        );
+      } else {
+        await controller.addMember(
+          name: name,
+          email: email,
+          phone: normalizedPhone,
+          plan: plan,
+          startDate: startDate,
+          expiresAt: expiresAt,
+        );
+      }
+      if (!mounted) return;
+      SuccessToast.show(
+        context,
+        title: isEditMode
+            ? 'Member Updated Successfully!'
+            : 'Member Added Successfully!',
+        popRoute: true,
+      );
+    } catch (e) {
+      Get.snackbar('Add Member Failed', e.toString());
+    } finally {
+      if (mounted) setState(() => _isSubmitting = false);
+    }
+  }
+
+  bool _isValidEmail(String email) {
+    final regex = RegExp(r'^[^\s@]+@[^\s@]+\.[^\s@]+$');
+    return regex.hasMatch(email);
+  }
+
+  bool _isValidPhone(String phone) {
+    final digits = phone.replaceAll(RegExp(r'[^0-9]'), '');
+    return digits.length >= 10 && digits.length <= 15;
+  }
+
+  String _normalizePhone(String phone) {
+    final trimmed = phone.trim();
+    if (trimmed.startsWith('+')) return trimmed;
+    final digits = trimmed.replaceAll(RegExp(r'[^0-9]'), '');
+    return '+$digits';
+  }
+
+  DateTime? _parseDate(String? value) {
+    if (value == null || value.trim().isEmpty || value.trim() == '—') {
+      return null;
+    }
+    final raw = value.trim();
+    final slash = RegExp(r'^(\d{1,2})/(\d{1,2})/(\d{4})$');
+    final m = slash.firstMatch(raw);
+    if (m != null) {
+      final d = int.parse(m.group(1)!);
+      final mon = int.parse(m.group(2)!);
+      final y = int.parse(m.group(3)!);
+      return DateTime(y, mon, d);
+    }
+    try {
+      return DateTime.parse(raw);
+    } catch (_) {
+      return null;
+    }
   }
 
   @override
@@ -134,7 +245,7 @@ class _AddMemberModalState extends State<AddMemberModal> {
         onWhatsAppChanged: (v) => setState(() => _whatsApp = v),
         onEmailChanged: (v) => setState(() => _email = v),
         onCancel: () => Navigator.of(context).pop(),
-        onSave: _onSave,
+        onSave: () => _onSave(),
         isSaveEnabled: _isSaveEnabled,
         isNameEditable: _isNameEditable,
         title: isEditMode
@@ -164,7 +275,7 @@ class _AddMemberModalState extends State<AddMemberModal> {
         onWhatsAppChanged: (v) => setState(() => _whatsApp = v),
         onEmailChanged: (v) => setState(() => _email = v),
         onCancel: () => Navigator.of(context).pop(),
-        onSave: _onSave,
+        onSave: () => _onSave(),
         isSaveEnabled: _isSaveEnabled,
         isNameEditable: _isNameEditable,
         title: isEditMode
@@ -570,7 +681,20 @@ class _AddMemberModalState extends State<AddMemberModal> {
               const SizedBox(height: 8),
               Builder(
                 builder: (_) {
-                  final expiry = calculateExpiryDate(_selectedPlan, _startDate);
+                  final calculated = calculateExpiryDate(_selectedPlan, _startDate);
+                  final samePlan = _selectedPlan == widget.initialPlan;
+                  final sameStart =
+                      _startDate != null &&
+                      _initialStartDate != null &&
+                      _startDate!.year == _initialStartDate!.year &&
+                      _startDate!.month == _initialStartDate!.month &&
+                      _startDate!.day == _initialStartDate!.day;
+                  final expiry = (isEditMode &&
+                          samePlan &&
+                          sameStart &&
+                          _initialExpiryDate != null)
+                      ? _initialExpiryDate
+                      : calculated;
                   return CustomPaint(
                     foregroundPainter: _DashedBorderPainter(
                       color: const Color(0xFFCBD5E1),
@@ -708,7 +832,7 @@ class _AddMemberModalState extends State<AddMemberModal> {
           height: 44,
           child: AppModalPrimaryButton(
             label: isRenewMode ? 'Renew' : 'Save Member',
-            onPressed: _isSaveEnabled ? _onSave : null,
+            onPressed: _isSaveEnabled ? () => _onSave() : null,
             padding: const EdgeInsets.fromLTRB(20, 12, 20, 12),
             minimumSize: const Size(146, 44),
             borderRadius: 10,

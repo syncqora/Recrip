@@ -13,6 +13,7 @@ import 'views/renewals/renewals_view.dart';
 import 'views/reports/reports_view.dart';
 import 'views/settings/settings_view.dart';
 import 'package:saas/app/subscriptions/subscriptions_view.dart';
+import 'views/payments/payments_view.dart';
 import 'package:saas/shared/constants/app_strings.dart';
 import 'package:saas/shared/constants/app_icons.dart';
 
@@ -98,6 +99,7 @@ class Dashboard extends GetView<DashboardController> {
     reminders: 'assets/icons/bell-ring.png',
     reports: 'assets/icons/chart-column-big.png',
     settings: 'assets/icons/settings.png',
+    payments: 'assets/icons/credit-card.svg',
   );
 
   Widget _buildSidebar(BuildContext context) {
@@ -138,6 +140,11 @@ class Dashboard extends GetView<DashboardController> {
           iconPath: _menuIcons.settings,
           label: AppStrings.navSettings,
           isActive: index == 6,
+        ),
+        _NavItem(
+          iconPath: _menuIcons.payments,
+          label: AppStrings.navPayments,
+          isActive: index == 7,
         ),
       ];
       return Container(
@@ -197,12 +204,9 @@ class Dashboard extends GetView<DashboardController> {
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 17),
             child: Row(
               children: [
-                Image.asset(
+                _navIcon(
                   item.iconPath,
-                  width: 24,
-                  height: 24,
-                  color: item.isActive ? _purple : _sidebarIconColor,
-                  colorBlendMode: BlendMode.srcIn,
+                  isActive: item.isActive,
                 ),
                 const SizedBox(width: 16),
                 Text(
@@ -217,6 +221,26 @@ class Dashboard extends GetView<DashboardController> {
           ),
         ),
       ),
+    );
+  }
+
+  Widget _navIcon(String path, {required bool isActive}) {
+    final color = isActive ? _purple : _sidebarIconColor;
+    if (path.toLowerCase().endsWith('.svg')) {
+      return SvgPicture.asset(
+        path,
+        width: 24,
+        height: 24,
+        color: color,
+        colorBlendMode: BlendMode.srcIn,
+      );
+    }
+    return Image.asset(
+      path,
+      width: 24,
+      height: 24,
+      color: color,
+      colorBlendMode: BlendMode.srcIn,
     );
   }
 
@@ -279,6 +303,7 @@ class Dashboard extends GetView<DashboardController> {
               if (index == 4) return const RemindersView();
               if (index == 5) return const ReportsView();
               if (index == 6) return const SettingsView();
+              if (index == 7) return const PaymentsView();
               return _buildDashboardBody();
             }),
           ),

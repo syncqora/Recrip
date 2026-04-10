@@ -77,24 +77,30 @@ class MemberAsset {
       auRList = auRRaw.map((e) => e.toString()).toList();
     }
 
+    String? readString(String key) {
+      final v = json[key];
+      if (v == null) return null;
+      return v.toString();
+    }
+
     return MemberAsset(
-      id: json['id'] as String? ?? '',
-      key: json['key'] as String? ?? '',
-      name: json['name'] as String? ?? '',
-      email: json['email'] as String?,
-      phone: json['phone'] as String?,
-      plan: json['plan'] as String?,
-      expiresAt: json['expiresAt'] as String?,
-      status: json['status'] as String?,
-      st: json['st'] as String?,
-      cty: json['cty'] as String?,
-      urn: json['urn'] as String?,
-      ct: json['ct'] as String?,
-      ut: json['ut'] as String?,
+      id: readString('id') ?? '',
+      key: readString('key') ?? '',
+      name: readString('name') ?? '',
+      email: readString('email'),
+      phone: readString('phone'),
+      plan: readString('plan'),
+      expiresAt: readString('expiresAt') ?? readString('expires_at'),
+      status: readString('status'),
+      st: readString('st'),
+      cty: readString('cty'),
+      urn: readString('urn'),
+      ct: readString('ct'),
+      ut: readString('ut'),
       prd: prdList,
-      auId: json['au_id'] as String?,
+      auId: readString('au_id'),
       auR: auRList,
-      auUt: json['au_ut'] as String?,
+      auUt: readString('au_ut'),
     );
   }
 }

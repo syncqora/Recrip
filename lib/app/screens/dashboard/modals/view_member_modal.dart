@@ -10,19 +10,23 @@ import 'modal_route_helper.dart';
 /// Data for the View Member modal.
 class ViewMemberData {
   const ViewMemberData({
+    required this.contentId,
     required this.name,
     required this.phone,
     required this.email,
     required this.plan,
+    required this.startDate,
     required this.expiry,
     required this.statusLabel,
     required this.statusColor,
   });
 
+  final String contentId;
   final String name;
   final String phone;
   final String email;
   final String plan;
+  final String startDate;
   final String expiry;
   final String statusLabel;
   final Color statusColor;
@@ -79,9 +83,13 @@ class ViewMemberModal extends StatelessWidget {
           openModalWithTransition(
             context,
             AddMemberModal(
+              initialContentId: member.contentId,
               initialFullName: member.name,
               initialPhone: member.phone,
+              initialEmail: member.email,
               initialPlan: member.plan,
+              initialStartDate: member.startDate,
+              initialExpiryDate: member.expiry,
               isEditMode: true,
             ),
           );
@@ -274,9 +282,13 @@ class ViewMemberModal extends StatelessWidget {
                 openModalWithTransition(
                   context,
                   AddMemberModal(
+                    initialContentId: member.contentId,
                     initialFullName: member.name,
                     initialPhone: member.phone,
+                    initialEmail: member.email,
                     initialPlan: member.plan,
+                    initialStartDate: member.startDate,
+                    initialExpiryDate: member.expiry,
                     isEditMode: true,
                   ),
                 );

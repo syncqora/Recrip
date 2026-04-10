@@ -32,7 +32,7 @@ class _AuthSupportFooterState extends State<AuthSupportFooter> {
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           GestureDetector(
-            onTap: () => appNav.changePage(AppRoutes.dashboard),
+            onTap: () {},
             child: Text(
               AppStrings.anySupportRequiredText,
               style: Get.theme.textTheme.bodySmall?.copyWith(
@@ -46,7 +46,7 @@ class _AuthSupportFooterState extends State<AuthSupportFooter> {
             onEnter: (_) => setState(() => _isLinkHovered = true),
             onExit: (_) => setState(() => _isLinkHovered = false),
             child: GestureDetector(
-              onTap: () => appNav.changePage(AppRoutes.adminDashboard),
+              onTap: () {},
               // onTap: widget.onReachOut,
               child: Text(
                 AppStrings.reachOutToUsText,

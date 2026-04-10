@@ -13,18 +13,22 @@ import '../../modals/view_member_modal.dart';
 enum MemberStatus { active, expired, expiring }
 
 class MemberRow {
+  final String contentId;
   final String name;
   final String phone;
   final String email;
   final String plan;
+  final String startDate;
   final String expiry;
   final MemberStatus status;
 
   MemberRow({
+    required this.contentId,
     required this.name,
     required this.phone,
     required this.email,
     required this.plan,
+    required this.startDate,
     required this.expiry,
     required this.status,
   });

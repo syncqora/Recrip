@@ -84,6 +84,7 @@ abstract final class AppStrings {
   static const String navReminders = 'Reminders';
   static const String navReports = 'Reports';
   static const String navSettings = 'Settings';
+  static const String navPayments = 'Payments';
 
   // Dashboard summary cards
   static const String summaryActiveMembers = 'Active Members';
