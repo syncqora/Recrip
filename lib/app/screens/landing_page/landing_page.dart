@@ -29,6 +29,7 @@ class _LandingPageState extends State<LandingPage> {
   final _pricingKey = GlobalKey();
   final _contactKey = GlobalKey();
   _TopNavTab _activeNavTab = _TopNavTab.features;
+  bool _renderDeferredSections = false;
 
   @override
   void initState() {
@@ -36,9 +37,9 @@ class _LandingPageState extends State<LandingPage> {
     LoginController.registerHeroIfNeeded();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
+      setState(() => _renderDeferredSections = true);
       for (final path in const [
         AppIcons.recripLogo,
-        'assets/images/Dashboard.webp',
         'assets/images/logo.webp',
       ]) {
         precacheImage(AssetImage(path), context);
@@ -113,16 +114,22 @@ class _LandingPageState extends State<LandingPage> {
               child: Column(
                 children: [
                   _HeroSection(padding: pad),
-                  _FeatureSection(
-                    key: _featuresKey,
-                    padding: pad,
-                    mobile: mobile,
-                  ),
-                  _TeamSection(padding: pad, mobile: mobile),
-                  _StepSection(key: _stepsKey, padding: pad, mobile: mobile),
-                  _CtaSection(key: _pricingKey, padding: pad),
-                  _FaqSection(key: _contactKey, padding: pad, mobile: mobile),
-                  _FooterSection(padding: pad),
+                  if (_renderDeferredSections) ...[
+                    _FeatureSection(
+                      key: _featuresKey,
+                      padding: pad,
+                      mobile: mobile,
+                    ),
+                    _TeamSection(padding: pad, mobile: mobile),
+                    _StepSection(key: _stepsKey, padding: pad, mobile: mobile),
+                    _CtaSection(key: _pricingKey, padding: pad),
+                    _FaqSection(
+                      key: _contactKey,
+                      padding: pad,
+                      mobile: mobile,
+                    ),
+                    _FooterSection(padding: pad),
+                  ],
                 ],
               ),
             ),

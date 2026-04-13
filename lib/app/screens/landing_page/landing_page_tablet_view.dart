@@ -22,6 +22,16 @@ class _LandingPageTabletViewState extends State<LandingPageTabletView> {
   final _contactKey = GlobalKey();
   _TabletNavTab _activeNavTab = _TabletNavTab.features;
   _TabletPreviewTab _selectedPreviewTab = _TabletPreviewTab.dashboard;
+  bool _renderDeferredSections = false;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      setState(() => _renderDeferredSections = true);
+    });
+  }
 
   Future<void> _scrollTo(GlobalKey key) async {
     final context = key.currentContext;
@@ -120,18 +130,20 @@ class _LandingPageTabletViewState extends State<LandingPageTabletView> {
               child: Column(
                 children: [
                   _TabletHeroSection(padding: padding),
-                  _TabletFeatureSection(key: _featuresKey, padding: padding),
-                  _TabletPreviewSection(
-                    key: _previewKey,
-                    padding: padding,
-                    selectedTab: _selectedPreviewTab,
-                    onPreviewSelected: (tab) =>
-                        setState(() => _selectedPreviewTab = tab),
-                  ),
-                  _TabletStepSection(padding: padding),
-                  _TabletCtaSection(key: _pricingKey, padding: padding),
-                  _TabletFaqSection(key: _contactKey, padding: padding),
-                  _TabletFooterSection(padding: padding),
+                  if (_renderDeferredSections) ...[
+                    _TabletFeatureSection(key: _featuresKey, padding: padding),
+                    _TabletPreviewSection(
+                      key: _previewKey,
+                      padding: padding,
+                      selectedTab: _selectedPreviewTab,
+                      onPreviewSelected: (tab) =>
+                          setState(() => _selectedPreviewTab = tab),
+                    ),
+                    _TabletStepSection(padding: padding),
+                    _TabletCtaSection(key: _pricingKey, padding: padding),
+                    _TabletFaqSection(key: _contactKey, padding: padding),
+                    _TabletFooterSection(padding: padding),
+                  ],
                 ],
               ),
             ),

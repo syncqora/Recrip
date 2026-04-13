@@ -21,7 +21,7 @@
   <meta content="IE=Edge" http-equiv="X-UA-Compatible">
 
   <link rel="preload" as="image" href="assets/assets/images/recrip-icon.webp" type="image/webp" fetchpriority="high">
-  <link rel="preload" as="image" href="assets/assets/images/Dashboard.webp" type="image/webp">
+  <link rel="prefetch" href="assets/assets/images/Dashboard.webp" as="image" type="image/webp">
   <meta name="description" content="Recrip is a membership and renewal dashboard: track plans, expiring members, and send reminders—built for teams with recurring subscriptions or access.">
 
   <meta property="og:type" content="website">
@@ -97,32 +97,55 @@
       window.setTimeout(removeBoot, 30000);
     })();
   </script>
-  <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
   <script>
+    var _rzpSdkPromise;
+
+    function _loadRazorpaySdk() {
+      if (window.Razorpay) {
+        return Promise.resolve();
+      }
+      if (_rzpSdkPromise) {
+        return _rzpSdkPromise;
+      }
+      _rzpSdkPromise = new Promise(function (resolve, reject) {
+        var script = document.createElement('script');
+        script.src = 'https://checkout.razorpay.com/v1/checkout.js';
+        script.async = true;
+        script.onload = function () { resolve(); };
+        script.onerror = function () { reject(new Error('Failed to load Razorpay SDK')); };
+        document.head.appendChild(script);
+      });
+      return _rzpSdkPromise;
+    }
+
     // Bridge for Flutter web: opens Razorpay Checkout and resolves with a JSON string.
     window._rzpCheckoutOpen = function (optionsJson) {
       return new Promise(function (resolve) {
-        try {
-          var o = JSON.parse(optionsJson);
-          o.handler = function (response) {
-            resolve(JSON.stringify({
-              kind: 'success',
-              paymentId: response.razorpay_payment_id,
-              orderId: response.razorpay_order_id,
-              signature: response.razorpay_signature
-            }));
-          };
-          var rzp = new Razorpay(o);
-          rzp.on('payment.failed', function (response) {
-            resolve(JSON.stringify({ kind: 'failed', payload: response.error }));
-          });
-          rzp.on('modal.dismiss', function () {
-            resolve(JSON.stringify({ kind: 'dismissed' }));
-          });
-          rzp.open();
-        } catch (e) {
+        _loadRazorpaySdk().then(function () {
+          try {
+            var o = JSON.parse(optionsJson);
+            o.handler = function (response) {
+              resolve(JSON.stringify({
+                kind: 'success',
+                paymentId: response.razorpay_payment_id,
+                orderId: response.razorpay_order_id,
+                signature: response.razorpay_signature
+              }));
+            };
+            var rzp = new Razorpay(o);
+            rzp.on('payment.failed', function (response) {
+              resolve(JSON.stringify({ kind: 'failed', payload: response.error }));
+            });
+            rzp.on('modal.dismiss', function () {
+              resolve(JSON.stringify({ kind: 'dismissed' }));
+            });
+            rzp.open();
+          } catch (e) {
+            resolve(JSON.stringify({ kind: 'error', message: String(e) }));
+          }
+        }).catch(function (e) {
           resolve(JSON.stringify({ kind: 'error', message: String(e) }));
-        }
+        });
       });
     };
   </script>

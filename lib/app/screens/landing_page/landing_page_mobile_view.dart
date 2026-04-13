@@ -22,6 +22,16 @@ class _LandingPageMobileViewState extends State<LandingPageMobileView> {
   final _contactKey = GlobalKey();
   _MobileNavTab _activeNavTab = _MobileNavTab.features;
   _MobilePreviewTab _selectedPreviewTab = _MobilePreviewTab.dashboard;
+  bool _renderDeferredSections = false;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      setState(() => _renderDeferredSections = true);
+    });
+  }
 
   Future<void> _scrollTo(GlobalKey key) async {
     final targetContext = key.currentContext;
@@ -120,18 +130,20 @@ class _LandingPageMobileViewState extends State<LandingPageMobileView> {
               child: Column(
                 children: [
                   _MobileHeroSection(padding: padding),
-                  _MobileFeatureSection(key: _featuresKey, padding: padding),
-                  _MobilePreviewSection(
-                    key: _previewKey,
-                    padding: padding,
-                    selectedTab: _selectedPreviewTab,
-                    onPreviewSelected: (tab) =>
-                        setState(() => _selectedPreviewTab = tab),
-                  ),
-                  _MobileStepSection(padding: padding),
-                  _MobileCtaSection(key: _pricingKey, padding: padding),
-                  _MobileFaqSection(key: _contactKey, padding: padding),
-                  _MobileFooterSection(padding: padding),
+                  if (_renderDeferredSections) ...[
+                    _MobileFeatureSection(key: _featuresKey, padding: padding),
+                    _MobilePreviewSection(
+                      key: _previewKey,
+                      padding: padding,
+                      selectedTab: _selectedPreviewTab,
+                      onPreviewSelected: (tab) =>
+                          setState(() => _selectedPreviewTab = tab),
+                    ),
+                    _MobileStepSection(padding: padding),
+                    _MobileCtaSection(key: _pricingKey, padding: padding),
+                    _MobileFaqSection(key: _contactKey, padding: padding),
+                    _MobileFooterSection(padding: padding),
+                  ],
                 ],
               ),
             ),
