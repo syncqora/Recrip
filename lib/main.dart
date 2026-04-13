@@ -74,10 +74,12 @@ class _MyAppState extends State<MyApp> {
       valueListenable: _appLoadState,
       builder: (context, snapshot, child) {
         if (snapshot.connectionState == ConnectionState.waiting) {
+          // Match landing / web index background so the single Flutter loader
+          // does not flash white after the HTML shell (see web/index.html).
           return _buildFallbackApp(
-            backgroundColor: Colors.white,
+            backgroundColor: const Color(0xFFF5F7FF),
             body: const Center(
-              child: CircularProgressIndicator(),
+              child: _RecripLogoLoader(),
             ),
           );
         } else if (snapshot.hasError || snapshot.data == false) {
@@ -149,32 +151,93 @@ class _MyAppState extends State<MyApp> {
   }
 }
 
+/// Lightweight branded splash: soft opacity pulse (single ticker, no shaders).
+class _RecripLogoLoader extends StatefulWidget {
+  const _RecripLogoLoader();
+
+  @override
+  State<_RecripLogoLoader> createState() => _RecripLogoLoaderState();
+}
+
+class _RecripLogoLoaderState extends State<_RecripLogoLoader>
+    with SingleTickerProviderStateMixin {
+  static const String _asset = 'assets/images/recrip-icon.webp';
+
+  late final AnimationController _controller = AnimationController(
+    vsync: this,
+    duration: const Duration(milliseconds: 1400),
+  )..repeat(reverse: true);
+
+  late final Animation<double> _opacity = Tween<double>(begin: 0.5, end: 1).animate(
+    CurvedAnimation(parent: _controller, curve: Curves.easeInOut),
+  );
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Semantics(
+      label: 'Loading',
+      child: FadeTransition(
+        opacity: _opacity,
+        child: Image.asset(
+          _asset,
+          width: 112,
+          height: 112,
+          fit: BoxFit.contain,
+          gaplessPlayback: true,
+          filterQuality: FilterQuality.medium,
+        ),
+      ),
+    );
+  }
+}
+
 /// Custom function to check network and ensure all services are ready before rendering the app.
 Future<bool> checkNetworkAndServices() async {
   try {
     await initializeApp().timeout(const Duration(seconds: 8));
 
     final networkChecker = Get.find<NetworkChecker>();
-    try {
-      await networkChecker.getConnectionStatus().timeout(
-        const Duration(seconds: 2),
-      );
-    } on TimeoutException {
-      if (kIsWeb) {
-        networkChecker.isConnected.value = true;
+    if (kIsWeb) {
+      // Web: assume online for UX; do not block first paint on connection probe
+      // or settings (PackageInfo, storage, etc.). That removes the "second"
+      // loading phase after the HTML boot shell and improves LCP on mobile.
+      networkChecker.isConnected.value = true;
+    } else {
+      try {
+        await networkChecker.getConnectionStatus().timeout(
+          const Duration(seconds: 2),
+        );
+      } on TimeoutException {
+        // keep default connection state on mobile
+      }
+
+      if (!networkChecker.isConnected.value) {
+        print("No internet connection");
+        return false;
       }
     }
 
-    if (!kIsWeb && !networkChecker.isConnected.value) {
-      print("No internet connection");
-      return false;
-    }
-
     final appSettingsController = Get.find<AppSettingsController>();
-    await appSettingsController.initializeSettings().timeout(
-      const Duration(seconds: 5),
-      onTimeout: () async {},
-    );
+    if (kIsWeb) {
+      unawaited(
+        appSettingsController.initializeSettings().catchError(
+          (Object e, StackTrace st) {
+            log('Deferred settings init: $e', stackTrace: st);
+          },
+        ),
+      );
+    } else {
+      await appSettingsController.initializeSettings().timeout(
+        const Duration(seconds: 5),
+        onTimeout: () async {},
+      );
+    }
 
     if (kIsWeb) {
       return true;

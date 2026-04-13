@@ -20,7 +20,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta content="IE=Edge" http-equiv="X-UA-Compatible">
 
-  <link rel="preload" as="image" href="assets/assets/images/Dashboard.webp" type="image/webp" fetchpriority="high">
+  <link rel="preload" as="image" href="assets/assets/images/recrip-icon.webp" type="image/webp" fetchpriority="high">
+  <link rel="preload" as="image" href="assets/assets/images/Dashboard.webp" type="image/webp">
   <meta name="description" content="Recrip is a membership and renewal dashboard: track plans, expiring members, and send reminders—built for teams with recurring subscriptions or access.">
 
   <meta property="og:type" content="website">
@@ -40,27 +41,52 @@
 
   <title>Recrip – Memberships, renewals & reminders</title>
   <link rel="manifest" href="manifest.json">
-</head>
-<body>
   <style>
-    body.flutter-loading { margin: 0; min-height: 100vh; display: flex; align-items: center; justify-content: center; background: #f5f7ff; }
-    body.flutter-loading .boot-spinner { width: 36px; height: 36px; border: 3px solid #e7ebf3; border-top-color: #4f46e5; border-radius: 50%; animation: flutter-boot-spin 0.8s linear infinite; }
-    @keyframes flutter-boot-spin { to { transform: rotate(360deg); } }
+    /* Matches lib/main.dart _RecripLogoLoader: soft opacity pulse, #f5f7ff shell */
+    #recrip-boot {
+      position: fixed;
+      inset: 0;
+      z-index: 2147483647;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: #f5f7ff;
+      margin: 0;
+    }
+    #recrip-boot-logo {
+      width: 112px;
+      height: 112px;
+      object-fit: contain;
+      animation: recrip-boot-pulse 1.4s ease-in-out infinite alternate;
+    }
+    @keyframes recrip-boot-pulse {
+      from { opacity: 0.5; }
+      to { opacity: 1; }
+    }
   </style>
+</head>
+<body style="margin:0;background:#f5f7ff;">
+  <div id="recrip-boot" aria-busy="true" aria-label="Loading">
+    <img
+      id="recrip-boot-logo"
+      src="assets/assets/images/recrip-icon.webp"
+      alt=""
+      width="112"
+      height="112"
+      decoding="async"
+      fetchpriority="high"
+    />
+  </div>
   <script>
-    document.body.classList.add('flutter-loading');
-    window.addEventListener('flutter-first-frame', function () {
-      document.body.classList.remove('flutter-loading');
-      var s = document.querySelector('.boot-spinner');
-      if (s) s.remove();
-    });
-    window.setTimeout(function () {
-      document.body.classList.remove('flutter-loading');
-      var s = document.querySelector('.boot-spinner');
-      if (s) s.remove();
-    }, 15000);
+    (function () {
+      function removeBoot() {
+        var el = document.getElementById('recrip-boot');
+        if (el) el.remove();
+      }
+      window.addEventListener('flutter-first-frame', removeBoot);
+      window.setTimeout(removeBoot, 30000);
+    })();
   </script>
-  <div class="boot-spinner" aria-hidden="true"></div>
   <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
   <script>
     // Bridge for Flutter web: opens Razorpay Checkout and resolves with a JSON string.

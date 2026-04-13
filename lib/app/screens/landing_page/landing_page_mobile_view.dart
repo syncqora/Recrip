@@ -2,8 +2,8 @@ import 'dart:ui' show ImageFilter;
 
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
-import 'package:saas/app/screens/authentication/widgets/auth_widgets.dart';
-import 'package:saas/app/screens/landing_page/landing_hero_login_form.dart';
+// import 'package:saas/app/screens/authentication/widgets/auth_widgets.dart';
+// import 'package:saas/app/screens/landing_page/landing_hero_login_form.dart';
 import 'package:saas/core/di/get_injector.dart';
 import 'package:saas/routes/app_pages.dart';
 import 'package:saas/shared/constants/app_icons.dart';
@@ -302,8 +302,8 @@ class _MobileHeroSection extends StatelessWidget {
                   ],
                 ),
                 const SizedBox(height: 14),
-                const SizedBox(height: 24),
-                const _MobileHeroLoginCard(),
+                // const SizedBox(height: 24),
+                // const _MobileHeroLoginCard(),
               ],
             ),
           ),
@@ -338,49 +338,49 @@ class _HeroMetric extends StatelessWidget {
   }
 }
 
-class _MobileHeroLoginCard extends StatelessWidget {
-  const _MobileHeroLoginCard();
-
-  @override
-  Widget build(BuildContext context) {
-    return AuthFormCard(
-      compact: true,
-      showLogo: false,
-      title: '',
-      cornerRadius: 28,
-      cardColor: Colors.white,
-      boxShadow: const [
-        BoxShadow(
-          color: Color(0x190F172A),
-          offset: Offset(0, 14),
-          blurRadius: 28,
-        ),
-      ],
-      customHeader: Column(
-        children: [
-          Text(
-            'Already with Us?',
-            textAlign: TextAlign.center,
-            style: Theme.of(context).textTheme.titleMedium?.copyWith(
-              fontWeight: FontWeight.w800,
-              color: const Color(0xFF0F172A),
-            ),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            'Login',
-            textAlign: TextAlign.center,
-            style: Theme.of(context).textTheme.titleMedium?.copyWith(
-              fontWeight: FontWeight.w800,
-              color: const Color(0xFF5C5BFF),
-            ),
-          ),
-        ],
-      ),
-      child: const LandingHeroLoginForm(),
-    );
-  }
-}
+// class _MobileHeroLoginCard extends StatelessWidget {
+//   const _MobileHeroLoginCard();
+//
+//   @override
+//   Widget build(BuildContext context) {
+//     return AuthFormCard(
+//       compact: true,
+//       showLogo: false,
+//       title: '',
+//       cornerRadius: 28,
+//       cardColor: Colors.white,
+//       boxShadow: const [
+//         BoxShadow(
+//           color: Color(0x190F172A),
+//           offset: Offset(0, 14),
+//           blurRadius: 28,
+//         ),
+//       ],
+//       customHeader: Column(
+//         children: [
+//           Text(
+//             'Already with Us?',
+//             textAlign: TextAlign.center,
+//             style: Theme.of(context).textTheme.titleMedium?.copyWith(
+//               fontWeight: FontWeight.w800,
+//               color: const Color(0xFF0F172A),
+//             ),
+//           ),
+//           const SizedBox(height: 4),
+//           Text(
+//             'Login',
+//             textAlign: TextAlign.center,
+//             style: Theme.of(context).textTheme.titleMedium?.copyWith(
+//               fontWeight: FontWeight.w800,
+//               color: const Color(0xFF5C5BFF),
+//             ),
+//           ),
+//         ],
+//       ),
+//       child: const LandingHeroLoginForm(),
+//     );
+//   }
+// }
 
 class _MobileFeatureSection extends StatelessWidget {
   const _MobileFeatureSection({super.key, required this.padding});
