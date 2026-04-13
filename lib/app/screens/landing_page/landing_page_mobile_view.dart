@@ -7,6 +7,7 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:saas/core/di/get_injector.dart';
 import 'package:saas/routes/app_pages.dart';
 import 'package:saas/shared/constants/app_icons.dart';
+import 'package:saas/shared/widgets/landing_section_skeleton.dart';
 
 class LandingPageMobileView extends StatefulWidget {
   const LandingPageMobileView({super.key});
@@ -143,6 +144,12 @@ class _LandingPageMobileViewState extends State<LandingPageMobileView> {
                     _MobileCtaSection(key: _pricingKey, padding: padding),
                     _MobileFaqSection(key: _contactKey, padding: padding),
                     _MobileFooterSection(padding: padding),
+                  ] else ...[
+                    const LandingSectionSkeleton(
+                      padding: padding,
+                      blockCount: 3,
+                      includeWideBlock: true,
+                    ),
                   ],
                 ],
               ),

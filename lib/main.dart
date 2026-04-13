@@ -161,7 +161,7 @@ class _RecripLogoLoader extends StatefulWidget {
 
 class _RecripLogoLoaderState extends State<_RecripLogoLoader>
     with SingleTickerProviderStateMixin {
-  static const String _asset = 'assets/images/recrip-icon.webp';
+  static const String _asset = 'assets/images/recrip-icon-loader.png';
 
   late final AnimationController _controller = AnimationController(
     vsync: this,

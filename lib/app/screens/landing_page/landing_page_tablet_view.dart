@@ -7,6 +7,7 @@ import 'package:saas/app/screens/landing_page/landing_hero_login_form.dart';
 import 'package:saas/core/di/get_injector.dart';
 import 'package:saas/routes/app_pages.dart';
 import 'package:saas/shared/constants/app_icons.dart';
+import 'package:saas/shared/widgets/landing_section_skeleton.dart';
 
 class LandingPageTabletView extends StatefulWidget {
   const LandingPageTabletView({super.key});
@@ -143,6 +144,12 @@ class _LandingPageTabletViewState extends State<LandingPageTabletView> {
                     _TabletCtaSection(key: _pricingKey, padding: padding),
                     _TabletFaqSection(key: _contactKey, padding: padding),
                     _TabletFooterSection(padding: padding),
+                  ] else ...[
+                    LandingSectionSkeleton(
+                      padding: padding,
+                      blockCount: 3,
+                      includeWideBlock: true,
+                    ),
                   ],
                 ],
               ),

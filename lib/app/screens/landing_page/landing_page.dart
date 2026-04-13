@@ -11,6 +11,7 @@ import 'package:saas/app/screens/landing_page/landing_page_tablet_view.dart';
 import 'package:saas/core/di/get_injector.dart';
 import 'package:saas/routes/app_pages.dart';
 import 'package:saas/shared/constants/app_icons.dart';
+import 'package:saas/shared/widgets/landing_section_skeleton.dart';
 import 'package:saas/shared/widgets/hover_elevated_card.dart';
 
 class LandingPage extends StatefulWidget {
@@ -129,6 +130,12 @@ class _LandingPageState extends State<LandingPage> {
                       mobile: mobile,
                     ),
                     _FooterSection(padding: pad),
+                  ] else ...[
+                    LandingSectionSkeleton(
+                      padding: pad,
+                      blockCount: 4,
+                      includeWideBlock: true,
+                    ),
                   ],
                 ],
               ),
