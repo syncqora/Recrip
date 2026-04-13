@@ -26,13 +26,15 @@
 
   <meta property="og:type" content="website">
   <meta property="og:url" content="https://recrip.com/">
+  <meta property="og:site_name" content="Recrip">
   <meta property="og:title" content="Recrip – Memberships, renewals & reminders">
   <meta property="og:description" content="Manage members, plans, renewals, and reminders in one dashboard. Built for subscription teams.">
+  <meta name="application-name" content="Recrip">
+  <meta name="apple-mobile-web-app-title" content="Recrip">
 
   <!-- iOS meta tags & icons -->
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black">
-  <meta name="apple-mobile-web-app-title" content="Recrip">
   <link rel="apple-touch-icon" href="recrip-icon.png">
 
   <!-- Tab / PWA icon: sync with assets/images/recrip-icon.webp (web/recrip-icon.png for HTML link targets) -->
@@ -41,6 +43,14 @@
 
   <title>Recrip – Memberships, renewals & reminders</title>
   <link rel="manifest" href="manifest.json">
+  <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "WebSite",
+      "name": "Recrip",
+      "url": "https://recrip.com/"
+    }
+  </script>
   <style>
     /* Matches lib/main.dart _RecripLogoLoader: soft opacity pulse, #f5f7ff shell */
     #recrip-boot {

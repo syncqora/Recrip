@@ -1,0 +1,34 @@
+PODS:
+  - flutter_localization (0.0.1):
+    - FlutterMacOS
+  - FlutterMacOS (1.0.0)
+  - location (0.0.1):
+    - FlutterMacOS
+  - printing (1.0.0):
+    - FlutterMacOS
+
+DEPENDENCIES:
+  - flutter_localization (from `Flutter/ephemeral/.symlinks/plugins/flutter_localization/macos`)
+  - FlutterMacOS (from `Flutter/ephemeral`)
+  - location (from `Flutter/ephemeral/.symlinks/plugins/location/macos`)
+  - printing (from `Flutter/ephemeral/.symlinks/plugins/printing/macos`)
+
+EXTERNAL SOURCES:
+  flutter_localization:
+    :path: Flutter/ephemeral/.symlinks/plugins/flutter_localization/macos
+  FlutterMacOS:
+    :path: Flutter/ephemeral
+  location:
+    :path: Flutter/ephemeral/.symlinks/plugins/location/macos
+  printing:
+    :path: Flutter/ephemeral/.symlinks/plugins/printing/macos
+
+SPEC CHECKSUMS:
+  flutter_localization: 4035848ae2ed142875d5fd3dde328250a5e81f42
+  FlutterMacOS: d0db08ddef1a9af05a5ec4b724367152bb0500b1
+  location: 7cdb0665bd6577d382b0a343acdadbcb7f964775
+  printing: 1dd6a1fce2209ec240698e2439a4adbb9b427637
+
+PODFILE CHECKSUM: 54d867c82ac51cbd61b565781b9fada492027009
+
+COCOAPODS: 1.16.2
