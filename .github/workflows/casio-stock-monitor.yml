@@ -25,7 +25,7 @@ jobs:
 
       - name: Run stock watcher
         env:
-          PRODUCT_URL: "https://casiostore.bhawar.com/products/casio-youth-ae-1200whl-5avdf-watch"
+          PRODUCT_URLS: "https://casiostore.bhawar.com/products/casio-youth-ae-1200whl-5avdf-watch,https://casiostore.bhawar.com/products/casio-ae-1200whd-1avdf-black-digital-unisex-watch"
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
           STATE_FILE_PATH: ".github/state/casio_stock_state.json"

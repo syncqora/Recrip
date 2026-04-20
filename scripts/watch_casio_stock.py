@@ -34,15 +34,15 @@ STATE_FILE = Path(
         str(Path(__file__).with_name(".casio_stock_state.json")),
     )
 )
-DEFAULT_PRODUCT_URL = (
-    "https://casiostore.bhawar.com/products/casio-youth-ae-1200whl-5avdf-watch"
-)
+DEFAULT_PRODUCT_URLS = [
+    "https://casiostore.bhawar.com/products/casio-youth-ae-1200whl-5avdf-watch",
+]
 DEFAULT_KEYCHAIN_SERVICE = "recrip.casio.stock.gmail"
 
 
 @dataclass
 class Config:
-    product_url: str
+    product_urls: list[str]
     gmail_user: str
     gmail_app_password: str
     notify_email_to: str
@@ -71,7 +71,12 @@ class Config:
                 account_name=gmail_user,
             )
         notify_email_to = os.getenv("NOTIFY_EMAIL_TO", "").strip()
-        product_url = os.getenv("PRODUCT_URL", DEFAULT_PRODUCT_URL).strip()
+        raw_product_urls = os.getenv("PRODUCT_URLS", "").strip()
+        if raw_product_urls:
+            product_urls = [item.strip() for item in raw_product_urls.split(",") if item.strip()]
+        else:
+            product_url = os.getenv("PRODUCT_URL", "").strip()
+            product_urls = [product_url] if product_url else DEFAULT_PRODUCT_URLS
         telegram_bot_token = os.getenv("TELEGRAM_BOT_TOKEN", "").strip() or None
         telegram_chat_id = os.getenv("TELEGRAM_CHAT_ID", "").strip() or None
         whatsapp_number = os.getenv("WHATSAPP_NUMBER_E164", "").strip() or None
@@ -89,7 +94,7 @@ class Config:
             )
 
         return cls(
-            product_url=product_url,
+            product_urls=product_urls,
             gmail_user=gmail_user,
             gmail_app_password=gmail_app_password,
             notify_email_to=notify_email_to,
@@ -159,22 +164,29 @@ def is_in_stock(html: str) -> bool:
     return any(token in lowered for token in indicators)
 
 
-def load_previous_state() -> Optional[bool]:
+def load_previous_state() -> dict[str, bool]:
     if not STATE_FILE.exists():
-        return None
+        return {}
     try:
         data = json.loads(STATE_FILE.read_text(encoding="utf-8"))
-        value = data.get("in_stock")
-        if isinstance(value, bool):
-            return value
+        # Backward-compatible migration from single-url format.
+        if isinstance(data.get("in_stock"), bool):
+            return {}
+        state_map = data.get("in_stock_by_url", {})
+        if isinstance(state_map, dict):
+            normalized: dict[str, bool] = {}
+            for key, value in state_map.items():
+                if isinstance(key, str) and isinstance(value, bool):
+                    normalized[key] = value
+            return normalized
     except (json.JSONDecodeError, OSError):
-        return None
-    return None
+        return {}
+    return {}
 
 
-def save_state(in_stock: bool) -> None:
+def save_state(in_stock_by_url: dict[str, bool]) -> None:
     payload = {
-        "in_stock": in_stock,
+        "in_stock_by_url": in_stock_by_url,
         "updated_at_utc": datetime.now(timezone.utc).isoformat(),
     }
     STATE_FILE.write_text(json.dumps(payload, indent=2), encoding="utf-8")
@@ -225,35 +237,46 @@ def main() -> int:
         print(f"[CONFIG ERROR] {err}")
         return 2
 
-    try:
-        html = fetch_product_page(cfg.product_url)
-    except (HTTPError, URLError, TimeoutError, ssl.SSLError) as err:
-        print(f"[FETCH ERROR] Could not fetch product page: {err}")
-        if "CERTIFICATE_VERIFY_FAILED" in str(err):
-            print(
-                "[HINT] SSL trust issue detected. Install certifi "
-                "(pip3 install certifi) or fix local Python certificates."
-            )
-        return 3
-
-    current_in_stock = is_in_stock(html)
     previous_state = load_previous_state()
-    save_state(current_in_stock)
+    current_state: dict[str, bool] = {}
+    newly_available_urls: list[str] = []
 
-    status_text = "IN STOCK" if current_in_stock else "SOLD OUT"
-    print(f"[{datetime.now().isoformat(timespec='seconds')}] Product status: {status_text}")
+    for product_url in cfg.product_urls:
+        try:
+            html = fetch_product_page(product_url)
+        except (HTTPError, URLError, TimeoutError, ssl.SSLError) as err:
+            print(f"[FETCH ERROR] Could not fetch product page ({product_url}): {err}")
+            if "CERTIFICATE_VERIFY_FAILED" in str(err):
+                print(
+                    "[HINT] SSL trust issue detected. Install certifi "
+                    "(pip3 install certifi) or fix local Python certificates."
+                )
+            continue
 
-    if previous_state is None:
+        current_in_stock = is_in_stock(html)
+        current_state[product_url] = current_in_stock
+        status_text = "IN STOCK" if current_in_stock else "SOLD OUT"
+        print(
+            f"[{datetime.now().isoformat(timespec='seconds')}] "
+            f"{product_url} -> {status_text}"
+        )
+        if previous_state.get(product_url) is False and current_in_stock is True:
+            newly_available_urls.append(product_url)
+
+    # Preserve entries that were temporarily unreachable in this run.
+    merged_state = previous_state.copy()
+    merged_state.update(current_state)
+    save_state(merged_state)
+
+    if not previous_state:
         print("[INFO] Baseline saved. No alert on first run.")
         return 0
 
-    # Notify only when stock changes to available.
-    if previous_state is False and current_in_stock is True:
-        text = (
-            "Casio AE-1200WHL-5AV is back in stock.\n"
-            f"Open now: {cfg.product_url}"
-        )
-        subject = "Stock Alert: Casio AE-1200WHL-5AV is available"
+    if newly_available_urls:
+        lines = ["Casio stock alert: these watches are now available:"]
+        lines.extend(f"- {url}" for url in newly_available_urls)
+        text = "\n".join(lines)
+        subject = "Stock Alert: Casio watch available"
 
         failures = []
         if cfg.has_gmail():
@@ -279,7 +302,6 @@ def main() -> int:
             for item in failures:
                 print(f" - {item}")
             return 4
-
         print("[ALERT SENT] Availability notifications sent.")
     return 0
 
