@@ -135,8 +135,11 @@ class _LandingPageState extends State<LandingPage>
     setState(() => _isSnappingHeroTransition = true);
     try {
       final distance = (target - current).abs();
-      final durationMs = lerpDouble(240, 760, (distance / 540).clamp(0.0, 1.0))!
-          .round();
+      final durationMs = lerpDouble(
+        240,
+        760,
+        (distance / 540).clamp(0.0, 1.0),
+      )!.round();
       await _scrollController.animateTo(
         target,
         duration: Duration(milliseconds: durationMs),
@@ -879,7 +882,7 @@ class _FeatureSection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: EdgeInsets.fromLTRB(padding, 0, padding, 88),
+      padding: EdgeInsets.fromLTRB(padding, 0, padding, 120),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
@@ -979,7 +982,7 @@ class _StepSection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: EdgeInsets.fromLTRB(padding, 10, padding, 88),
+      padding: EdgeInsets.fromLTRB(padding, 10, padding, 120),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
@@ -1087,7 +1090,7 @@ class _PricingSection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: EdgeInsets.fromLTRB(padding, 8, padding, 90),
+      padding: EdgeInsets.fromLTRB(padding, 8, padding, 120),
       child: Column(
         children: [
           _SectionTitle(
@@ -1260,7 +1263,7 @@ class _ContactSection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: EdgeInsets.fromLTRB(padding, 6, padding, 84),
+      padding: EdgeInsets.fromLTRB(padding, 6, padding, 120),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -1480,7 +1483,7 @@ class _FaqSection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: EdgeInsets.fromLTRB(padding, 0, padding, 84),
+      padding: EdgeInsets.fromLTRB(padding, 0, padding, 120),
       child: Column(
         children: [
           _SectionTitle(
@@ -1704,7 +1707,7 @@ class _BottomCtaSection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: EdgeInsets.fromLTRB(padding, 12, padding, 88),
+      padding: EdgeInsets.fromLTRB(padding, 12, padding, 120),
       child: Column(
         children: [
           RichText(
