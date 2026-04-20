@@ -3,7 +3,7 @@ name: Casio Stock Scheduler
 on:
   schedule:
     # GitHub Actions supports 5-minute minimum intervals.
-    - cron: "2/5 * * * *"
+    - cron: "*/5 * * * *"
   workflow_dispatch:
 
 permissions:
