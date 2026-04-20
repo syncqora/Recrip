@@ -3,7 +3,8 @@ name: Casio Stock Monitor
 on:
   schedule:
     # GitHub Actions supports 5-minute minimum intervals.
-    - cron: "*/5 * * * *"
+    # Offset minute to refresh scheduler registration.
+    - cron: "2/5 * * * *"
   workflow_dispatch:
 
 concurrency:
