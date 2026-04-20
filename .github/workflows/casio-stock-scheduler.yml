@@ -1,0 +1,15 @@
+name: Casio Stock Scheduler
+
+on:
+  schedule:
+    # GitHub Actions supports 5-minute minimum intervals.
+    - cron: "2/5 * * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  trigger-monitor:
+    uses: ./.github/workflows/casio-stock-monitor.yml
+    secrets: inherit
