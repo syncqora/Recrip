@@ -6,6 +6,10 @@ on:
     - cron: "*/5 * * * *"
   workflow_dispatch:
 
+concurrency:
+  group: casio-stock-monitor
+  cancel-in-progress: false
+
 permissions:
   contents: write
 
@@ -35,6 +39,7 @@ jobs:
 
       - name: Persist monitor state
         run: |
+          BRANCH="${GITHUB_REF_NAME:-main}"
           git add .github/state/casio_stock_state.json
           if git diff --cached --quiet; then
             echo "No state changes to commit."
@@ -43,10 +48,20 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git commit -m "chore: update casio stock monitor state"
-          # Another run may have pushed first; rebase and retry.
-          if ! git pull --rebase origin "${GITHUB_REF_NAME}"; then
-            echo "Rebase conflict while syncing state. Skipping this run."
-            git rebase --abort || true
-            exit 0
-          fi
-          git push origin "HEAD:${GITHUB_REF_NAME}"
+          # Another run may push first. Retry with rebase.
+          for attempt in 1 2 3; do
+            echo "Sync/push attempt $attempt..."
+            git fetch origin "$BRANCH"
+            if ! git rebase "origin/$BRANCH"; then
+              echo "Rebase conflict while syncing state. Skipping this run."
+              git rebase --abort || true
+              exit 0
+            fi
+            if git push origin "HEAD:$BRANCH"; then
+              echo "State push successful."
+              exit 0
+            fi
+            echo "Push rejected, retrying..."
+          done
+          echo "Could not push state after retries. Skipping without failure."
+          exit 0
