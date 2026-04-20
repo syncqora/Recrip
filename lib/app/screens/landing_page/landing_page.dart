@@ -3,6 +3,7 @@ import 'dart:ui' show lerpDouble;
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:get/get.dart';
 import 'package:saas/app/screens/authentication/login/views/login_controller.dart';
 import 'package:saas/app/screens/landing_page/landing_page_mobile_view.dart';
 import 'package:saas/app/screens/landing_page/landing_page_tablet_view.dart';
@@ -21,7 +22,8 @@ class LandingPage extends StatefulWidget {
   State<LandingPage> createState() => _LandingPageState();
 }
 
-class _LandingPageState extends State<LandingPage> {
+class _LandingPageState extends State<LandingPage>
+    with SingleTickerProviderStateMixin {
   static const double _heroTransitionScrollExtent = 760;
   static const double _stageCardTarget = 280;
   static const double _stageMenuTarget = 540;
@@ -38,10 +40,23 @@ class _LandingPageState extends State<LandingPage> {
   bool _renderDeferredSections = false;
   bool _isSnappingHeroTransition = false;
   double _heroCardShiftProgress = 0;
+  late final AnimationController _dashboardTapController;
+  late final Animation<double> _dashboardTapAnimation;
 
   @override
   void initState() {
     super.initState();
+    _dashboardTapController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 2000),
+    );
+    _dashboardTapAnimation = CurvedAnimation(
+      parent: _dashboardTapController,
+      curve: const Cubic(0.78, 0.01, 0.5, 1),
+    );
+    _dashboardTapController.addListener(() {
+      if (mounted) setState(() {});
+    });
     LoginController.registerHeroIfNeeded();
     _scrollController.addListener(_handleScroll);
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -61,6 +76,7 @@ class _LandingPageState extends State<LandingPage> {
 
   @override
   void dispose() {
+    _dashboardTapController.dispose();
     _scrollController
       ..removeListener(_handleScroll)
       ..dispose();
@@ -197,14 +213,23 @@ class _LandingPageState extends State<LandingPage> {
     await _scrollTo(key);
   }
 
+  Future<void> _onDashboardCardTap() async {
+    if (_dashboardTapController.isAnimating) return;
+    await _dashboardTapController.forward(from: 0);
+    if (!mounted) return;
+    appNav.changePage(AppRoutes.home);
+  }
+
   @override
   Widget build(BuildContext context) {
     final width = MediaQuery.sizeOf(context).width;
     final currentOffset = _scrollController.hasClients
         ? _scrollController.offset
         : 0.0;
-    final fullUnlockProgress =
-        (currentOffset / _fullScrollUnlockTarget).clamp(0.0, 1.0);
+    final fullUnlockProgress = (currentOffset / _fullScrollUnlockTarget).clamp(
+      0.0,
+      1.0,
+    );
     final releaseProgress = Curves.easeInOutCubic.transform(
       ((fullUnlockProgress - 0.58) / 0.42).clamp(0.0, 1.0),
     );
@@ -277,6 +302,8 @@ class _LandingPageState extends State<LandingPage> {
                             _HeroSection(
                               padding: horizontalPadding,
                               scrollProgress: _heroCardShiftProgress,
+                              dashboardTapProgress:
+                                  _dashboardTapAnimation.value,
                               selectedTab: _selectedPreviewTab,
                               onTabSelected: (tab) =>
                                   setState(() => _selectedPreviewTab = tab),
@@ -284,6 +311,7 @@ class _LandingPageState extends State<LandingPage> {
                                   appNav.changePage(AppRoutes.login),
                               onSecondaryTap: () =>
                                   _onNavTap(_TopNavTab.contact, _contactKey),
+                              onDashboardTap: _onDashboardCardTap,
                             ),
                             if (_renderDeferredSections)
                               SizedBox(
@@ -457,18 +485,22 @@ class _HeroSection extends StatelessWidget {
   const _HeroSection({
     required this.padding,
     required this.scrollProgress,
+    required this.dashboardTapProgress,
     required this.selectedTab,
     required this.onTabSelected,
     required this.onPrimaryTap,
     required this.onSecondaryTap,
+    required this.onDashboardTap,
   });
 
   final double padding;
   final double scrollProgress;
+  final double dashboardTapProgress;
   final _PreviewTab selectedTab;
   final ValueChanged<_PreviewTab> onTabSelected;
   final VoidCallback onPrimaryTap;
   final VoidCallback onSecondaryTap;
+  final VoidCallback onDashboardTap;
 
   @override
   Widget build(BuildContext context) {
@@ -478,6 +510,8 @@ class _HeroSection extends StatelessWidget {
     final cardMoveProgress = Curves.easeOutCubic.transform(
       (scrollProgress / 0.45).clamp(0.0, 1.0),
     );
+    final dashboardTapLift = lerpDouble(0, -40, dashboardTapProgress)!;
+    final dashboardTapScale = lerpDouble(1, 1.06, dashboardTapProgress)!;
     final cardVisualHeight = lerpDouble(420, 487.2, cardMoveProgress)!;
     final menuProgress = Curves.easeOutCubic.transform(
       ((scrollProgress - 0.45) / 0.35).clamp(0.0, 1.0),
@@ -501,20 +535,20 @@ class _HeroSection extends StatelessWidget {
                     Text(
                       'Never Lose Revenue\nfrom ',
                       style: Theme.of(context).textTheme.displayLarge?.copyWith(
-                            color: Colors.white,
-                            fontWeight: FontWeight.w300,
-                            height: 1.12,
-                            fontSize: 60,
-                          ),
+                        color: Colors.white,
+                        fontWeight: FontWeight.w300,
+                        height: 1.12,
+                        fontSize: 60,
+                      ),
                     ),
                     Text(
                       'Expired Subscriptions',
                       style: Theme.of(context).textTheme.displayLarge?.copyWith(
-                            color: const Color(0xFF5F57F8),
-                            fontWeight: FontWeight.w800,
-                            height: 1.0,
-                            fontSize: 62,
-                          ),
+                        color: const Color(0xFF5F57F8),
+                        fontWeight: FontWeight.w800,
+                        height: 1.0,
+                        fontSize: 62,
+                      ),
                     ),
                     const SizedBox(height: 30),
                     ConstrainedBox(
@@ -522,11 +556,11 @@ class _HeroSection extends StatelessWidget {
                       child: Text(
                         'Recrip helps businesses automate renewals, track customers, and recover missed payments — all from one powerful dashboard.',
                         style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                              color: const Color(0xFFE2DDF7),
-                              height: 1.55,
-                              fontWeight: FontWeight.w400,
-                              fontSize: 24,
-                            ),
+                          color: const Color(0xFFE2DDF7),
+                          height: 1.55,
+                          fontWeight: FontWeight.w400,
+                          fontSize: 24,
+                        ),
                       ),
                     ),
                     const SizedBox(height: 38),
@@ -570,13 +604,18 @@ class _HeroSection extends StatelessWidget {
                     offset: Offset(
                       // Single image moves into center/text area.
                       lerpDouble(0, -690, cardMoveProgress)!,
-                      lerpDouble(0, -240, cardMoveProgress)!,
+                      lerpDouble(0, -240, cardMoveProgress)! + dashboardTapLift,
                     ),
                     child: Transform.scale(
-                      scale: lerpDouble(1, 1.16, cardMoveProgress)!,
+                      scale:
+                          lerpDouble(1, 1.16, cardMoveProgress)! *
+                          dashboardTapScale,
                       alignment: Alignment.topRight,
-                      child: _HeroDashboardCard(
-                        imagePath: _previewImageFor(selectedTab),
+                      child: GestureDetector(
+                        onTap: onDashboardTap,
+                        child: _HeroDashboardCard(
+                          imagePath: _previewImageFor(selectedTab),
+                        ),
                       ),
                     ),
                   ),
@@ -842,17 +881,18 @@ class _FeatureCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      height: 192,
-      padding: const EdgeInsets.fromLTRB(26, 24, 26, 20),
+      //height: 192,
+      //  padding: const EdgeInsets.fromLTRB(26, 24, 26, 20),
+      padding: EdgeInsets.symmetric(vertical: 27, horizontal: 87),
       decoration: BoxDecoration(
         border: Border.all(color: const Color(0xFF3B2F84)),
       ),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Container(
-            width: 40,
-            height: 40,
+            width: 64,
+            height: 64,
             decoration: BoxDecoration(
               color: feature.color,
               borderRadius: BorderRadius.circular(8),
@@ -860,8 +900,8 @@ class _FeatureCard extends StatelessWidget {
             alignment: Alignment.center,
             child: SvgPicture.asset(
               feature.iconAsset,
-              width: 18,
-              height: 18,
+              width: 32,
+              height: 32,
               colorFilter: const ColorFilter.mode(
                 Colors.white,
                 BlendMode.srcIn,
@@ -871,18 +911,20 @@ class _FeatureCard extends StatelessWidget {
           const SizedBox(height: 18),
           Text(
             feature.title,
-            style: TextStyle(
+            style: Get.theme.textTheme.bodyLarge?.copyWith(
               color: feature.color,
-              fontWeight: FontWeight.w700,
-              fontSize: 20,
             ),
+
+            // TextStyle(
+            //   color: feature.color,
+            //   fontWeight: FontWeight.w700,
+            // ),
           ),
           const SizedBox(height: 8),
           Text(
             feature.description,
-            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-              color: const Color(0xFFC9C1EC),
-              height: 1.55,
+            style: Get.theme.textTheme.bodyMedium!.copyWith(
+              color: const Color(0xFFD7D7D7),
             ),
           ),
         ],

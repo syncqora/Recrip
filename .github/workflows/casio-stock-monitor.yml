@@ -1,0 +1,44 @@
+name: Casio Stock Monitor
+
+on:
+  schedule:
+    # GitHub Actions supports 5-minute minimum intervals.
+    - cron: "*/5 * * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  check-stock:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Run stock watcher
+        env:
+          PRODUCT_URL: "https://casiostore.bhawar.com/products/casio-youth-ae-1200whl-5avdf-watch"
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+          STATE_FILE_PATH: ".github/state/casio_stock_state.json"
+        run: |
+          mkdir -p .github/state
+          python3 scripts/watch_casio_stock.py
+
+      - name: Persist monitor state
+        run: |
+          git add .github/state/casio_stock_state.json
+          if git diff --cached --quiet; then
+            echo "No state changes to commit."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git commit -m "chore: update casio stock monitor state"
+          git push
