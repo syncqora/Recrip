@@ -92,9 +92,7 @@ class _LandingPageState extends State<LandingPage>
                 ? (_scrollController.offset / _heroTransitionScrollExtent)
                 : 0.0)
             .clamp(0.0, 1.0);
-    final shouldUpdateHero =
-        (nextHeroProgress - _heroCardShiftProgress).abs() > 0.012;
-    if (shouldUpdateHero) {
+    if (nextHeroProgress != _heroCardShiftProgress) {
       setState(() {
         _heroCardShiftProgress = nextHeroProgress;
       });
@@ -136,9 +134,12 @@ class _LandingPageState extends State<LandingPage>
 
     setState(() => _isSnappingHeroTransition = true);
     try {
+      final distance = (target - current).abs();
+      final durationMs = lerpDouble(240, 760, (distance / 540).clamp(0.0, 1.0))!
+          .round();
       await _scrollController.animateTo(
         target,
-        duration: const Duration(milliseconds: 760),
+        duration: Duration(milliseconds: durationMs),
         curve: Curves.easeInOutCubic,
       );
     } finally {
@@ -214,10 +215,40 @@ class _LandingPageState extends State<LandingPage>
   }
 
   Future<void> _onDashboardCardTap() async {
-    if (_dashboardTapController.isAnimating) return;
-    await _dashboardTapController.forward(from: 0);
-    if (!mounted) return;
-    appNav.changePage(AppRoutes.home);
+    if (_isSnappingHeroTransition) return;
+    if (!_scrollController.hasClients) return;
+
+    // Give the dashboard card a small tactile pulse on tap.
+    if (!_dashboardTapController.isAnimating) {
+      _dashboardTapController.forward(from: 0);
+    }
+
+    final offset = _scrollController.offset;
+    if (offset < _stageMenuTarget - 0.5) {
+      final remaining = (_stageMenuTarget - offset).clamp(
+        0.0,
+        _stageMenuTarget,
+      );
+
+      setState(() => _isSnappingHeroTransition = true);
+      try {
+        final durationMs = lerpDouble(
+          340,
+          760,
+          (remaining / _stageMenuTarget).clamp(0.0, 1.0),
+        )!.round();
+        await _scrollController.animateTo(
+          _stageMenuTarget,
+          duration: Duration(milliseconds: durationMs),
+          curve: Curves.easeInOutCubicEmphasized,
+        );
+      } finally {
+        if (mounted) {
+          setState(() => _isSnappingHeroTransition = false);
+          _handleScroll();
+        }
+      }
+    }
   }
 
   @override
@@ -516,6 +547,9 @@ class _HeroSection extends StatelessWidget {
     final menuProgress = Curves.easeOutCubic.transform(
       ((scrollProgress - 0.45) / 0.35).clamp(0.0, 1.0),
     );
+    // Keep transformed visuals within Stack bounds so hit-testing aligns with
+    // what the user sees.
+    const rightPanelTopInset = 240.0;
 
     return Padding(
       padding: EdgeInsets.fromLTRB(padding, 56, padding, 54),
@@ -596,32 +630,36 @@ class _HeroSection extends StatelessWidget {
           Expanded(
             flex: 5,
             child: Padding(
-              padding: const EdgeInsets.only(top: 320),
+              padding: const EdgeInsets.only(top: 80),
               child: Stack(
                 clipBehavior: Clip.none,
                 children: [
-                  Transform.translate(
-                    offset: Offset(
-                      // Single image moves into center/text area.
-                      lerpDouble(0, -690, cardMoveProgress)!,
-                      lerpDouble(0, -240, cardMoveProgress)! + dashboardTapLift,
-                    ),
-                    child: Transform.scale(
-                      scale:
-                          lerpDouble(1, 1.16, cardMoveProgress)! *
-                          dashboardTapScale,
-                      alignment: Alignment.topRight,
-                      child: GestureDetector(
-                        onTap: onDashboardTap,
-                        child: _HeroDashboardCard(
-                          imagePath: _previewImageFor(selectedTab),
+                  Padding(
+                    padding: const EdgeInsets.only(top: rightPanelTopInset),
+                    child: Transform.translate(
+                      offset: Offset(
+                        // Single image moves into center/text area.
+                        lerpDouble(0, -690, cardMoveProgress)!,
+                        lerpDouble(0, -240, cardMoveProgress)! +
+                            dashboardTapLift,
+                      ),
+                      child: Transform.scale(
+                        scale:
+                            lerpDouble(1, 1.16, cardMoveProgress)! *
+                            dashboardTapScale,
+                        alignment: Alignment.topRight,
+                        child: GestureDetector(
+                          onTap: onDashboardTap,
+                          child: _HeroDashboardCard(
+                            imagePath: _previewImageFor(selectedTab),
+                          ),
                         ),
                       ),
                     ),
                   ),
                   Positioned(
                     right: -6,
-                    top: 0,
+                    top: rightPanelTopInset,
                     child: Opacity(
                       opacity: menuProgress,
                       child: Transform.translate(
