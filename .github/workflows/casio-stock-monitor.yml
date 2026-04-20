@@ -43,4 +43,10 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git commit -m "chore: update casio stock monitor state"
-          git push
+          # Another run may have pushed first; rebase and retry.
+          if ! git pull --rebase origin "${GITHUB_REF_NAME}"; then
+            echo "Rebase conflict while syncing state. Skipping this run."
+            git rebase --abort || true
+            exit 0
+          fi
+          git push origin "HEAD:${GITHUB_REF_NAME}"
