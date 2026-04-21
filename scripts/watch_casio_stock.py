@@ -3,11 +3,17 @@
 Stock watcher for Casio product page.
 
 Features:
-- Detects "Sold out" vs available state.
+- Detects "Sold out" vs available state (prefers schema.org availability when present).
 - Sends email alert via Gmail SMTP.
 - Optional Telegram alert.
 - Optional WhatsApp alert via CallMeBot API.
 - Persists last known state to avoid duplicate notifications.
+
+Alerts are sent when:
+- A URL was explicitly out of stock (false) and is now in stock, or
+- A URL is new in the watchlist (no prior state entry) while other URLs already have
+  baseline state, and the new product is currently in stock (one-time ping).
+The very first run (empty state file) only saves a baseline and does not notify.
 """
 
 from __future__ import annotations
@@ -230,7 +236,13 @@ def send_telegram_alert(cfg: Config, message: str) -> None:
         f"?chat_id={quote_plus(cfg.telegram_chat_id)}&text={quote_plus(message)}"
     )
     with urlopen(url, timeout=20) as response:
-        response.read()
+        body = response.read().decode("utf-8", errors="replace")
+    try:
+        payload = json.loads(body)
+    except json.JSONDecodeError as err:
+        raise RuntimeError(f"Telegram API returned non-JSON: {body[:500]}") from err
+    if not payload.get("ok"):
+        raise RuntimeError(f"Telegram API error: {payload}")
 
 
 def send_whatsapp_alert(cfg: Config, message: str) -> None:
@@ -277,7 +289,15 @@ def main() -> int:
             f"[{datetime.now().isoformat(timespec='seconds')}] "
             f"{product_url} -> {status_text}"
         )
-        if previous_state.get(product_url) is False and current_in_stock is True:
+        prev = previous_state.get(product_url)
+        if not current_in_stock:
+            pass
+        elif prev is False:
+            # Restock: was sold out, now available.
+            newly_available_urls.append(product_url)
+        elif prev is None and previous_state:
+            # New URL added to PRODUCT_URLS after baseline exists; if it is already
+            # purchasable, send one notification (otherwise user never hears about it).
             newly_available_urls.append(product_url)
 
     # Preserve entries that were temporarily unreachable in this run.
