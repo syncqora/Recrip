@@ -13,3 +13,6 @@ jobs:
   trigger-monitor:
     uses: ./.github/workflows/casio-stock-monitor.yml
     secrets: inherit
+    # Same product list as Casio Stock Monitor (both AE-1200 pages).
+    with:
+      product_urls: "https://casiostore.bhawar.com/products/casio-youth-ae-1200whl-5avdf-watch,https://casiostore.bhawar.com/products/casio-ae-1200whd-1avdf-black-digital-unisex-watch"

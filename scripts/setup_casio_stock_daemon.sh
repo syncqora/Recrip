@@ -9,7 +9,7 @@ INTERVAL_SECONDS="${INTERVAL_SECONDS:-300}"
 
 GMAIL_USER="${GMAIL_USER:-vishalvav55@gmail.com}"
 NOTIFY_EMAIL_TO="${NOTIFY_EMAIL_TO:-vishalvav55@gmail.com}"
-PRODUCT_URL="${PRODUCT_URL:-https://casiostore.bhawar.com/products/casio-youth-ae-1200whl-5avdf-watch}"
+PRODUCT_URLS="${PRODUCT_URLS:-https://casiostore.bhawar.com/products/casio-youth-ae-1200whl-5avdf-watch,https://casiostore.bhawar.com/products/casio-ae-1200whd-1avdf-black-digital-unisex-watch}"
 TELEGRAM_BOT_TOKEN="${TELEGRAM_BOT_TOKEN:-}"
 TELEGRAM_CHAT_ID="${TELEGRAM_CHAT_ID:-}"
 WHATSAPP_NUMBER_E164="${WHATSAPP_NUMBER_E164:-919980655374}"
@@ -80,8 +80,8 @@ cat > "$PLIST_PATH" <<EOF
       <string>$GMAIL_USER</string>
       <key>NOTIFY_EMAIL_TO</key>
       <string>$NOTIFY_EMAIL_TO</string>
-      <key>PRODUCT_URL</key>
-      <string>$PRODUCT_URL</string>
+      <key>PRODUCT_URLS</key>
+      <string>$PRODUCT_URLS</string>
       <key>GMAIL_KEYCHAIN_SERVICE</key>
       <string>$KEYCHAIN_SERVICE</string>
       <key>TELEGRAM_BOT_TOKEN</key>

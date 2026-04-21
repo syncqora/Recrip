@@ -2,7 +2,19 @@ name: Casio Stock Monitor
 
 on:
   workflow_dispatch:
+    inputs:
+      product_urls:
+        description: Comma-separated Casio product page URLs
+        type: string
+        required: false
+        default: "https://casiostore.bhawar.com/products/casio-youth-ae-1200whl-5avdf-watch,https://casiostore.bhawar.com/products/casio-ae-1200whd-1avdf-black-digital-unisex-watch"
   workflow_call:
+    inputs:
+      product_urls:
+        description: Comma-separated Casio product page URLs
+        type: string
+        required: false
+        default: "https://casiostore.bhawar.com/products/casio-youth-ae-1200whl-5avdf-watch,https://casiostore.bhawar.com/products/casio-ae-1200whd-1avdf-black-digital-unisex-watch"
 
 concurrency:
   group: casio-stock-monitor
@@ -16,6 +28,7 @@ jobs:
     runs-on: ubuntu-latest
     env:
       FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
+      PRODUCT_URLS: ${{ inputs.product_urls }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v5
@@ -27,7 +40,6 @@ jobs:
 
       - name: Run stock watcher
         env:
-          PRODUCT_URLS: "https://casiostore.bhawar.com/products/casio-youth-ae-1200whl-5avdf-watch,https://casiostore.bhawar.com/products/casio-ae-1200whd-1avdf-black-digital-unisex-watch"
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
           STATE_FILE_PATH: ".github/state/casio_stock_state.json"

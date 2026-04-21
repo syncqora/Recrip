@@ -12,8 +12,8 @@ Set these environment variables:
 
 Optional variables:
 
-- `PRODUCT_URL` (defaults to the AE-1200WHL-5AV page)
-- `PRODUCT_URLS` (comma-separated URLs, overrides `PRODUCT_URL`)
+- `PRODUCT_URL` (single URL; used if `PRODUCT_URLS` is unset)
+- `PRODUCT_URLS` (comma-separated URLs; overrides `PRODUCT_URL`; defaults include AE-1200WHL-5AV and AE-1200WHD-1AV)
 - `TELEGRAM_BOT_TOKEN`
 - `TELEGRAM_CHAT_ID`
 - `WHATSAPP_NUMBER_E164` (example: `919980655374`)

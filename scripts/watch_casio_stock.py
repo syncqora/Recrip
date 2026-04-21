@@ -36,6 +36,7 @@ STATE_FILE = Path(
 )
 DEFAULT_PRODUCT_URLS = [
     "https://casiostore.bhawar.com/products/casio-youth-ae-1200whl-5avdf-watch",
+    "https://casiostore.bhawar.com/products/casio-ae-1200whd-1avdf-black-digital-unisex-watch",
 ]
 DEFAULT_KEYCHAIN_SERVICE = "recrip.casio.stock.gmail"
 
