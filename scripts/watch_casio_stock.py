@@ -14,6 +14,7 @@ from __future__ import annotations
 
 import json
 import os
+import re
 import smtplib
 import ssl
 import subprocess
@@ -37,6 +38,7 @@ STATE_FILE = Path(
 DEFAULT_PRODUCT_URLS = [
     "https://casiostore.bhawar.com/products/casio-youth-ae-1200whl-5avdf-watch",
     "https://casiostore.bhawar.com/products/casio-ae-1200whd-1avdf-black-digital-unisex-watch",
+    "https://casiostore.bhawar.com/products/casio-ae-1200wh-1avdf-black-digital-unisex-watch",
 ]
 DEFAULT_KEYCHAIN_SERVICE = "recrip.casio.stock.gmail"
 
@@ -157,10 +159,24 @@ def build_ssl_context() -> ssl.SSLContext:
 
 
 def is_in_stock(html: str) -> bool:
+    # Shopify JSON-LD: prefer this so unrelated "Sold out" blocks (e.g. carousel)
+    # do not override the main product.
+    if re.search(
+        r'"availability"\s*:\s*"https://schema\.org/InStock"',
+        html,
+        re.IGNORECASE,
+    ):
+        return True
+    if re.search(
+        r'"availability"\s*:\s*"https://schema\.org/OutOfStock"',
+        html,
+        re.IGNORECASE,
+    ):
+        return False
+
     lowered = html.lower()
     if "sold out" in lowered:
         return False
-    # If page includes an active purchase CTA and no "sold out", treat as available.
     indicators = ("add to cart", "buy now", "check out", "checkout")
     return any(token in lowered for token in indicators)
 
