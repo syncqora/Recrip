@@ -39,7 +39,6 @@ class _LandingPageState extends State<LandingPage>
   _PreviewTab _selectedPreviewTab = _PreviewTab.dashboard;
   bool _renderDeferredSections = false;
   bool _isSnappingHeroTransition = false;
-  double _heroCardShiftProgress = 0;
   late final AnimationController _dashboardTapController;
   late final Animation<double> _dashboardTapAnimation;
 
@@ -48,17 +47,13 @@ class _LandingPageState extends State<LandingPage>
     super.initState();
     _dashboardTapController = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 2000),
+      duration: const Duration(milliseconds: 480),
     );
     _dashboardTapAnimation = CurvedAnimation(
       parent: _dashboardTapController,
-      curve: const Cubic(0.78, 0.01, 0.5, 1),
+      curve: Curves.easeOutCubic,
     );
-    _dashboardTapController.addListener(() {
-      if (mounted) setState(() {});
-    });
     LoginController.registerHeroIfNeeded();
-    _scrollController.addListener(_handleScroll);
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
       setState(() => _renderDeferredSections = true);
@@ -70,38 +65,18 @@ class _LandingPageState extends State<LandingPage>
       ]) {
         precacheImage(AssetImage(path), context);
       }
-      _handleScroll();
     });
   }
 
   @override
   void dispose() {
     _dashboardTapController.dispose();
-    _scrollController
-      ..removeListener(_handleScroll)
-      ..dispose();
+    _scrollController.dispose();
     LoginController.deleteHeroIfRegistered();
     super.dispose();
   }
 
-  void _handleScroll() {
-    if (!mounted) return;
-
-    final nextHeroProgress =
-        (_scrollController.hasClients
-                ? (_scrollController.offset / _heroTransitionScrollExtent)
-                : 0.0)
-            .clamp(0.0, 1.0);
-    if (nextHeroProgress != _heroCardShiftProgress) {
-      setState(() {
-        _heroCardShiftProgress = nextHeroProgress;
-      });
-    }
-  }
-
-  ScrollPhysics get _scrollPhysics => _isSnappingHeroTransition
-      ? const NeverScrollableScrollPhysics()
-      : const ClampingScrollPhysics();
+  ScrollPhysics get _scrollPhysics => const ClampingScrollPhysics();
 
   double _nextSnapTarget({required bool forward, required double offset}) {
     const points = <double>[
@@ -148,7 +123,6 @@ class _LandingPageState extends State<LandingPage>
     } finally {
       if (mounted) {
         setState(() => _isSnappingHeroTransition = false);
-        _handleScroll();
       }
     }
   }
@@ -164,40 +138,7 @@ class _LandingPageState extends State<LandingPage>
   }
 
   bool _handleScrollNotification(ScrollNotification notification) {
-    if (!_renderDeferredSections ||
-        _isSnappingHeroTransition ||
-        !_scrollController.hasClients) {
-      return false;
-    }
-
-    final offset = _scrollController.offset;
-    bool? goingDown;
-
-    if (notification is UserScrollNotification) {
-      if (notification.direction == ScrollDirection.idle) return false;
-      goingDown = notification.direction == ScrollDirection.reverse;
-    } else if (notification is ScrollUpdateNotification &&
-        notification.dragDetails != null) {
-      final dy = notification.scrollDelta ?? 0;
-      if (dy.abs() < 0.001) return false;
-      goingDown = dy > 0;
-    } else {
-      return false;
-    }
-
-    // Fully unlock normal scroll once stage-3 is complete.
-    if (goingDown && offset >= _fullScrollUnlockTarget - 0.5) {
-      return false;
-    }
-    // While above the transition zone, allow normal upward scrolling.
-    if (!goingDown && offset > _fullScrollUnlockTarget + 0.5) {
-      return false;
-    }
-
-    if (_shouldSnapForDirection(goingDown: goingDown, offset: offset)) {
-      _snapHeroTransition(forward: goingDown);
-      return true;
-    }
+    // Disable scroll-snapping interception to keep native scrolling buttery.
     return false;
   }
 
@@ -236,19 +177,18 @@ class _LandingPageState extends State<LandingPage>
       setState(() => _isSnappingHeroTransition = true);
       try {
         final durationMs = lerpDouble(
-          340,
-          760,
+          220,
+          460,
           (remaining / _stageMenuTarget).clamp(0.0, 1.0),
         )!.round();
         await _scrollController.animateTo(
           _stageMenuTarget,
           duration: Duration(milliseconds: durationMs),
-          curve: Curves.easeInOutCubicEmphasized,
+          curve: Curves.easeOutCubic,
         );
       } finally {
         if (mounted) {
           setState(() => _isSnappingHeroTransition = false);
-          _handleScroll();
         }
       }
     }
@@ -257,20 +197,6 @@ class _LandingPageState extends State<LandingPage>
   @override
   Widget build(BuildContext context) {
     final width = MediaQuery.sizeOf(context).width;
-    final currentOffset = _scrollController.hasClients
-        ? _scrollController.offset
-        : 0.0;
-    final fullUnlockProgress = (currentOffset / _fullScrollUnlockTarget).clamp(
-      0.0,
-      1.0,
-    );
-    final releaseProgress = Curves.easeInOutCubic.transform(
-      ((fullUnlockProgress - 0.58) / 0.42).clamp(0.0, 1.0),
-    );
-    final heroCompensation = currentOffset * (1 - releaseProgress);
-    final featureRevealProgress = Curves.easeOutCubic.transform(
-      ((fullUnlockProgress - 0.72) / 0.28).clamp(0.0, 1.0),
-    );
 
     if (width < LandingPage.mobileBreakpoint) {
       return const LandingPageMobileView();
@@ -327,59 +253,105 @@ class _LandingPageState extends State<LandingPage>
                   physics: _scrollPhysics,
                   child: Column(
                     children: [
-                      Transform.translate(
-                        // Keep staged hero transition visually locked so finished
-                        // content and incoming content stay aligned.
-                        offset: Offset(0, heroCompensation),
-                        child: Column(
-                          children: [
-                            _HeroSection(
-                              padding: horizontalPadding,
-                              scrollProgress: _heroCardShiftProgress,
-                              dashboardTapProgress:
-                                  _dashboardTapAnimation.value,
-                              selectedTab: _selectedPreviewTab,
-                              onTabSelected: (tab) =>
-                                  setState(() => _selectedPreviewTab = tab),
-                              onPrimaryTap: () =>
-                                  appNav.changePage(AppRoutes.login),
-                              onSecondaryTap: () =>
-                                  _onNavTap(_TopNavTab.contact, _contactKey),
-                              onDashboardTap: _onDashboardCardTap,
+                      AnimatedBuilder(
+                        animation: _scrollController,
+                        builder: (context, child) {
+                          final currentOffset = _scrollController.hasClients
+                              ? _scrollController.offset
+                              : 0.0;
+                          final fullUnlockProgress = (currentOffset /
+                                  _fullScrollUnlockTarget)
+                              .clamp(0.0, 1.0);
+                          final releaseProgress = Curves.easeInOutCubic.transform(
+                            ((fullUnlockProgress - 0.58) / 0.42).clamp(0.0, 1.0),
+                          );
+                          final heroCompensation =
+                              currentOffset * (1 - releaseProgress);
+                          final featureRevealProgress = Curves.easeOutCubic
+                              .transform(
+                                ((fullUnlockProgress - 0.72) / 0.28).clamp(
+                                  0.0,
+                                  1.0,
+                                ),
+                              );
+                          final heroCardShiftProgress = (currentOffset /
+                                  _heroTransitionScrollExtent)
+                              .clamp(0.0, 1.0);
+
+                          return Transform.translate(
+                            // Keep staged hero transition visually locked so
+                            // finished content and incoming content stay aligned.
+                            offset: Offset(0, heroCompensation),
+                            child: Column(
+                              children: [
+                                RepaintBoundary(
+                                  child: _HeroSection(
+                                    padding: horizontalPadding,
+                                    scrollProgress: heroCardShiftProgress,
+                                    dashboardTapAnimation:
+                                        _dashboardTapAnimation,
+                                    selectedTab: _selectedPreviewTab,
+                                    onTabSelected: (tab) => setState(
+                                      () => _selectedPreviewTab = tab,
+                                    ),
+                                    onPrimaryTap: () =>
+                                        appNav.changePage(AppRoutes.login),
+                                    onSecondaryTap: () => _onNavTap(
+                                      _TopNavTab.contact,
+                                      _contactKey,
+                                    ),
+                                    onDashboardTap: _onDashboardCardTap,
+                                  ),
+                                ),
+                                if (_renderDeferredSections)
+                                  SizedBox(
+                                    // Keep next section parked below until the full
+                                    // staged transition is released progressively.
+                                    height: lerpDouble(
+                                      540,
+                                      0,
+                                      featureRevealProgress,
+                                    )!,
+                                  ),
+                              ],
                             ),
-                            if (_renderDeferredSections)
-                              SizedBox(
-                                // Keep next section parked below until the full
-                                // staged transition is released progressively.
-                                height: lerpDouble(
-                                  540,
-                                  0,
-                                  featureRevealProgress,
-                                )!,
-                              ),
-                          ],
-                        ),
+                          );
+                        },
                       ),
                       if (_renderDeferredSections) ...[
-                        _FeatureSection(
-                          key: _featuresKey,
-                          padding: horizontalPadding,
+                        RepaintBoundary(
+                          child: _FeatureSection(
+                            key: _featuresKey,
+                            padding: horizontalPadding,
+                          ),
                         ),
-                        _StepSection(
-                          key: _stepsKey,
-                          padding: horizontalPadding,
+                        RepaintBoundary(
+                          child: _StepSection(
+                            key: _stepsKey,
+                            padding: horizontalPadding,
+                          ),
                         ),
-                        _PricingSection(
-                          key: _pricingKey,
-                          padding: horizontalPadding,
+                        RepaintBoundary(
+                          child: _PricingSection(
+                            key: _pricingKey,
+                            padding: horizontalPadding,
+                          ),
                         ),
-                        _ContactSection(padding: horizontalPadding),
-                        _FaqSection(
-                          key: _contactKey,
-                          padding: horizontalPadding,
+                        RepaintBoundary(
+                          child: _ContactSection(padding: horizontalPadding),
                         ),
-                        _BottomCtaSection(padding: horizontalPadding),
-                        _FooterSection(padding: horizontalPadding),
+                        RepaintBoundary(
+                          child: _FaqSection(
+                            key: _contactKey,
+                            padding: horizontalPadding,
+                          ),
+                        ),
+                        RepaintBoundary(
+                          child: _BottomCtaSection(padding: horizontalPadding),
+                        ),
+                        RepaintBoundary(
+                          child: _FooterSection(padding: horizontalPadding),
+                        ),
                       ] else ...[
                         LandingSectionSkeleton(
                           padding: horizontalPadding,
@@ -436,11 +408,16 @@ class _TopNav extends StatelessWidget {
           ),
           child: Text(
             label,
-            style: TextStyle(
+            style: Get.theme.textTheme.bodyMedium?.copyWith(
               color: selected ? const Color(0xFF3F37D8) : Colors.white,
-              fontWeight: FontWeight.w700,
-              fontSize: 14,
+              fontWeight: FontWeight.w600,
             ),
+
+            // TextStyle(
+            //   color: selected ? const Color(0xFF3F37D8) : Colors.white,
+            //   fontWeight: FontWeight.w700,
+            //   fontSize: 14,
+            // ),
           ),
         ),
       );
@@ -448,7 +425,22 @@ class _TopNav extends StatelessWidget {
 
     return Row(
       children: [
-        Image.asset(AppIcons.recripLogo, height: 42, fit: BoxFit.contain),
+        Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Image.asset(
+              'assets/images/brand-logo.png',
+              height: 42,
+              fit: BoxFit.contain,
+            ),
+            const SizedBox(width: 10),
+            Image.asset(
+              'assets/images/recrip.png',
+              height: 42,
+              fit: BoxFit.contain,
+            ),
+          ],
+        ),
         const Spacer(),
         Container(
           padding: const EdgeInsets.all(4),
@@ -489,25 +481,46 @@ class _TopNav extends StatelessWidget {
             foregroundColor: Colors.white,
             padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
           ),
-          child: const Text(
+          child: Text(
             'Log in',
-            style: TextStyle(fontWeight: FontWeight.w600, fontSize: 15),
+            style: Get.theme.textTheme.bodyMedium?.copyWith(
+              color: Colors.white,
+              fontWeight: FontWeight.w600,
+            ),
           ),
         ),
         const SizedBox(width: 12),
-        FilledButton(
-          onPressed: () => appNav.changePage(AppRoutes.login),
-          style: FilledButton.styleFrom(
-            backgroundColor: const Color(0xFF5C57F4),
-            foregroundColor: Colors.white,
-            padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 20),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(999),
+        SizedBox(
+          width: 142,
+          height: 48,
+          child: DecoratedBox(
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(30),
+              gradient: const LinearGradient(
+                begin: Alignment.bottomCenter,
+                end: Alignment.topCenter,
+                colors: [Color(0xFF4F46E5), Color(0xFF2C277F)],
+              ),
             ),
-          ),
-          child: const Text(
-            'Get Started',
-            style: TextStyle(fontWeight: FontWeight.w700, fontSize: 15),
+            child: FilledButton(
+              onPressed: () => appNav.changePage(AppRoutes.login),
+              style: FilledButton.styleFrom(
+                backgroundColor: Colors.transparent,
+                foregroundColor: Colors.white,
+                shadowColor: Colors.transparent,
+                padding: const EdgeInsets.fromLTRB(24, 10, 24, 10),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(30),
+                ),
+              ),
+              child: Text(
+                'Get Started',
+                style: Get.theme.textTheme.bodyMedium?.copyWith(
+                  color: Colors.white,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
           ),
         ),
       ],
@@ -519,7 +532,7 @@ class _HeroSection extends StatelessWidget {
   const _HeroSection({
     required this.padding,
     required this.scrollProgress,
-    required this.dashboardTapProgress,
+    required this.dashboardTapAnimation,
     required this.selectedTab,
     required this.onTabSelected,
     required this.onPrimaryTap,
@@ -529,7 +542,7 @@ class _HeroSection extends StatelessWidget {
 
   final double padding;
   final double scrollProgress;
-  final double dashboardTapProgress;
+  final Animation<double> dashboardTapAnimation;
   final _PreviewTab selectedTab;
   final ValueChanged<_PreviewTab> onTabSelected;
   final VoidCallback onPrimaryTap;
@@ -544,8 +557,6 @@ class _HeroSection extends StatelessWidget {
     final cardMoveProgress = Curves.easeOutCubic.transform(
       (scrollProgress / 0.45).clamp(0.0, 1.0),
     );
-    final dashboardTapLift = lerpDouble(0, -40, dashboardTapProgress)!;
-    final dashboardTapScale = lerpDouble(1, 1.06, dashboardTapProgress)!;
     final cardVisualHeight = lerpDouble(420, 487.2, cardMoveProgress)!;
     final menuProgress = Curves.easeOutCubic.transform(
       ((scrollProgress - 0.45) / 0.35).clamp(0.0, 1.0),
@@ -569,22 +580,26 @@ class _HeroSection extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     const SizedBox(height: 28),
-                    Text(
-                      'Never Lose Revenue\nfrom ',
-                      style: Theme.of(context).textTheme.displayLarge?.copyWith(
-                        color: Colors.white,
-                        fontWeight: FontWeight.w300,
-                        height: 1.12,
-                        fontSize: 60,
-                      ),
-                    ),
-                    Text(
-                      'Expired Subscriptions',
-                      style: Theme.of(context).textTheme.displayLarge?.copyWith(
-                        color: const Color(0xFF5F57F8),
-                        fontWeight: FontWeight.w800,
-                        height: 1.0,
-                        fontSize: 62,
+                    RichText(
+                      text: TextSpan(
+                        style: Theme.of(context).textTheme.displayLarge
+                            ?.copyWith(
+                              color: Colors.white,
+                              fontWeight: FontWeight.w400,
+                              height: 1.12,
+                              fontSize: 60,
+                            ),
+                        children: const [
+                          TextSpan(text: 'Never Lose Revenue\nfrom '),
+                          TextSpan(
+                            text: 'Expired Subscriptions',
+                            style: TextStyle(
+                              color: Color(0xFF5F57F8),
+                              fontWeight: FontWeight.w900,
+                              height: 1.0,
+                            ),
+                          ),
+                        ],
                       ),
                     ),
                     const SizedBox(height: 30),
@@ -632,105 +647,125 @@ class _HeroSection extends StatelessWidget {
           const SizedBox(width: 30),
           Expanded(
             flex: 5,
-            child: Padding(
-              padding: const EdgeInsets.only(top: 80),
-              child: Stack(
-                clipBehavior: Clip.none,
-                children: [
-                  Padding(
-                    padding: const EdgeInsets.only(top: rightPanelTopInset),
-                    child: Transform.translate(
-                      offset: Offset(
-                        // Single image moves into center/text area.
-                        lerpDouble(0, -690, cardMoveProgress)!,
-                        lerpDouble(0, -240, cardMoveProgress)! +
-                            dashboardTapLift,
-                      ),
-                      child: Transform.scale(
-                        scale:
-                            lerpDouble(1, 1.16, cardMoveProgress)! *
-                            dashboardTapScale,
-                        alignment: Alignment.topRight,
-                        child: GestureDetector(
-                          onTap: onDashboardTap,
-                          child: _HeroDashboardCard(
-                            imagePath: _previewImageFor(selectedTab),
+            child: AnimatedBuilder(
+              animation: dashboardTapAnimation,
+              builder: (context, child) {
+                final dashboardTapLift = lerpDouble(
+                  0,
+                  -22,
+                  dashboardTapAnimation.value,
+                )!;
+                final dashboardTapScale = lerpDouble(
+                  1,
+                  1.02,
+                  dashboardTapAnimation.value,
+                )!;
+
+                return Padding(
+                  padding: const EdgeInsets.only(top: 80),
+                  child: Stack(
+                    clipBehavior: Clip.none,
+                    children: [
+                      Padding(
+                        padding: const EdgeInsets.only(top: rightPanelTopInset),
+                        child: Transform.translate(
+                          offset: Offset(
+                            // Single image moves into center/text area.
+                            lerpDouble(0, -690, cardMoveProgress)!,
+                            lerpDouble(0, -240, cardMoveProgress)! +
+                                dashboardTapLift,
+                          ),
+                          child: Transform.scale(
+                            scale:
+                                lerpDouble(1, 1.16, cardMoveProgress)! *
+                                dashboardTapScale,
+                            alignment: Alignment.topRight,
+                            child: GestureDetector(
+                              onTap: onDashboardTap,
+                              child: _HeroDashboardCard(
+                                imagePath: _previewImageFor(selectedTab),
+                              ),
+                            ),
                           ),
                         ),
                       ),
-                    ),
-                  ),
-                  Positioned(
-                    right: -6,
-                    top: rightPanelTopInset,
-                    child: Opacity(
-                      opacity: menuProgress,
-                      child: Transform.translate(
-                        offset: Offset(
-                          lerpDouble(90, 0, menuProgress)!,
-                          lerpDouble(0, -240, cardMoveProgress)!,
-                        ),
-                        child: SizedBox(
-                          width: 270,
-                          height: cardVisualHeight,
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              RichText(
-                                text: TextSpan(
-                                  style: Theme.of(context)
-                                      .textTheme
-                                      .headlineMedium
-                                      ?.copyWith(
-                                        fontSize: 46,
-                                        fontWeight: FontWeight.w900,
-                                        height: 1.02,
-                                        color: Colors.white,
-                                      ),
-                                  children: const [
-                                    TextSpan(text: 'Built for '),
-                                    TextSpan(
-                                      text: 'Modern\nTeams',
-                                      style: TextStyle(
-                                        color: Color(0xFF5F57F8),
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                              const SizedBox(height: 24),
-                              const Spacer(),
-                              ..._PreviewTab.values.indexed.map((entry) {
-                                final itemProgress =
-                                    ((menuProgress - (entry.$1 * 0.12)) / 0.6)
-                                        .clamp(0.0, 1.0);
-                                return Padding(
-                                  padding: const EdgeInsets.only(bottom: 16),
-                                  child: Opacity(
-                                    opacity: itemProgress,
-                                    child: Transform.translate(
-                                      offset: Offset(
-                                        lerpDouble(60, 0, itemProgress)!,
-                                        0,
-                                      ),
-                                      child: _PreviewNavItem(
-                                        label: _previewLabel(entry.$2),
-                                        iconAsset: _previewIcon(entry.$2),
-                                        selected: entry.$2 == selectedTab,
-                                        onTap: () => onTabSelected(entry.$2),
-                                      ),
+                      Positioned(
+                        right: -6,
+                        top: rightPanelTopInset,
+                        child: Opacity(
+                          opacity: menuProgress,
+                          child: Transform.translate(
+                            offset: Offset(
+                              lerpDouble(90, 0, menuProgress)!,
+                              lerpDouble(0, -240, cardMoveProgress)!,
+                            ),
+                            child: SizedBox(
+                              width: 270,
+                              height: cardVisualHeight,
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  RichText(
+                                    text: TextSpan(
+                                      style: Theme.of(context)
+                                          .textTheme
+                                          .headlineMedium
+                                          ?.copyWith(
+                                            fontSize: 46,
+                                            fontWeight: FontWeight.w900,
+                                            height: 1.02,
+                                            color: Colors.white,
+                                          ),
+                                      children: const [
+                                        TextSpan(text: 'Built for '),
+                                        TextSpan(
+                                          text: 'Modern\nTeams',
+                                          style: TextStyle(
+                                            color: Color(0xFF5F57F8),
+                                          ),
+                                        ),
+                                      ],
                                     ),
                                   ),
-                                );
-                              }),
-                            ],
+                                  const SizedBox(height: 24),
+                                  const Spacer(),
+                                  ..._PreviewTab.values.indexed.map((entry) {
+                                    final itemProgress =
+                                        ((menuProgress - (entry.$1 * 0.12)) /
+                                                0.6)
+                                            .clamp(0.0, 1.0);
+                                    return Padding(
+                                      padding: const EdgeInsets.only(
+                                        bottom: 16,
+                                      ),
+                                      child: Opacity(
+                                        opacity: itemProgress,
+                                        child: Transform.translate(
+                                          offset: Offset(
+                                            lerpDouble(60, 0, itemProgress)!,
+                                            0,
+                                          ),
+                                          child: _PreviewNavItem(
+                                            label: _previewLabel(entry.$2),
+                                            iconAsset: _previewIcon(entry.$2),
+                                            selected: entry.$2 == selectedTab,
+                                            onTap: () =>
+                                                onTabSelected(entry.$2),
+                                          ),
+                                        ),
+                                      ),
+                                    );
+                                  }),
+                                ],
+                              ),
+                            ),
                           ),
                         ),
                       ),
-                    ),
+                    ],
                   ),
-                ],
-              ),
+                );
+              },
             ),
           ),
         ],
@@ -752,36 +787,76 @@ class _HeroButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final style = TextStyle(
+    final style = Get.theme.textTheme.headlineMedium?.copyWith(
       color: Colors.white,
-      fontWeight: FontWeight.w700,
-      fontSize: 16,
+      fontSize: 20,
+      fontWeight: FontWeight.w600,
     );
 
     if (filled) {
-      return FilledButton(
-        onPressed: onTap,
-        style: FilledButton.styleFrom(
-          backgroundColor: const Color(0xFF5C57F4),
-          foregroundColor: Colors.white,
-          minimumSize: const Size(208, 60),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(999),
+      return SizedBox(
+        width: 208,
+        height: 64,
+        child: DecoratedBox(
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(30),
+            gradient: const LinearGradient(
+              begin: Alignment.bottomCenter,
+              end: Alignment.topCenter,
+              colors: [Color(0xFF4F46E5), Color(0xFF2C277F)],
+            ),
+          ),
+          child: FilledButton(
+            onPressed: onTap,
+            style: FilledButton.styleFrom(
+              backgroundColor: Colors.transparent,
+              foregroundColor: Colors.white,
+              shadowColor: Colors.transparent,
+              padding: const EdgeInsets.fromLTRB(24, 10, 24, 10),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(30),
+              ),
+            ),
+            child: Text(label, style: style),
           ),
         ),
-        child: Text(label, style: style),
       );
     }
 
-    return OutlinedButton(
-      onPressed: onTap,
-      style: OutlinedButton.styleFrom(
-        foregroundColor: Colors.white,
-        minimumSize: const Size(208, 60),
-        side: const BorderSide(color: Color(0xFF5C57F4)),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(999)),
+    return SizedBox(
+      width: 220,
+      height: 64,
+      child: DecoratedBox(
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(30),
+          gradient: const LinearGradient(
+            begin: Alignment.bottomCenter,
+            end: Alignment.topCenter,
+            colors: [Color(0xFF4F46E5), Color(0xFF2C277F)],
+          ),
+        ),
+        child: Padding(
+          padding: const EdgeInsets.all(1),
+          child: DecoratedBox(
+            decoration: BoxDecoration(
+              color: const Color(0xFF090611),
+              borderRadius: BorderRadius.circular(29),
+            ),
+            child: OutlinedButton(
+              onPressed: onTap,
+              style: OutlinedButton.styleFrom(
+                foregroundColor: Colors.white,
+                side: BorderSide.none,
+                padding: const EdgeInsets.fromLTRB(24, 10, 24, 10),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(29),
+                ),
+              ),
+              child: Text(label, style: style),
+            ),
+          ),
+        ),
       ),
-      child: Text(label, style: style),
     );
   }
 }
@@ -794,9 +869,10 @@ class _HeroDashboardCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      height: 420,
+      width: 725,
+      height: 453,
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(28),
+        borderRadius: BorderRadius.circular(20),
         boxShadow: const [
           BoxShadow(
             color: Color(0x44130A25),
@@ -806,11 +882,12 @@ class _HeroDashboardCard extends StatelessWidget {
         ],
       ),
       child: ClipRRect(
-        borderRadius: BorderRadius.circular(28),
+        borderRadius: BorderRadius.circular(20),
         child: Image.asset(
           imagePath,
-          fit: BoxFit.cover,
-          alignment: Alignment.topLeft,
+          fit: BoxFit.contain,
+          alignment: Alignment.center,
+          filterQuality: FilterQuality.low,
         ),
       ),
     );
@@ -890,21 +967,37 @@ class _FeatureSection extends StatelessWidget {
             title: 'Everything you need to',
             accent: 'scale faster',
             description:
-                'Stop manually tracking spreadsheets. Recrip automates the boring stuff so you can focus on growth.',
+                'Stop manually tracking spreadsheets. Recrip automates the boring stuff so you can\nfocus on growth.',
           ),
-          const SizedBox(height: 34),
+          const SizedBox(height: 60),
           LayoutBuilder(
             builder: (context, constraints) {
-              final cardWidth = constraints.maxWidth / 3;
-              return Wrap(
-                children: features
-                    .map(
-                      (feature) => SizedBox(
-                        width: cardWidth,
-                        child: _FeatureCard(feature: feature),
-                      ),
-                    )
-                    .toList(),
+              const columns = 3;
+              final totalRows = (features.length / columns).ceil();
+              return Container(
+                decoration: BoxDecoration(
+                  border: Border.all(color: const Color(0xFF3B2F84)),
+                ),
+                child: GridView.builder(
+                  shrinkWrap: true,
+                  physics: const NeverScrollableScrollPhysics(),
+                  itemCount: features.length,
+                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                    crossAxisCount: columns,
+                    childAspectRatio: 1.95,
+                  ),
+                  itemBuilder: (context, index) {
+                    final column = index % columns;
+                    final row = index ~/ columns;
+                    final showRightBorder = column < columns - 1;
+                    final showBottomBorder = row < totalRows - 1;
+                    return _FeatureCard(
+                      feature: features[index],
+                      showRightBorder: showRightBorder,
+                      showBottomBorder: showBottomBorder,
+                    );
+                  },
+                ),
               );
             },
           ),
@@ -915,9 +1008,15 @@ class _FeatureSection extends StatelessWidget {
 }
 
 class _FeatureCard extends StatelessWidget {
-  const _FeatureCard({required this.feature});
+  const _FeatureCard({
+    required this.feature,
+    required this.showRightBorder,
+    required this.showBottomBorder,
+  });
 
   final _Feature feature;
+  final bool showRightBorder;
+  final bool showBottomBorder;
 
   @override
   Widget build(BuildContext context) {
@@ -926,7 +1025,14 @@ class _FeatureCard extends StatelessWidget {
       //  padding: const EdgeInsets.fromLTRB(26, 24, 26, 20),
       padding: EdgeInsets.symmetric(vertical: 27, horizontal: 87),
       decoration: BoxDecoration(
-        border: Border.all(color: const Color(0xFF3B2F84)),
+        border: Border(
+          right: showRightBorder
+              ? const BorderSide(color: Color(0xFF3B2F84))
+              : BorderSide.none,
+          bottom: showBottomBorder
+              ? const BorderSide(color: Color(0xFF3B2F84))
+              : BorderSide.none,
+        ),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -990,26 +1096,27 @@ class _StepSection extends StatelessWidget {
             title: 'Get started in',
             accent: '3 simple steps',
             description: null,
+            accentOnNewLine: false,
           ),
           const SizedBox(height: 28),
           Text(
             'Identify, Support & Retain',
             textAlign: TextAlign.center,
-            style: Theme.of(context).textTheme.displayMedium?.copyWith(
-              fontWeight: FontWeight.w800,
-              fontSize: 62,
+            style: Get.theme.textTheme.headlineMedium?.copyWith(
+              fontWeight: FontWeight.w900,
+              fontSize: 85,
               foreground: Paint()
                 ..style = PaintingStyle.stroke
                 ..strokeWidth = 1
-                ..color = const Color(0xFF30255C),
+                ..color = const Color(0x33FFFFFF),
             ),
           ),
-          const SizedBox(height: 30),
+          const SizedBox(height: 62),
           Stack(
             children: [
               Positioned(
-                left: 140,
-                right: 140,
+                left: 225,
+                right: 225,
                 top: 27,
                 child: Container(height: 1, color: const Color(0xFF6A5AB5)),
               ),
@@ -1044,37 +1151,49 @@ class _StepCard extends StatelessWidget {
     return Column(
       children: [
         Container(
-          width: 50,
-          height: 50,
+          width: 64,
+          height: 64,
           decoration: BoxDecoration(
-            color: const Color(0xFF5C57F4),
+            color: const Color(0xFF4F46E5),
             borderRadius: BorderRadius.circular(10),
+            boxShadow: const [
+              BoxShadow(
+                color: Color(0x40383737),
+                offset: Offset(0, 13),
+                blurRadius: 11.1,
+              ),
+            ],
           ),
           alignment: Alignment.center,
           child: SvgPicture.asset(
             step.iconAsset,
-            width: 20,
-            height: 20,
+            width: 32,
+            height: 32,
             colorFilter: const ColorFilter.mode(Colors.white, BlendMode.srcIn),
           ),
         ),
         const SizedBox(height: 22),
-        Text(
-          step.title,
-          textAlign: TextAlign.center,
-          style: const TextStyle(
-            color: Colors.white,
-            fontWeight: FontWeight.w700,
-            fontSize: 22,
-          ),
-        ),
-        const SizedBox(height: 10),
-        Text(
-          step.description,
-          textAlign: TextAlign.center,
-          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-            color: const Color(0xFFC9C1EC),
-            height: 1.55,
+        Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
+            children: [
+              Text(
+                step.title,
+                textAlign: TextAlign.center,
+                style: Get.theme.textTheme.bodyLarge?.copyWith(
+                  color: Colors.white,
+                ),
+              ),
+              const SizedBox(height: 10),
+              Text(
+                step.description,
+                textAlign: TextAlign.center,
+                style: Get.theme.textTheme.bodySmall?.copyWith(
+                  fontSize: 24,
+                  color: const Color(0xFF969696),
+                ),
+              ),
+            ],
           ),
         ),
       ],
@@ -1097,8 +1216,9 @@ class _PricingSection extends StatelessWidget {
             title: 'Simple &',
             accent: 'transparent pricing',
             description: null,
+            accentOnNewLine: false,
           ),
-          const SizedBox(height: 42),
+          const SizedBox(height: 114),
           Center(
             child: ConstrainedBox(
               constraints: const BoxConstraints(maxWidth: 1018),
@@ -1109,16 +1229,19 @@ class _PricingSection extends StatelessWidget {
                   children: [
                     Positioned.fill(
                       child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          Expanded(
-                            child: Padding(
-                              padding: const EdgeInsets.only(right: 24),
+                          Padding(
+                            padding: const EdgeInsets.only(right: 24),
+                            child: SizedBox(
+                              width: 484,
                               child: _PricingCard(plan: pricingPlans[0]),
                             ),
                           ),
-                          Expanded(
-                            child: Padding(
-                              padding: const EdgeInsets.only(left: 24),
+                          Padding(
+                            padding: const EdgeInsets.only(left: 24),
+                            child: SizedBox(
+                              width: 484,
                               child: _PricingCard(plan: pricingPlans[1]),
                             ),
                           ),
@@ -1134,13 +1257,15 @@ class _PricingSection extends StatelessWidget {
                           onPressed: () => appNav.changePage(AppRoutes.login),
                           style: OutlinedButton.styleFrom(
                             foregroundColor: Colors.white,
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 34,
-                              vertical: 18,
+                            fixedSize: const Size(317, 64),
+                            backgroundColor: const Color(0xFF08042A),
+                            padding: const EdgeInsets.fromLTRB(24, 10, 24, 10),
+                            side: const BorderSide(
+                              color: Color(0xFF4F46E5),
+                              width: 1,
                             ),
-                            side: const BorderSide(color: Color(0xFF554AD8)),
                             shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(999),
+                              borderRadius: BorderRadius.circular(30),
                             ),
                           ),
                           child: const Text(
@@ -1168,12 +1293,13 @@ class _PricingCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      height: 700,
+      width: 484,
+      height: 674,
       padding: const EdgeInsets.fromLTRB(58, 74, 54, 56),
       decoration: BoxDecoration(
-        color: const Color(0xFF0E0825),
-        borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: const Color(0xFF4E42D1)),
+        color: const Color(0xFF08042A),
+        borderRadius: BorderRadius.circular(30),
+        border: Border.all(color: const Color(0xFF4F46E5), width: 1),
         boxShadow: const [
           BoxShadow(
             color: Color(0x443C2DD8),
@@ -1193,7 +1319,11 @@ class _PricingCard extends StatelessWidget {
                 width: 156,
                 padding: const EdgeInsets.symmetric(vertical: 16),
                 decoration: BoxDecoration(
-                  color: const Color(0xFF4F46E5),
+                  gradient: const LinearGradient(
+                    begin: Alignment.bottomCenter,
+                    end: Alignment.topCenter,
+                    colors: [Color(0xFF4F46E5), Color(0xFF2C277F)],
+                  ),
                   borderRadius: BorderRadius.circular(999),
                   border: Border.all(color: const Color(0xFFFF9900)),
                 ),
@@ -1757,9 +1887,9 @@ class _BottomCtaSection extends StatelessWidget {
           const SizedBox(height: 14),
           Text(
             'No credit card required • 14-day free trial • Cancel anytime',
-            style: Theme.of(
-              context,
-            ).textTheme.bodyMedium?.copyWith(color: const Color(0xFF7B73A7)),
+            style: Get.theme.textTheme.bodyMedium?.copyWith(
+              color: const Color(0xFF475569),
+            ),
           ),
         ],
       ),
@@ -1933,11 +2063,13 @@ class _SectionTitle extends StatelessWidget {
     required this.title,
     required this.accent,
     required this.description,
+    this.accentOnNewLine = true,
   });
 
   final String title;
   final String accent;
   final String? description;
+  final bool accentOnNewLine;
 
   @override
   Widget build(BuildContext context) {
@@ -1946,30 +2078,29 @@ class _SectionTitle extends StatelessWidget {
         RichText(
           textAlign: TextAlign.center,
           text: TextSpan(
-            style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+            style: Get.theme.textTheme.headlineMedium?.copyWith(
               color: Colors.white,
-              fontSize: 46,
-              fontWeight: FontWeight.w800,
-              height: 1.15,
+              fontWeight: FontWeight.w900,
+              fontSize: 40,
             ),
             children: [
               TextSpan(text: title),
-              const TextSpan(text: '\n'),
+              TextSpan(text: accentOnNewLine ? '\n' : ' '),
               TextSpan(
                 text: accent,
-                style: const TextStyle(color: Color(0xFF5F57F8)),
+                style: const TextStyle(color: Color(0xFF4F46E5)),
               ),
             ],
           ),
         ),
         if (description != null) ...[
-          const SizedBox(height: 14),
+          const SizedBox(height: 24),
           Text(
             description!,
             textAlign: TextAlign.center,
-            style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-              color: const Color(0xFFE2DDF7),
-              height: 1.55,
+            style: Get.theme.textTheme.bodyLarge?.copyWith(
+              color: Colors.white,
+              fontWeight: FontWeight.w600,
             ),
           ),
         ],
