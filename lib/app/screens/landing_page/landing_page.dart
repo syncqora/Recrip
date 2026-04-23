@@ -35,7 +35,7 @@ class _LandingPageState extends State<LandingPage>
   final _contactKey = GlobalKey();
   final _scrollController = ScrollController();
 
-  _TopNavTab _activeNavTab = _TopNavTab.features;
+  _TopNavTab? _activeNavTab;
   _PreviewTab _selectedPreviewTab = _PreviewTab.dashboard;
   bool _renderDeferredSections = false;
   bool _isSnappingHeroTransition = false;
@@ -158,6 +158,48 @@ class _LandingPageState extends State<LandingPage>
     await _scrollTo(key);
   }
 
+  Future<void> _scrollToFeaturesFromArrow() async {
+    if (!_renderDeferredSections) {
+      if (mounted) setState(() => _renderDeferredSections = true);
+      await Future<void>.delayed(const Duration(milliseconds: 16));
+    }
+
+    final sectionContext = _featuresKey.currentContext;
+    if (sectionContext != null && _scrollController.hasClients) {
+      final renderObject = sectionContext.findRenderObject();
+      if (renderObject is RenderBox) {
+        final viewport = RenderAbstractViewport.of(renderObject);
+        final revealOffset = viewport
+            ?.getOffsetToReveal(renderObject, 0.05)
+            .offset;
+        if (revealOffset != null) {
+          final target = revealOffset.clamp(
+            0.0,
+            _scrollController.position.maxScrollExtent,
+          );
+          await _scrollController.animateTo(
+            target,
+            duration: const Duration(milliseconds: 520),
+            curve: Curves.easeOutCubic,
+          );
+          return;
+        }
+      }
+    }
+
+    if (_scrollController.hasClients) {
+      final fallbackTarget = _fullScrollUnlockTarget.clamp(
+        0.0,
+        _scrollController.position.maxScrollExtent,
+      );
+      await _scrollController.animateTo(
+        fallbackTarget,
+        duration: const Duration(milliseconds: 520),
+        curve: Curves.easeOutCubic,
+      );
+    }
+  }
+
   Future<void> _onDashboardCardTap() async {
     if (_isSnappingHeroTransition) return;
     if (!_scrollController.hasClients) return;
@@ -259,12 +301,18 @@ class _LandingPageState extends State<LandingPage>
                           final currentOffset = _scrollController.hasClients
                               ? _scrollController.offset
                               : 0.0;
-                          final fullUnlockProgress = (currentOffset /
-                                  _fullScrollUnlockTarget)
-                              .clamp(0.0, 1.0);
-                          final releaseProgress = Curves.easeInOutCubic.transform(
-                            ((fullUnlockProgress - 0.58) / 0.42).clamp(0.0, 1.0),
-                          );
+                          final fullUnlockProgress =
+                              (currentOffset / _fullScrollUnlockTarget).clamp(
+                                0.0,
+                                1.0,
+                              );
+                          final releaseProgress = Curves.easeInOutCubic
+                              .transform(
+                                ((fullUnlockProgress - 0.58) / 0.42).clamp(
+                                  0.0,
+                                  1.0,
+                                ),
+                              );
                           final heroCompensation =
                               currentOffset * (1 - releaseProgress);
                           final featureRevealProgress = Curves.easeOutCubic
@@ -274,9 +322,9 @@ class _LandingPageState extends State<LandingPage>
                                   1.0,
                                 ),
                               );
-                          final heroCardShiftProgress = (currentOffset /
-                                  _heroTransitionScrollExtent)
-                              .clamp(0.0, 1.0);
+                          final heroCardShiftProgress =
+                              (currentOffset / _heroTransitionScrollExtent)
+                                  .clamp(0.0, 1.0);
 
                           return Transform.translate(
                             // Keep staged hero transition visually locked so
@@ -301,6 +349,7 @@ class _LandingPageState extends State<LandingPage>
                                       _contactKey,
                                     ),
                                     onDashboardTap: _onDashboardCardTap,
+                                    onArrowTap: _scrollToFeaturesFromArrow,
                                   ),
                                 ),
                                 if (_renderDeferredSections)
@@ -382,7 +431,7 @@ class _TopNav extends StatelessWidget {
     required this.onContact,
   });
 
-  final _TopNavTab selectedTab;
+  final _TopNavTab? selectedTab;
   final VoidCallback onFeatures;
   final VoidCallback onSteps;
   final VoidCallback onPricing;
@@ -538,6 +587,7 @@ class _HeroSection extends StatelessWidget {
     required this.onPrimaryTap,
     required this.onSecondaryTap,
     required this.onDashboardTap,
+    required this.onArrowTap,
   });
 
   final double padding;
@@ -548,6 +598,7 @@ class _HeroSection extends StatelessWidget {
   final VoidCallback onPrimaryTap;
   final VoidCallback onSecondaryTap;
   final VoidCallback onDashboardTap;
+  final VoidCallback onArrowTap;
 
   @override
   Widget build(BuildContext context) {
@@ -557,215 +608,271 @@ class _HeroSection extends StatelessWidget {
     final cardMoveProgress = Curves.easeOutCubic.transform(
       (scrollProgress / 0.45).clamp(0.0, 1.0),
     );
-    final cardVisualHeight = lerpDouble(420, 487.2, cardMoveProgress)!;
-    final menuProgress = Curves.easeOutCubic.transform(
-      ((scrollProgress - 0.45) / 0.35).clamp(0.0, 1.0),
-    );
+    final dashboardInitialOpacity = lerpDouble(0.52, 1.0, cardMoveProgress)!;
+    final dashboardDullOverlayOpacity = lerpDouble(
+      0.42,
+      0.0,
+      cardMoveProgress,
+    )!;
+    final cardVisualHeight = lerpDouble(460, 530, cardMoveProgress)!;
+    final menuProgress = cardMoveProgress;
     // Keep transformed visuals within Stack bounds so hit-testing aligns with
     // what the user sees.
     const rightPanelTopInset = 240.0;
 
     return Padding(
       padding: EdgeInsets.fromLTRB(padding, 56, padding, 54),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
+      child: Stack(
+        clipBehavior: Clip.none,
         children: [
-          Expanded(
-            flex: 6,
-            child: Opacity(
-              opacity: textOpacity,
-              child: ConstrainedBox(
-                constraints: const BoxConstraints(maxWidth: 760),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const SizedBox(height: 28),
-                    RichText(
-                      text: TextSpan(
-                        style: Theme.of(context).textTheme.displayLarge
-                            ?.copyWith(
-                              color: Colors.white,
-                              fontWeight: FontWeight.w400,
-                              height: 1.12,
-                              fontSize: 60,
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(
+                flex: 6,
+                child: Opacity(
+                  opacity: textOpacity,
+                  child: ConstrainedBox(
+                    constraints: const BoxConstraints(maxWidth: 760),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const SizedBox(height: 28),
+                        RichText(
+                          text: TextSpan(
+                            style: Theme.of(context).textTheme.displayLarge
+                                ?.copyWith(
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.w400,
+                                  height: 1.12,
+                                  fontSize: 60,
+                                ),
+                            children: const [
+                              TextSpan(text: 'Never Lose Revenue\nfrom '),
+                              TextSpan(
+                                text: 'Expired Subscriptions',
+                                style: TextStyle(
+                                  color: Color(0xFF5F57F8),
+                                  fontWeight: FontWeight.w900,
+                                  height: 1.0,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(height: 30),
+                        ConstrainedBox(
+                          constraints: const BoxConstraints(maxWidth: 800),
+                          child: Text(
+                            'Recrip helps businesses automate renewals, track customers, and recover missed payments — all from one powerful dashboard.',
+                            style: Theme.of(context).textTheme.bodyLarge
+                                ?.copyWith(
+                                  color: const Color(0xFFE2DDF7),
+                                  height: 1.55,
+                                  fontWeight: FontWeight.w400,
+                                  fontSize: 24,
+                                ),
+                          ),
+                        ),
+                        const SizedBox(height: 38),
+                        Row(
+                          children: [
+                            _HeroButton(
+                              label: 'Book a Free Trial',
+                              filled: true,
+                              onTap: onPrimaryTap,
                             ),
-                        children: const [
-                          TextSpan(text: 'Never Lose Revenue\nfrom '),
-                          TextSpan(
-                            text: 'Expired Subscriptions',
-                            style: TextStyle(
-                              color: Color(0xFF5F57F8),
-                              fontWeight: FontWeight.w900,
-                              height: 1.0,
+                            const SizedBox(width: 18),
+                            _HeroButton(
+                              label: 'Schedule a Demo',
+                              filled: false,
+                              onTap: onSecondaryTap,
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 24),
+                        Text(
+                          'No credit card required • 14-day free trial • Cancel anytime',
+                          style: Theme.of(context).textTheme.bodyMedium
+                              ?.copyWith(color: const Color(0xFF475569)),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 30),
+              Expanded(
+                flex: 5,
+                child: AnimatedBuilder(
+                  animation: dashboardTapAnimation,
+                  builder: (context, child) {
+                    final dashboardTapLift = lerpDouble(
+                      0,
+                      -22,
+                      dashboardTapAnimation.value,
+                    )!;
+                    final dashboardTapScale = lerpDouble(
+                      1,
+                      1.02,
+                      dashboardTapAnimation.value,
+                    )!;
+
+                    return Padding(
+                      padding: const EdgeInsets.only(top: 80),
+                      child: Stack(
+                        clipBehavior: Clip.none,
+                        children: [
+                          Padding(
+                            padding: const EdgeInsets.only(
+                              top: rightPanelTopInset,
+                            ),
+                            child: Transform.translate(
+                              offset: Offset(
+                                // Single image moves into center/text area.
+                                lerpDouble(135, -690, cardMoveProgress)!,
+                                lerpDouble(12, -240, cardMoveProgress)! +
+                                    dashboardTapLift,
+                              ),
+                              child: Transform.scale(
+                                scale:
+                                    lerpDouble(1, 1.16, cardMoveProgress)! *
+                                    dashboardTapScale,
+                                alignment: Alignment.topRight,
+                                child: GestureDetector(
+                                  onTap: onDashboardTap,
+                                  child: Opacity(
+                                    opacity: dashboardInitialOpacity,
+                                    child: _HeroDashboardCard(
+                                      imagePath: _previewImageFor(selectedTab),
+                                      dullOverlayOpacity:
+                                          dashboardDullOverlayOpacity,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                          Positioned(
+                            right: 70,
+                            top: rightPanelTopInset,
+                            child: Opacity(
+                              opacity: menuProgress,
+                              child: Transform.translate(
+                                offset: Offset(
+                                  lerpDouble(20, 0, menuProgress)!,
+                                  lerpDouble(0, -240, cardMoveProgress)!,
+                                ),
+                                child: SizedBox(
+                                  width: 270,
+                                  height: cardVisualHeight,
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      RichText(
+                                        text: TextSpan(
+                                          style: Theme.of(context)
+                                              .textTheme
+                                              .headlineMedium
+                                              ?.copyWith(
+                                                fontSize: 46,
+                                                fontWeight: FontWeight.w900,
+                                                height: 1.02,
+                                                color: Colors.white,
+                                              ),
+                                          children: const [
+                                            TextSpan(text: 'Built for '),
+                                            TextSpan(
+                                              text: 'Modern\nTeams',
+                                              style: TextStyle(
+                                                color: Color(0xFF5F57F8),
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                      const SizedBox(height: 24),
+                                      const Spacer(),
+                                      ..._PreviewTab.values.indexed.map((
+                                        entry,
+                                      ) {
+                                        final itemProgress =
+                                            ((menuProgress -
+                                                        (entry.$1 * 0.12)) /
+                                                    0.6)
+                                                .clamp(0.0, 1.0);
+                                        return Padding(
+                                          padding: const EdgeInsets.only(
+                                            bottom: 16,
+                                          ),
+                                          child: Opacity(
+                                            opacity: itemProgress,
+                                            child: Transform.translate(
+                                              offset: Offset(
+                                                lerpDouble(
+                                                  60,
+                                                  0,
+                                                  itemProgress,
+                                                )!,
+                                                0,
+                                              ),
+                                              child: _PreviewNavItem(
+                                                label: _previewLabel(entry.$2),
+                                                iconAsset: _previewIcon(
+                                                  entry.$2,
+                                                ),
+                                                selected:
+                                                    entry.$2 == selectedTab,
+                                                onTap: () =>
+                                                    onTabSelected(entry.$2),
+                                              ),
+                                            ),
+                                          ),
+                                        );
+                                      }),
+                                    ],
+                                  ),
+                                ),
+                              ),
                             ),
                           ),
                         ],
                       ),
-                    ),
-                    const SizedBox(height: 30),
-                    ConstrainedBox(
-                      constraints: const BoxConstraints(maxWidth: 800),
-                      child: Text(
-                        'Recrip helps businesses automate renewals, track customers, and recover missed payments — all from one powerful dashboard.',
-                        style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                          color: const Color(0xFFE2DDF7),
-                          height: 1.55,
-                          fontWeight: FontWeight.w400,
-                          fontSize: 24,
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 38),
-                    Row(
-                      children: [
-                        _HeroButton(
-                          label: 'Book a Free Trial',
-                          filled: true,
-                          onTap: onPrimaryTap,
-                        ),
-                        const SizedBox(width: 18),
-                        _HeroButton(
-                          label: 'Schedule a Demo',
-                          filled: false,
-                          onTap: onSecondaryTap,
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 24),
-                    Text(
-                      'No credit card required • 14-day free trial • Cancel anytime',
-                      style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                        color: const Color(0xFF7B73A7),
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                  ],
+                    );
+                  },
                 ),
               ),
-            ),
+            ],
           ),
-          const SizedBox(width: 30),
-          Expanded(
-            flex: 5,
-            child: AnimatedBuilder(
-              animation: dashboardTapAnimation,
-              builder: (context, child) {
-                final dashboardTapLift = lerpDouble(
-                  0,
-                  -22,
-                  dashboardTapAnimation.value,
-                )!;
-                final dashboardTapScale = lerpDouble(
-                  1,
-                  1.02,
-                  dashboardTapAnimation.value,
-                )!;
-
-                return Padding(
-                  padding: const EdgeInsets.only(top: 80),
-                  child: Stack(
-                    clipBehavior: Clip.none,
-                    children: [
-                      Padding(
-                        padding: const EdgeInsets.only(top: rightPanelTopInset),
-                        child: Transform.translate(
-                          offset: Offset(
-                            // Single image moves into center/text area.
-                            lerpDouble(0, -690, cardMoveProgress)!,
-                            lerpDouble(0, -240, cardMoveProgress)! +
-                                dashboardTapLift,
-                          ),
-                          child: Transform.scale(
-                            scale:
-                                lerpDouble(1, 1.16, cardMoveProgress)! *
-                                dashboardTapScale,
-                            alignment: Alignment.topRight,
-                            child: GestureDetector(
-                              onTap: onDashboardTap,
-                              child: _HeroDashboardCard(
-                                imagePath: _previewImageFor(selectedTab),
-                              ),
-                            ),
-                          ),
+          Positioned(
+            left: 0,
+            right: 0,
+            bottom: -140,
+            child: GestureDetector(
+              behavior: HitTestBehavior.opaque,
+              onTap: onArrowTap,
+              child: SizedBox(
+                width: 72,
+                height: 72,
+                child: Center(
+                  child: Transform.translate(
+                    offset: Offset(0, lerpDouble(0, -240, cardMoveProgress)!),
+                    child: Opacity(
+                      opacity: lerpDouble(0.92, 0.82, cardMoveProgress)!,
+                      child: SvgPicture.asset(
+                        'assets/icons/arrow-down.svg',
+                        width: 36,
+                        height: 36,
+                        colorFilter: const ColorFilter.mode(
+                          Colors.white,
+                          BlendMode.srcIn,
                         ),
                       ),
-                      Positioned(
-                        right: -6,
-                        top: rightPanelTopInset,
-                        child: Opacity(
-                          opacity: menuProgress,
-                          child: Transform.translate(
-                            offset: Offset(
-                              lerpDouble(90, 0, menuProgress)!,
-                              lerpDouble(0, -240, cardMoveProgress)!,
-                            ),
-                            child: SizedBox(
-                              width: 270,
-                              height: cardVisualHeight,
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  RichText(
-                                    text: TextSpan(
-                                      style: Theme.of(context)
-                                          .textTheme
-                                          .headlineMedium
-                                          ?.copyWith(
-                                            fontSize: 46,
-                                            fontWeight: FontWeight.w900,
-                                            height: 1.02,
-                                            color: Colors.white,
-                                          ),
-                                      children: const [
-                                        TextSpan(text: 'Built for '),
-                                        TextSpan(
-                                          text: 'Modern\nTeams',
-                                          style: TextStyle(
-                                            color: Color(0xFF5F57F8),
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                  const SizedBox(height: 24),
-                                  const Spacer(),
-                                  ..._PreviewTab.values.indexed.map((entry) {
-                                    final itemProgress =
-                                        ((menuProgress - (entry.$1 * 0.12)) /
-                                                0.6)
-                                            .clamp(0.0, 1.0);
-                                    return Padding(
-                                      padding: const EdgeInsets.only(
-                                        bottom: 16,
-                                      ),
-                                      child: Opacity(
-                                        opacity: itemProgress,
-                                        child: Transform.translate(
-                                          offset: Offset(
-                                            lerpDouble(60, 0, itemProgress)!,
-                                            0,
-                                          ),
-                                          child: _PreviewNavItem(
-                                            label: _previewLabel(entry.$2),
-                                            iconAsset: _previewIcon(entry.$2),
-                                            selected: entry.$2 == selectedTab,
-                                            onTap: () =>
-                                                onTabSelected(entry.$2),
-                                          ),
-                                        ),
-                                      ),
-                                    );
-                                  }),
-                                ],
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
-                    ],
+                    ),
                   ),
-                );
-              },
+                ),
+              ),
             ),
           ),
         ],
@@ -862,9 +969,13 @@ class _HeroButton extends StatelessWidget {
 }
 
 class _HeroDashboardCard extends StatelessWidget {
-  const _HeroDashboardCard({required this.imagePath});
+  const _HeroDashboardCard({
+    required this.imagePath,
+    this.dullOverlayOpacity = 0,
+  });
 
   final String imagePath;
+  final double dullOverlayOpacity;
 
   @override
   Widget build(BuildContext context) {
@@ -883,11 +994,20 @@ class _HeroDashboardCard extends StatelessWidget {
       ),
       child: ClipRRect(
         borderRadius: BorderRadius.circular(20),
-        child: Image.asset(
-          imagePath,
-          fit: BoxFit.contain,
-          alignment: Alignment.center,
-          filterQuality: FilterQuality.low,
+        child: Stack(
+          fit: StackFit.expand,
+          children: [
+            Image.asset(
+              imagePath,
+              fit: BoxFit.contain,
+              alignment: Alignment.center,
+              filterQuality: FilterQuality.low,
+            ),
+            if (dullOverlayOpacity > 0)
+              ColoredBox(
+                color: const Color(0xFF2A1E63).withOpacity(dullOverlayOpacity),
+              ),
+          ],
         ),
       ),
     );
@@ -1406,18 +1526,21 @@ class _ContactSection extends StatelessWidget {
                 children: [
                   RichText(
                     text: TextSpan(
-                      style: Theme.of(context).textTheme.headlineMedium
-                          ?.copyWith(
-                            fontSize: 34,
-                            fontWeight: FontWeight.w800,
-                            height: 1.15,
-                            color: Colors.white,
-                          ),
-                      children: const [
+                      style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                        fontSize: 40,
+                        fontWeight: FontWeight.w900,
+                        height: 1.15,
+                        color: Colors.white,
+                      ),
+                      children: [
                         TextSpan(text: 'Start Automating\nYour '),
                         TextSpan(
                           text: 'Renewals Today',
-                          style: TextStyle(color: Color(0xFF5F57F8)),
+                          style: Get.theme.textTheme.bodyLarge?.copyWith(
+                            fontSize: 40,
+                            fontWeight: FontWeight.w900,
+                            color: Color(0xFF4F46E5),
+                          ),
                         ),
                       ],
                     ),
@@ -1426,8 +1549,8 @@ class _ContactSection extends StatelessWidget {
                   Text(
                     'Join hundreds of businesses that are recovering lost revenue every single day. No credit card required to start.',
                     style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                      color: const Color(0xFFC9C1EC),
-                      height: 1.55,
+                      color: const Color(0xFF475569),
+                      fontWeight: FontWeight.w500,
                     ),
                   ),
                   const SizedBox(height: 22),
@@ -1437,30 +1560,31 @@ class _ContactSection extends StatelessWidget {
                       child: Row(
                         children: [
                           Container(
-                            width: 20,
-                            height: 20,
+                            width: 32,
+                            height: 32,
                             decoration: BoxDecoration(
+                              color: Color(0xFF4F46E5),
                               shape: BoxShape.circle,
-                              border: Border.all(
-                                color: const Color(0xFF7167FF),
-                                width: 1.5,
-                              ),
+                              // border: Border.all(
+                              //   color: const Color(0xFF7167FF),
+                              //   width: 1.5,
+                              // ),
                             ),
                             alignment: Alignment.center,
-                            child: Container(
-                              width: 8,
-                              height: 8,
-                              decoration: const BoxDecoration(
-                                shape: BoxShape.circle,
-                                color: Color(0xFF7167FF),
-                              ),
+                            child: SvgPicture.asset(
+                              'assets/icons/circle-check.svg',
+                              width: 20,
+                              height: 20,
                             ),
                           ),
                           const SizedBox(width: 12),
                           Text(
                             item,
                             style: Theme.of(context).textTheme.bodyLarge
-                                ?.copyWith(color: const Color(0xFFC9C1EC)),
+                                ?.copyWith(
+                                  color: const Color(0xFF475569),
+                                  fontWeight: FontWeight.w600,
+                                ),
                           ),
                         ],
                       ),
@@ -1487,7 +1611,7 @@ class _LeadCard extends StatelessWidget {
       height: 431,
       padding: const EdgeInsets.only(top: 32, left: 48, right: 48, bottom: 32),
       decoration: BoxDecoration(
-        color: const Color(0xFF16224A),
+        color: const Color(0xFF08042A),
         borderRadius: BorderRadius.circular(50),
         border: Border.all(color: const Color(0xFFCBD5E1), width: 1),
       ),
@@ -1544,11 +1668,11 @@ class _LeadCard extends StatelessWidget {
           ),
           const SizedBox(height: 32),
           Text(
-            'Request a demo and we will get back to you. Thank you!',
+            'Request enquiry and we will get back to you.Thank you!',
             textAlign: TextAlign.center,
             style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-              color: const Color(0xFFC9D1F0),
-              height: 1.2,
+              color: const Color(0xFF475569),
+              fontWeight: FontWeight.w600,
             ),
           ),
         ],
@@ -1585,7 +1709,7 @@ class _DarkField extends StatelessWidget {
             ).textTheme.bodySmall?.copyWith(color: const Color(0xFF8E9AC7)),
             isDense: true,
             filled: true,
-            fillColor: const Color(0xFF16224A),
+            fillColor: const Color(0xFF0F172A),
             contentPadding: const EdgeInsets.symmetric(
               horizontal: 14,
               vertical: 12,
@@ -1620,8 +1744,9 @@ class _FaqSection extends StatelessWidget {
             title: 'Frequently',
             accent: 'Asked Questions',
             description: null,
+            accentOnNewLine: false,
           ),
-          const SizedBox(height: 30),
+          const SizedBox(height: 48),
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -1631,7 +1756,7 @@ class _FaqSection extends StatelessWidget {
                   children: faqs
                       .map(
                         (faq) => Padding(
-                          padding: const EdgeInsets.only(bottom: 14),
+                          padding: const EdgeInsets.only(bottom: 18),
                           child: _ExpandableFaqCard(faq: faq),
                         ),
                       )
@@ -1648,69 +1773,43 @@ class _FaqSection extends StatelessWidget {
   }
 }
 
-class _ExpandableFaqCard extends StatefulWidget {
+class _ExpandableFaqCard extends StatelessWidget {
   const _ExpandableFaqCard({required this.faq});
 
   final _Faq faq;
 
   @override
-  State<_ExpandableFaqCard> createState() => _ExpandableFaqCardState();
-}
-
-class _ExpandableFaqCardState extends State<_ExpandableFaqCard> {
-  bool _open = false;
-
-  @override
   Widget build(BuildContext context) {
     return Container(
       decoration: BoxDecoration(
-        color: const Color(0xFF110A29),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: const Color(0xFFB8AFF0)),
+        color: const Color(0xFF08042A),
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: const Color(0xFFDCE3F3), width: 1),
       ),
       child: Column(
         children: [
-          InkWell(
-            onTap: () => setState(() => _open = !_open),
-            borderRadius: BorderRadius.circular(16),
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: Text(
-                      widget.faq.question,
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontWeight: FontWeight.w700,
-                        fontSize: 16,
-                      ),
-                    ),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(18, 18, 18, 16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  faq.question,
+                  style: Get.theme.textTheme.titleSmall?.copyWith(
+                    color: Colors.white,
+                    fontWeight: FontWeight.w600,
                   ),
-                  Icon(
-                    _open ? Icons.remove_rounded : Icons.add_rounded,
-                    color: const Color(0xFFC9C1EC),
-                  ),
-                ],
-              ),
-            ),
-          ),
-          AnimatedCrossFade(
-            firstChild: const SizedBox.shrink(),
-            secondChild: Padding(
-              padding: const EdgeInsets.fromLTRB(18, 0, 18, 16),
-              child: Text(
-                widget.faq.answer,
-                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  color: const Color(0xFFC9C1EC),
-                  height: 1.55,
                 ),
-              ),
+                const SizedBox(height: 10),
+                Text(
+                  faq.answer,
+                  style: Get.theme.textTheme.bodyMedium?.copyWith(
+                    color: const Color(0xFF64748B),
+                    height: 1.45,
+                  ),
+                ),
+              ],
             ),
-            crossFadeState: _open
-                ? CrossFadeState.showSecond
-                : CrossFadeState.showFirst,
-            duration: const Duration(milliseconds: 180),
           ),
         ],
       ),
@@ -1725,21 +1824,21 @@ class _QuestionCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       width: 652,
-      constraints: const BoxConstraints(minHeight: 413),
+      height: 413,
       padding: const EdgeInsets.only(left: 24, right: 24, top: 24, bottom: 32),
       decoration: BoxDecoration(
-        color: const Color(0xFF110A29),
+        color: const Color(0xFF08042A),
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: const Color(0xFFB8AFF0), width: 1),
+        border: Border.all(color: const Color(0xFFCBD5E1), width: 1),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
             'Got anything to ask us?',
-            style: Theme.of(context).textTheme.titleMedium?.copyWith(
-              color: const Color(0xFF7066FF),
-              fontWeight: FontWeight.w700,
+            style: Get.theme.textTheme.bodyLarge?.copyWith(
+              fontSize: 20,
+              color: const Color(0xFF4F46E5),
             ),
           ),
           const SizedBox(height: 32),
@@ -1751,12 +1850,12 @@ class _QuestionCard extends StatelessWidget {
                 context,
               ).textTheme.bodySmall?.copyWith(color: const Color(0xFF9CA3AF)),
               filled: true,
-              fillColor: const Color(0xFF151B2F),
+              fillColor: const Color(0xFF0F172A),
               contentPadding: const EdgeInsets.fromLTRB(12, 11, 12, 11),
               enabledBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(10),
                 borderSide: const BorderSide(
-                  color: Color(0xFFDCE3F3),
+                  color: Color(0xFFCBD5E1),
                   width: 1,
                 ),
               ),
@@ -1769,7 +1868,7 @@ class _QuestionCard extends StatelessWidget {
               ),
             ),
           ),
-          const SizedBox(height: 24),
+          const SizedBox(height: 16),
           SizedBox(
             height: 155,
             child: TextField(
@@ -1784,12 +1883,12 @@ class _QuestionCard extends StatelessWidget {
                   context,
                 ).textTheme.bodySmall?.copyWith(color: const Color(0xFF9CA3AF)),
                 filled: true,
-                fillColor: const Color(0xFF151B2F),
+                fillColor: const Color(0xFF0F172A),
                 contentPadding: const EdgeInsets.fromLTRB(12, 11, 12, 11),
                 enabledBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(10),
                   borderSide: const BorderSide(
-                    color: Color(0xFFDCE3F3),
+                    color: Color(0xFFCBD5E1),
                     width: 1,
                   ),
                 ),
@@ -1803,23 +1902,23 @@ class _QuestionCard extends StatelessWidget {
               ),
             ),
           ),
-          const SizedBox(height: 32),
+          const SizedBox(height: 22),
           SizedBox(
             width: double.infinity,
             child: FilledButton(
               onPressed: () {},
               style: FilledButton.styleFrom(
                 elevation: 0,
-                minimumSize: const Size(0, 48),
-                backgroundColor: const Color(0xFF5C5BFF),
+                minimumSize: const Size(0, 46),
+                backgroundColor: const Color(0xFF312E91),
                 foregroundColor: Colors.white,
                 shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(16),
                 ),
               ),
               child: const Text(
                 'Send',
-                style: TextStyle(fontWeight: FontWeight.w700),
+                style: TextStyle(fontWeight: FontWeight.w600),
               ),
             ),
           ),
@@ -1843,31 +1942,34 @@ class _BottomCtaSection extends StatelessWidget {
           RichText(
             textAlign: TextAlign.center,
             text: TextSpan(
-              style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                fontSize: 50,
-                fontWeight: FontWeight.w800,
-                height: 1.1,
+              style: Get.theme.textTheme.bodyLarge?.copyWith(
+                fontSize: 40,
+                fontWeight: FontWeight.w900,
                 color: Colors.white,
               ),
-              children: const [
+              children: [
                 TextSpan(text: 'Ready to transform your\n'),
                 TextSpan(
                   text: 'Renewal Process?',
-                  style: TextStyle(color: Color(0xFF5F57F8)),
+                  style: Get.theme.textTheme.bodyLarge?.copyWith(
+                    fontSize: 40,
+                    fontWeight: FontWeight.w900,
+                    color: Color(0xFF4F46E5),
+                  ),
                 ),
               ],
             ),
           ),
-          const SizedBox(height: 18),
+          const SizedBox(height: 24),
           Text(
             'Join thousands of teams who have reduced churn and increased retention with Recrip.\nStart your free trial today.',
             textAlign: TextAlign.center,
             style: Theme.of(context).textTheme.bodyLarge?.copyWith(
               color: const Color(0xFFE2DDF7),
-              height: 1.55,
+              fontWeight: FontWeight.w600,
             ),
           ),
-          const SizedBox(height: 28),
+          const SizedBox(height: 60),
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
@@ -1884,7 +1986,7 @@ class _BottomCtaSection extends StatelessWidget {
               ),
             ],
           ),
-          const SizedBox(height: 14),
+          const SizedBox(height: 32),
           Text(
             'No credit card required • 14-day free trial • Cancel anytime',
             style: Get.theme.textTheme.bodyMedium?.copyWith(
@@ -1924,10 +2026,9 @@ class _FooterSection extends StatelessWidget {
                       constraints: const BoxConstraints(maxWidth: 340),
                       child: Text(
                         'Most powerful subscription renewal management platform. Built for business that want to scale without losing revenue.',
-                        style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                          color: const Color(0xFF5D678A),
-                          fontSize: 20,
-                          height: 1.18,
+                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                          color: const Color(0xFF475569),
+                          fontWeight: FontWeight.w500,
                         ),
                       ),
                     ),
@@ -1965,8 +2066,8 @@ class _FooterSection extends StatelessWidget {
           Text(
             '© 2026 Recrip. All rights reserved.',
             style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-              color: const Color(0xFF697394),
-              fontSize: 22,
+              color: const Color(0xFF64748B),
+              fontSize: 20,
               fontWeight: FontWeight.w500,
             ),
           ),
