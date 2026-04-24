@@ -142,20 +142,33 @@ class _LandingPageState extends State<LandingPage>
     return false;
   }
 
-  Future<void> _scrollTo(GlobalKey key) async {
+  Future<void> _scrollTo(GlobalKey key, {double alignment = 0.05}) async {
     final sectionContext = key.currentContext;
     if (sectionContext == null) return;
     await Scrollable.ensureVisible(
       sectionContext,
       duration: const Duration(milliseconds: 450),
       curve: Curves.easeInOutCubic,
-      alignment: 0.05,
+      alignment: alignment,
     );
   }
 
   Future<void> _onNavTap(_TopNavTab tab, GlobalKey key) async {
     setState(() => _activeNavTab = tab);
-    await _scrollTo(key);
+    if (tab == _TopNavTab.features && _scrollController.hasClients) {
+      final target = (_fullScrollUnlockTarget - 90).clamp(
+        0.0,
+        _scrollController.position.maxScrollExtent,
+      );
+      await _scrollController.animateTo(
+        target,
+        duration: const Duration(milliseconds: 500),
+        curve: Curves.easeOutCubic,
+      );
+      return;
+    }
+    final targetAlignment = tab == _TopNavTab.features ? 0.0 : 0.05;
+    await _scrollTo(key, alignment: targetAlignment);
   }
 
   Future<void> _scrollToFeaturesFromArrow() async {
@@ -271,12 +284,7 @@ class _LandingPageState extends State<LandingPage>
             SafeArea(
               bottom: false,
               child: Padding(
-                padding: EdgeInsets.fromLTRB(
-                  horizontalPadding,
-                  18,
-                  horizontalPadding,
-                  12,
-                ),
+                padding: EdgeInsets.fromLTRB(120, 18, 120, 12),
                 child: _TopNav(
                   selectedTab: _activeNavTab,
                   onFeatures: () =>
@@ -357,8 +365,8 @@ class _LandingPageState extends State<LandingPage>
                                     // Keep next section parked below until the full
                                     // staged transition is released progressively.
                                     height: lerpDouble(
-                                      540,
-                                      0,
+                                      620,
+                                      90,
                                       featureRevealProgress,
                                     )!,
                                   ),
@@ -386,21 +394,14 @@ class _LandingPageState extends State<LandingPage>
                             padding: horizontalPadding,
                           ),
                         ),
+                        RepaintBoundary(child: _ContactSection(padding: 120)),
                         RepaintBoundary(
-                          child: _ContactSection(padding: horizontalPadding),
-                        ),
-                        RepaintBoundary(
-                          child: _FaqSection(
-                            key: _contactKey,
-                            padding: horizontalPadding,
-                          ),
+                          child: _FaqSection(key: _contactKey, padding: 120),
                         ),
                         RepaintBoundary(
                           child: _BottomCtaSection(padding: horizontalPadding),
                         ),
-                        RepaintBoundary(
-                          child: _FooterSection(padding: horizontalPadding),
-                        ),
+                        RepaintBoundary(child: _FooterSection(padding: 120)),
                       ] else ...[
                         LandingSectionSkeleton(
                           padding: horizontalPadding,
@@ -602,20 +603,20 @@ class _HeroSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final heroContentLeftInset = (120 - padding).clamp(0.0, 120.0);
     // Match reference: copy fades out earlier while card enters.
     final textFadeProgress = ((scrollProgress - 0.10) / 0.38).clamp(0.0, 1.0);
     final textOpacity = 1 - Curves.easeInOut.transform(textFadeProgress);
     final cardMoveProgress = Curves.easeOutCubic.transform(
       (scrollProgress / 0.45).clamp(0.0, 1.0),
     );
-    final dashboardInitialOpacity = lerpDouble(0.52, 1.0, cardMoveProgress)!;
+    final dashboardInitialOpacity = lerpDouble(0.42, 1.0, cardMoveProgress)!;
     final dashboardDullOverlayOpacity = lerpDouble(
       0.42,
       0.0,
       cardMoveProgress,
     )!;
-    final cardVisualHeight = lerpDouble(460, 530, cardMoveProgress)!;
-    final menuProgress = cardMoveProgress;
+    final cardVisualHeight = lerpDouble(450, 520, cardMoveProgress)!;
     // Keep transformed visuals within Stack bounds so hit-testing aligns with
     // what the user sees.
     const rightPanelTopInset = 240.0;
@@ -630,73 +631,76 @@ class _HeroSection extends StatelessWidget {
             children: [
               Expanded(
                 flex: 6,
-                child: Opacity(
-                  opacity: textOpacity,
-                  child: ConstrainedBox(
-                    constraints: const BoxConstraints(maxWidth: 760),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const SizedBox(height: 28),
-                        RichText(
-                          text: TextSpan(
-                            style: Theme.of(context).textTheme.displayLarge
-                                ?.copyWith(
-                                  color: Colors.white,
-                                  fontWeight: FontWeight.w400,
-                                  height: 1.12,
-                                  fontSize: 60,
+                child: Padding(
+                  padding: EdgeInsets.only(left: heroContentLeftInset),
+                  child: Opacity(
+                    opacity: textOpacity,
+                    child: ConstrainedBox(
+                      constraints: const BoxConstraints(maxWidth: 760),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const SizedBox(height: 28),
+                          RichText(
+                            text: TextSpan(
+                              style: Theme.of(context).textTheme.displayLarge
+                                  ?.copyWith(
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.w400,
+                                    height: 1.12,
+                                    fontSize: 60,
+                                  ),
+                              children: const [
+                                TextSpan(text: 'Never Lose Revenue\nfrom '),
+                                TextSpan(
+                                  text: 'Expired Subscriptions',
+                                  style: TextStyle(
+                                    color: Color(0xFF5F57F8),
+                                    fontWeight: FontWeight.w900,
+                                    height: 1.0,
+                                  ),
                                 ),
-                            children: const [
-                              TextSpan(text: 'Never Lose Revenue\nfrom '),
-                              TextSpan(
-                                text: 'Expired Subscriptions',
-                                style: TextStyle(
-                                  color: Color(0xFF5F57F8),
-                                  fontWeight: FontWeight.w900,
-                                  height: 1.0,
-                                ),
+                              ],
+                            ),
+                          ),
+                          const SizedBox(height: 30),
+                          ConstrainedBox(
+                            constraints: const BoxConstraints(maxWidth: 800),
+                            child: Text(
+                              'Recrip helps businesses automate renewals, track customers, and recover missed payments — all from one powerful dashboard.',
+                              style: Theme.of(context).textTheme.bodyLarge
+                                  ?.copyWith(
+                                    color: const Color(0xFFE2DDF7),
+                                    height: 1.55,
+                                    fontWeight: FontWeight.w400,
+                                    fontSize: 24,
+                                  ),
+                            ),
+                          ),
+                          const SizedBox(height: 38),
+                          Row(
+                            children: [
+                              _HeroButton(
+                                label: 'Book a Free Trial',
+                                filled: true,
+                                onTap: onPrimaryTap,
+                              ),
+                              const SizedBox(width: 18),
+                              _HeroButton(
+                                label: 'Schedule a Demo',
+                                filled: false,
+                                onTap: onSecondaryTap,
                               ),
                             ],
                           ),
-                        ),
-                        const SizedBox(height: 30),
-                        ConstrainedBox(
-                          constraints: const BoxConstraints(maxWidth: 800),
-                          child: Text(
-                            'Recrip helps businesses automate renewals, track customers, and recover missed payments — all from one powerful dashboard.',
-                            style: Theme.of(context).textTheme.bodyLarge
-                                ?.copyWith(
-                                  color: const Color(0xFFE2DDF7),
-                                  height: 1.55,
-                                  fontWeight: FontWeight.w400,
-                                  fontSize: 24,
-                                ),
+                          const SizedBox(height: 24),
+                          Text(
+                            'No credit card required • 14-day free trial • Cancel anytime',
+                            style: Theme.of(context).textTheme.bodyMedium
+                                ?.copyWith(color: const Color(0xFF475569)),
                           ),
-                        ),
-                        const SizedBox(height: 38),
-                        Row(
-                          children: [
-                            _HeroButton(
-                              label: 'Book a Free Trial',
-                              filled: true,
-                              onTap: onPrimaryTap,
-                            ),
-                            const SizedBox(width: 18),
-                            _HeroButton(
-                              label: 'Schedule a Demo',
-                              filled: false,
-                              onTap: onSecondaryTap,
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 24),
-                        Text(
-                          'No credit card required • 14-day free trial • Cancel anytime',
-                          style: Theme.of(context).textTheme.bodyMedium
-                              ?.copyWith(color: const Color(0xFF475569)),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
                   ),
                 ),
@@ -730,13 +734,13 @@ class _HeroSection extends StatelessWidget {
                             child: Transform.translate(
                               offset: Offset(
                                 // Single image moves into center/text area.
-                                lerpDouble(135, -690, cardMoveProgress)!,
-                                lerpDouble(12, -240, cardMoveProgress)! +
+                                lerpDouble(150, -620, cardMoveProgress)!,
+                                lerpDouble(20, -220, cardMoveProgress)! +
                                     dashboardTapLift,
                               ),
                               child: Transform.scale(
                                 scale:
-                                    lerpDouble(1, 1.16, cardMoveProgress)! *
+                                    lerpDouble(0.96, 1.08, cardMoveProgress)! *
                                     dashboardTapScale,
                                 alignment: Alignment.topRight,
                                 child: GestureDetector(
@@ -754,85 +758,58 @@ class _HeroSection extends StatelessWidget {
                             ),
                           ),
                           Positioned(
-                            right: 70,
+                            right: 210,
                             top: rightPanelTopInset,
-                            child: Opacity(
-                              opacity: menuProgress,
-                              child: Transform.translate(
-                                offset: Offset(
-                                  lerpDouble(20, 0, menuProgress)!,
-                                  lerpDouble(0, -240, cardMoveProgress)!,
-                                ),
-                                child: SizedBox(
-                                  width: 270,
-                                  height: cardVisualHeight,
-                                  child: Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      RichText(
-                                        text: TextSpan(
-                                          style: Theme.of(context)
-                                              .textTheme
-                                              .headlineMedium
-                                              ?.copyWith(
-                                                fontSize: 46,
-                                                fontWeight: FontWeight.w900,
-                                                height: 1.02,
-                                                color: Colors.white,
-                                              ),
-                                          children: const [
-                                            TextSpan(text: 'Built for '),
-                                            TextSpan(
-                                              text: 'Modern\nTeams',
-                                              style: TextStyle(
-                                                color: Color(0xFF5F57F8),
-                                              ),
+                            child: Transform.translate(
+                              offset: Offset(
+                                lerpDouble(800, 0, cardMoveProgress)!,
+                                // Start fully off-screen and enter with hero motion.
+                                lerpDouble(0, -220, cardMoveProgress)!,
+                              ),
+                              child: SizedBox(
+                                width: 340,
+                                height: cardVisualHeight,
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    RichText(
+                                      text: TextSpan(
+                                        style: Theme.of(context)
+                                            .textTheme
+                                            .headlineMedium
+                                            ?.copyWith(
+                                              fontSize: 46,
+                                              fontWeight: FontWeight.w900,
+                                              height: 0.93,
+                                              color: Colors.white,
                                             ),
-                                          ],
-                                        ),
+                                        children: const [
+                                          TextSpan(text: 'Built for Modern'),
+                                          TextSpan(
+                                            text: '\nTeams',
+                                            style: TextStyle(
+                                              color: Color(0xFF5F57F8),
+                                            ),
+                                          ),
+                                        ],
                                       ),
-                                      const SizedBox(height: 24),
-                                      const Spacer(),
-                                      ..._PreviewTab.values.indexed.map((
-                                        entry,
-                                      ) {
-                                        final itemProgress =
-                                            ((menuProgress -
-                                                        (entry.$1 * 0.12)) /
-                                                    0.6)
-                                                .clamp(0.0, 1.0);
-                                        return Padding(
-                                          padding: const EdgeInsets.only(
-                                            bottom: 16,
-                                          ),
-                                          child: Opacity(
-                                            opacity: itemProgress,
-                                            child: Transform.translate(
-                                              offset: Offset(
-                                                lerpDouble(
-                                                  60,
-                                                  0,
-                                                  itemProgress,
-                                                )!,
-                                                0,
-                                              ),
-                                              child: _PreviewNavItem(
-                                                label: _previewLabel(entry.$2),
-                                                iconAsset: _previewIcon(
-                                                  entry.$2,
-                                                ),
-                                                selected:
-                                                    entry.$2 == selectedTab,
-                                                onTap: () =>
-                                                    onTabSelected(entry.$2),
-                                              ),
-                                            ),
-                                          ),
-                                        );
-                                      }),
-                                    ],
-                                  ),
+                                    ),
+                                    const SizedBox(height: 16),
+                                    const Spacer(),
+                                    ..._PreviewTab.values.map((tab) {
+                                      return Padding(
+                                        padding: const EdgeInsets.only(
+                                          bottom: 16,
+                                        ),
+                                        child: _PreviewNavItem(
+                                          label: _previewLabel(tab),
+                                          iconAsset: _previewIcon(tab),
+                                          selected: tab == selectedTab,
+                                          onTap: () => onTabSelected(tab),
+                                        ),
+                                      );
+                                    }),
+                                  ],
                                 ),
                               ),
                             ),
@@ -857,7 +834,7 @@ class _HeroSection extends StatelessWidget {
                 height: 72,
                 child: Center(
                   child: Transform.translate(
-                    offset: Offset(0, lerpDouble(0, -240, cardMoveProgress)!),
+                    offset: Offset(0, lerpDouble(0, -220, cardMoveProgress)!),
                     child: Opacity(
                       opacity: lerpDouble(0.92, 0.82, cardMoveProgress)!,
                       child: SvgPicture.asset(
@@ -982,8 +959,11 @@ class _HeroDashboardCard extends StatelessWidget {
     return Container(
       width: 725,
       height: 453,
+      clipBehavior: Clip.antiAlias,
       decoration: BoxDecoration(
+        color: const Color(0xFFFFFFFF),
         borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: const Color(0xFFDCE3F3), width: 1),
         boxShadow: const [
           BoxShadow(
             color: Color(0x44130A25),
@@ -992,23 +972,20 @@ class _HeroDashboardCard extends StatelessWidget {
           ),
         ],
       ),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(20),
-        child: Stack(
-          fit: StackFit.expand,
-          children: [
-            Image.asset(
-              imagePath,
-              fit: BoxFit.contain,
-              alignment: Alignment.center,
-              filterQuality: FilterQuality.low,
+      child: Stack(
+        fit: StackFit.expand,
+        children: [
+          Image.asset(
+            imagePath,
+            fit: BoxFit.contain,
+            alignment: Alignment.center,
+            filterQuality: FilterQuality.low,
+          ),
+          if (dullOverlayOpacity > 0)
+            ColoredBox(
+              color: const Color(0xFF2A1E63).withOpacity(dullOverlayOpacity),
             ),
-            if (dullOverlayOpacity > 0)
-              ColoredBox(
-                color: const Color(0xFF2A1E63).withOpacity(dullOverlayOpacity),
-              ),
-          ],
-        ),
+        ],
       ),
     );
   }
@@ -1079,15 +1056,18 @@ class _FeatureSection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: EdgeInsets.fromLTRB(padding, 0, padding, 120),
+      padding: const EdgeInsets.only(bottom: 120),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          _SectionTitle(
-            title: 'Everything you need to',
-            accent: 'scale faster',
-            description:
-                'Stop manually tracking spreadsheets. Recrip automates the boring stuff so you can\nfocus on growth.',
+          Padding(
+            padding: EdgeInsets.symmetric(horizontal: padding),
+            child: const _SectionTitle(
+              title: 'Everything you need to',
+              accent: 'scale faster',
+              description:
+                  'Stop manually tracking spreadsheets. Recrip automates the boring stuff so you can\nfocus on growth.',
+            ),
           ),
           const SizedBox(height: 60),
           LayoutBuilder(
@@ -1415,7 +1395,7 @@ class _PricingCard extends StatelessWidget {
     return Container(
       width: 484,
       height: 674,
-      padding: const EdgeInsets.fromLTRB(58, 74, 54, 56),
+      padding: const EdgeInsets.fromLTRB(58, 0, 54, 56),
       decoration: BoxDecoration(
         color: const Color(0xFF08042A),
         borderRadius: BorderRadius.circular(30),
@@ -1428,78 +1408,99 @@ class _PricingCard extends StatelessWidget {
           ),
         ],
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+      child: Stack(
+        clipBehavior: Clip.none,
         children: [
-          Transform.translate(
-            offset: const Offset(0, -106),
-            child: Align(
-              alignment: Alignment.topCenter,
-              child: Container(
-                width: 156,
-                padding: const EdgeInsets.symmetric(vertical: 16),
-                decoration: BoxDecoration(
-                  gradient: const LinearGradient(
-                    begin: Alignment.bottomCenter,
-                    end: Alignment.topCenter,
-                    colors: [Color(0xFF4F46E5), Color(0xFF2C277F)],
-                  ),
-                  borderRadius: BorderRadius.circular(999),
-                  border: Border.all(color: const Color(0xFFFF9900)),
-                ),
-                child: Text(
-                  plan.name,
-                  textAlign: TextAlign.center,
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontWeight: FontWeight.w700,
-                    fontSize: 18,
-                  ),
-                ),
-              ),
-            ),
+          Positioned(
+            top: -32,
+            left: 0,
+            right: 0,
+            child: _PricingPlanBadge(label: plan.name),
           ),
-          Align(
-            alignment: Alignment.center,
-            child: RichText(
-              text: TextSpan(
-                children: [
-                  TextSpan(
-                    text: plan.price,
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontWeight: FontWeight.w800,
-                      fontSize: 32,
+          Padding(
+            padding: const EdgeInsets.only(top: 74),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Align(
+                  alignment: Alignment.center,
+                  child: RichText(
+                    text: TextSpan(
+                      children: [
+                        TextSpan(
+                          text: plan.price,
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.w800,
+                            fontSize: 32,
+                          ),
+                        ),
+                        const TextSpan(
+                          text: '/month',
+                          style: TextStyle(
+                            color: Color(0xFF5F688E),
+                            fontSize: 18,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ],
                     ),
                   ),
-                  const TextSpan(
-                    text: '/month',
-                    style: TextStyle(
-                      color: Color(0xFF5F688E),
-                      fontSize: 18,
-                      fontWeight: FontWeight.w600,
+                ),
+                const SizedBox(height: 48),
+                ...plan.items.map(
+                  (item) => Padding(
+                    padding: const EdgeInsets.only(bottom: 22),
+                    child: Text(
+                      item,
+                      style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                        color: const Color(0xFF8B8DA7),
+                        fontWeight: FontWeight.w700,
+                        height: 1.4,
+                        fontSize: 18,
+                      ),
                     ),
                   ),
-                ],
-              ),
-            ),
-          ),
-          const SizedBox(height: 40),
-          ...plan.items.map(
-            (item) => Padding(
-              padding: const EdgeInsets.only(bottom: 22),
-              child: Text(
-                item,
-                style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                  color: const Color(0xFF8B8DA7),
-                  fontWeight: FontWeight.w700,
-                  height: 1.4,
-                  fontSize: 18,
                 ),
-              ),
+              ],
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+class _PricingPlanBadge extends StatelessWidget {
+  const _PricingPlanBadge({required this.label});
+
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    return Align(
+      alignment: Alignment.topCenter,
+      child: Container(
+        width: 156,
+        padding: const EdgeInsets.symmetric(vertical: 16),
+        decoration: BoxDecoration(
+          gradient: const LinearGradient(
+            begin: Alignment.bottomCenter,
+            end: Alignment.topCenter,
+            colors: [Color(0xFF4F46E5), Color(0xFF2C277F)],
+          ),
+          borderRadius: BorderRadius.circular(999),
+          border: Border.all(color: const Color(0xFFFF9900)),
+        ),
+        child: Text(
+          label,
+          textAlign: TextAlign.center,
+          style: const TextStyle(
+            color: Colors.white,
+            fontWeight: FontWeight.w700,
+            fontSize: 18,
+          ),
+        ),
       ),
     );
   }
@@ -2090,22 +2091,19 @@ class _FooterColumn extends StatelessWidget {
       children: [
         Text(
           title,
-          style: const TextStyle(
+          style: Get.theme.textTheme.bodyMedium?.copyWith(
             color: Colors.white,
             fontWeight: FontWeight.w500,
-            fontSize: 18,
           ),
         ),
-        const SizedBox(height: 22),
+        const SizedBox(height: 24),
         ...items.map(
           (item) => Padding(
             padding: const EdgeInsets.only(bottom: 16),
             child: Text(
               item,
-              style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                color: const Color(0xFF5D678A),
-                fontSize: 18,
-                height: 1.1,
+              style: Get.theme.textTheme.bodyMedium?.copyWith(
+                color: Color(0xFF475569),
               ),
             ),
           ),
@@ -2213,13 +2211,13 @@ class _SectionTitle extends StatelessWidget {
 String _previewImageFor(_PreviewTab tab) {
   switch (tab) {
     case _PreviewTab.dashboard:
-      return 'assets/images/Dashboard.webp';
+      return 'assets/images/dashboard.webp';
     case _PreviewTab.members:
-      return 'assets/images/Members.webp';
+      return 'assets/images/members.webp';
     case _PreviewTab.subscriptions:
-      return 'assets/images/Members.webp';
+      return 'assets/images/subscriptions.webp';
     case _PreviewTab.renewals:
-      return 'assets/images/Renewals.webp';
+      return 'assets/images/renewals.webp';
   }
 }
 
