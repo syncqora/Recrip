@@ -794,8 +794,8 @@ class _HeroSection extends StatelessWidget {
                                         ],
                                       ),
                                     ),
-                                    const SizedBox(height: 16),
-                                    const Spacer(),
+                                    const SizedBox(height: 48),
+                                    //const Spacer(),
                                     ..._PreviewTab.values.map((tab) {
                                       return Padding(
                                         padding: const EdgeInsets.only(
@@ -910,39 +910,50 @@ class _HeroButton extends StatelessWidget {
     return SizedBox(
       width: 220,
       height: 64,
-      child: DecoratedBox(
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(30),
-          gradient: const LinearGradient(
-            begin: Alignment.bottomCenter,
-            end: Alignment.topCenter,
-            colors: [Color(0xFF4F46E5), Color(0xFF2C277F)],
-          ),
-        ),
-        child: Padding(
-          padding: const EdgeInsets.all(1),
-          child: DecoratedBox(
-            decoration: BoxDecoration(
-              color: const Color(0xFF090611),
-              borderRadius: BorderRadius.circular(29),
-            ),
-            child: OutlinedButton(
-              onPressed: onTap,
-              style: OutlinedButton.styleFrom(
-                foregroundColor: Colors.white,
-                side: BorderSide.none,
-                padding: const EdgeInsets.fromLTRB(24, 10, 24, 10),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(29),
-                ),
-              ),
-              child: Text(label, style: style),
+      child: CustomPaint(
+        painter: const _GradientStrokePainter(),
+        child: TextButton(
+          onPressed: onTap,
+          style: TextButton.styleFrom(
+            foregroundColor: Colors.white,
+            backgroundColor: Colors.transparent,
+            shadowColor: Colors.transparent,
+            padding: const EdgeInsets.fromLTRB(24, 10, 24, 10),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(30),
             ),
           ),
+          child: Text(label, style: style),
         ),
       ),
     );
   }
+}
+
+class _GradientStrokePainter extends CustomPainter {
+  const _GradientStrokePainter();
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    const strokeWidth = 1.0;
+    final rect = Offset.zero & size;
+    final rRect = RRect.fromRectAndRadius(
+      rect.deflate(strokeWidth / 2),
+      const Radius.circular(30),
+    );
+    final paint = Paint()
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = strokeWidth
+      ..shader = const LinearGradient(
+        begin: Alignment.bottomCenter,
+        end: Alignment.topCenter,
+        colors: [Color(0xFF4F46E5), Color(0xFF2C277F)],
+      ).createShader(rect);
+    canvas.drawRRect(rRect, paint);
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }
 
 class _HeroDashboardCard extends StatelessWidget {
@@ -956,36 +967,38 @@ class _HeroDashboardCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
+    return SizedBox(
       width: 725,
       height: 453,
-      clipBehavior: Clip.antiAlias,
-      decoration: BoxDecoration(
-        color: const Color(0xFFFFFFFF),
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: const Color(0xFFDCE3F3), width: 1),
-        boxShadow: const [
-          BoxShadow(
-            color: Color(0x44130A25),
-            blurRadius: 36,
-            offset: Offset(0, 24),
-          ),
-        ],
-      ),
-      child: Stack(
-        fit: StackFit.expand,
-        children: [
-          Image.asset(
-            imagePath,
-            fit: BoxFit.contain,
-            alignment: Alignment.center,
-            filterQuality: FilterQuality.low,
-          ),
-          if (dullOverlayOpacity > 0)
-            ColoredBox(
-              color: const Color(0xFF2A1E63).withOpacity(dullOverlayOpacity),
+      child: Container(
+        clipBehavior: Clip.antiAlias,
+        decoration: BoxDecoration(
+          color: const Color(0xFFFFFFFF),
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(color: const Color(0xFFDCE3F3), width: 1),
+          boxShadow: const [
+            BoxShadow(
+              color: Color(0x44130A25),
+              blurRadius: 36,
+              offset: Offset(0, 24),
             ),
-        ],
+          ],
+        ),
+        child: Stack(
+          fit: StackFit.expand,
+          children: [
+            Image.asset(
+              imagePath,
+              fit: BoxFit.contain,
+              alignment: Alignment.center,
+              filterQuality: FilterQuality.low,
+            ),
+            if (dullOverlayOpacity > 0)
+              ColoredBox(
+                color: const Color(0xFF2A1E63).withOpacity(dullOverlayOpacity),
+              ),
+          ],
+        ),
       ),
     );
   }
@@ -1010,16 +1023,19 @@ class _PreviewNavItem extends StatelessWidget {
   Widget build(BuildContext context) {
     return InkWell(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(999),
+      borderRadius: BorderRadius.circular(30),
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 180),
-        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+        width: 255,
+        height: 56,
+        padding: const EdgeInsets.only(left: 24, right: 96),
+        alignment: Alignment.centerLeft,
         decoration: BoxDecoration(
           color: selected ? const Color(0xFFEAEFFC) : Colors.transparent,
-          borderRadius: BorderRadius.circular(999),
+          borderRadius: BorderRadius.circular(30),
         ),
         child: Row(
-          mainAxisSize: MainAxisSize.min,
+          mainAxisSize: MainAxisSize.max,
           children: [
             SvgPicture.asset(
               iconAsset,
@@ -1030,15 +1046,22 @@ class _PreviewNavItem extends StatelessWidget {
                 BlendMode.srcIn,
               ),
             ),
-            const SizedBox(width: 14),
-            Text(
-              label,
-              style: TextStyle(
-                color: selected
-                    ? const Color(0xFF5C57F4)
-                    : const Color(0xFF66739B),
-                fontWeight: FontWeight.w600,
-                fontSize: 17,
+            const SizedBox(width: 16),
+            Expanded(
+              child: OverflowBox(
+                alignment: Alignment.centerLeft,
+                minWidth: 0,
+                maxWidth: double.infinity,
+                child: Text(
+                  label,
+                  style: TextStyle(
+                    color: selected
+                        ? const Color(0xFF5C57F4)
+                        : const Color(0xFF66739B),
+                    fontWeight: FontWeight.w600,
+                    fontSize: 17,
+                  ),
+                ),
               ),
             ),
           ],
@@ -2211,13 +2234,13 @@ class _SectionTitle extends StatelessWidget {
 String _previewImageFor(_PreviewTab tab) {
   switch (tab) {
     case _PreviewTab.dashboard:
-      return 'assets/images/dashboard.webp';
+      return 'assets/images/Dashboard.webp';
     case _PreviewTab.members:
-      return 'assets/images/members.webp';
+      return 'assets/images/Members.webp';
     case _PreviewTab.subscriptions:
       return 'assets/images/subscriptions.webp';
     case _PreviewTab.renewals:
-      return 'assets/images/renewals.webp';
+      return 'assets/images/Renewals.webp';
   }
 }
 
