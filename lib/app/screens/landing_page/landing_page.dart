@@ -451,23 +451,20 @@ class _TopNav extends StatelessWidget {
         borderRadius: BorderRadius.circular(999),
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 180),
-          padding: const EdgeInsets.symmetric(horizontal: 26, vertical: 14),
+          height: 35,
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+          alignment: Alignment.center,
           decoration: BoxDecoration(
             color: selected ? Colors.white : Colors.transparent,
-            borderRadius: BorderRadius.circular(999),
+            borderRadius: BorderRadius.circular(20),
           ),
           child: Text(
             label,
+            textAlign: TextAlign.center,
             style: Get.theme.textTheme.bodyMedium?.copyWith(
               color: selected ? const Color(0xFF3F37D8) : Colors.white,
               fontWeight: FontWeight.w600,
             ),
-
-            // TextStyle(
-            //   color: selected ? const Color(0xFF3F37D8) : Colors.white,
-            //   fontWeight: FontWeight.w700,
-            //   fontSize: 14,
-            // ),
           ),
         ),
       );
@@ -492,36 +489,42 @@ class _TopNav extends StatelessWidget {
           ],
         ),
         const Spacer(),
-        Container(
-          padding: const EdgeInsets.all(4),
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(999),
-            border: Border.all(color: const Color(0xFF5445D9)),
-            color: const Color(0x14000000),
-          ),
-          child: Row(
-            children: [
-              navPill(
-                tab: _TopNavTab.features,
-                label: 'Features',
-                onTap: onFeatures,
-              ),
-              navPill(
-                tab: _TopNavTab.howItWorks,
-                label: 'How it works',
-                onTap: onSteps,
-              ),
-              navPill(
-                tab: _TopNavTab.pricing,
-                label: 'Pricing',
-                onTap: onPricing,
-              ),
-              navPill(
-                tab: _TopNavTab.contact,
-                label: 'Contact',
-                onTap: onContact,
-              ),
-            ],
+        SizedBox(
+          height: 48,
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6.5),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(30),
+              border: Border.all(color: const Color(0xFF4F46E5), width: 1),
+              color: const Color(0x14000000),
+            ),
+            child: Row(
+              children: [
+                navPill(
+                  tab: _TopNavTab.features,
+                  label: 'Features',
+                  onTap: onFeatures,
+                ),
+                const SizedBox(width: 24),
+                navPill(
+                  tab: _TopNavTab.howItWorks,
+                  label: 'How it works',
+                  onTap: onSteps,
+                ),
+                const SizedBox(width: 24),
+                navPill(
+                  tab: _TopNavTab.pricing,
+                  label: 'Pricing',
+                  onTap: onPricing,
+                ),
+                const SizedBox(width: 24),
+                navPill(
+                  tab: _TopNavTab.contact,
+                  label: 'Contact',
+                  onTap: onContact,
+                ),
+              ],
+            ),
           ),
         ),
         const Spacer(),
@@ -616,7 +619,7 @@ class _HeroSection extends StatelessWidget {
       0.0,
       cardMoveProgress,
     )!;
-    final cardVisualHeight = lerpDouble(450, 520, cardMoveProgress)!;
+    final cardVisualHeight = lerpDouble(470, 540, cardMoveProgress)!;
     // Keep transformed visuals within Stack bounds so hit-testing aligns with
     // what the user sees.
     const rightPanelTopInset = 240.0;
@@ -770,6 +773,7 @@ class _HeroSection extends StatelessWidget {
                                 width: 340,
                                 height: cardVisualHeight,
                                 child: Column(
+                                  mainAxisAlignment: MainAxisAlignment.center,
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
                                     RichText(
@@ -1147,6 +1151,7 @@ class _FeatureCard extends StatelessWidget {
       //height: 192,
       //  padding: const EdgeInsets.fromLTRB(26, 24, 26, 20),
       padding: EdgeInsets.symmetric(vertical: 27, horizontal: 87),
+      alignment: Alignment.center,
       decoration: BoxDecoration(
         border: Border(
           right: showRightBorder
@@ -1158,29 +1163,34 @@ class _FeatureCard extends StatelessWidget {
         ),
       ),
       child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Container(
-            width: 64,
-            height: 64,
-            decoration: BoxDecoration(
-              color: feature.color,
-              borderRadius: BorderRadius.circular(8),
-            ),
-            alignment: Alignment.center,
-            child: SvgPicture.asset(
-              feature.iconAsset,
-              width: 32,
-              height: 32,
-              colorFilter: const ColorFilter.mode(
-                Colors.white,
-                BlendMode.srcIn,
+          Align(
+            alignment: Alignment.centerLeft,
+            child: Container(
+              width: 64,
+              height: 64,
+              decoration: BoxDecoration(
+                color: feature.color,
+                borderRadius: BorderRadius.circular(8),
+              ),
+              alignment: Alignment.center,
+              child: SvgPicture.asset(
+                feature.iconAsset,
+                width: 32,
+                height: 32,
+                colorFilter: const ColorFilter.mode(
+                  Colors.white,
+                  BlendMode.srcIn,
+                ),
               ),
             ),
           ),
           const SizedBox(height: 18),
           Text(
             feature.title,
+            textAlign: TextAlign.start,
             style: Get.theme.textTheme.bodyLarge?.copyWith(
               color: feature.color,
             ),
@@ -1193,6 +1203,7 @@ class _FeatureCard extends StatelessWidget {
           const SizedBox(height: 8),
           Text(
             feature.description,
+            textAlign: TextAlign.start,
             style: Get.theme.textTheme.bodyMedium!.copyWith(
               color: const Color(0xFFD7D7D7),
             ),

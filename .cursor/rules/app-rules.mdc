@@ -1,0 +1,111 @@
+---
+description: Flutter GetX MVVM conventions for the CoffeeWeb app — use when editing Dart code in lib/, creating features, or working with controllers, views, services, or routes.
+globs:
+  - lib/**/*.dart
+alwaysApply: true
+---
+
+# CoffeeWeb Mobile App Rules
+
+## Description
+This rule ensures consistent, clean, and performant Flutter code for the CoffeeWeb Mobile App using GetX and MVVM architecture. It promotes maintainability, testability, and proper separation of concerns for a scalable mobile app delivering coffee industry insights.
+
+## Auto-Attachment
+- **File Extensions**: `.dart`
+- **Directory**: `lib/`
+
+## Architecture Conventions
+- **State Management**: Use `GetX` exclusively for state management, routing, and dependency injection. Avoid mixing with other tools like Riverpod or Bloc.
+- **Architecture**: Follow MVVM strictly:
+  - `models/`: Data structures for API responses and ObjectBox entities (e.g., `CoffeePriceModel`).
+  - `services/`: Business logic, API, and database services (e.g., `ApiService`, `AuthService`).
+  - `controllers/`: GetX controllers for state and logic (e.g., `CoffeePriceController`).
+  - `views/`: UI screens and widgets, organized by feature (e.g., `views/prices/PriceScreen.dart`).
+  - `utils/`: Common utilities, constants, and extensions (e.g., `AppConstants.dart`).
+  - `routes/`: GetX route definitions (e.g., `AppRoutes.dart`).
+
+## Code Quality Rules
+- All classes, public methods, and widgets must include **DartDoc** comments (e.g., `/// Fetches coffee prices from API.`).
+- Avoid magic strings/numbers; define in `utils/constants.dart` (e.g., `const API_BASE_URL = 'https://api.coffeeweb.com'`).
+- Prefer `final` over `var` unless mutation is required.
+- Avoid `BuildContext` in controllers or services; use GetX navigation methods.
+- All GetX controllers must use `Rx` types for reactive state (e.g., `RxList<CoffeePriceModel>`).
+- Functions must return `0` (success) or `1` (failure) for debugging.
+
+## Testing and Analyzer
+- Must pass `flutter analyze` with **zero warnings or errors**.
+- Format code using `dart format lib` (exclude generated files like `.g.dart`).
+- Tests must exist for:
+  - All `GetxController` logic using `Get.testMode`.
+  - All services with API/ObjectBox logic using mocks.
+- Run tests with `flutter test` before committing.
+
+## Dependency Management
+- Document all dependencies in `pubspec.yaml` with clear version constraints (e.g., `get: ^4.6.5`, not `any`).
+- Avoid unused packages to minimize bundle size.
+- Use `flutter pub run build_runner build --delete-conflicting-outputs` for ObjectBox schema updates.
+
+## Naming Conventions
+- Controllers: Suffix with `Controller` (e.g., `CoffeePriceController`).
+- Widgets: Suffix with `Widget` or `Screen` (e.g., `PriceScreen`, `PrimaryButtonWidget`).
+- Models: Suffix with `Model` (e.g., `CoffeePriceModel`).
+- Services: Suffix with `Service` (e.g., `ApiService`).
+- Avoid underscores or abbreviations in class names (e.g., use `CoffeePrice` not `Coffee_Price`).
+
+## UI Design
+- Use `Theme.of(context)` for consistent colors/styles, defined in `utils/theme.dart`.
+- Break down large widgets into smaller, reusable components in `views/shared/`.
+- Keep UI logic minimal in views; push to controllers or extensions.
+- Use `const` constructors for stateless widgets to optimize rendering.
+- Implement GetX snackbars for error feedback (e.g., `Get.snackbar('Error', 'API failed')`).
+
+## Performance Optimizations
+- **State Management**: Use `Obx` for reactive updates and `GetBuilder` for non-reactive ones to minimize rebuilds.
+- **API Calls**: Cache API responses in ObjectBox for offline support; use debouncing for search inputs.
+- **Database**: Index frequently queried ObjectBox fields (e.g., `price` in `CoffeePriceModel`).
+- **Build**: Enable tree-shaking with `--release` builds; keep APK/AAB size under 50MB.
+- **Memory**: Dispose `Rx` objects in `GetxController.onClose()` (e.g., `priceList.close()`).
+
+## Git Workflow
+- **Branch Structure**:
+  - `master`: Production releases.
+  - `develop`: Ongoing development.
+  - `feature/<feature_name>`: New features.
+  - `bug/<bug_name>`: Bug fixes.
+- **Commits**: Clear, descriptive messages (e.g., `update settings screen UI - TC007`).
+- **Pull Requests**:
+  - Title: Start with `task`, `feature`, `bug`, `hotfix`, `fix`, `docs`, `style`, `refactor`, `test`, or `chore`.
+  - Description: Mandatory, with ticket numbers and detailed changes.
+  - Minimum two reviewers.
+- **Rules**:
+  - Commit/push daily.
+  - Rebase with `develop` for long-running branches.
+  - No direct commits to `develop`.
+  - Keep commits small (<10 files).
+  - Delete remote branches after merging.
+  - Tag production releases.
+
+## Build Configuration
+- **Flavors**:
+  - Android: `rel` (Production), `dev` (Development), `preprod` (Pre-Production).
+  - iOS: `prod` (Production), `dev` (Development), `preprod` (Pre-Production).
+- **Package Names**:
+  - Development: `com.coffeeweb.app.dev`
+  - Production: `com.coffeeweb.app`
+  - Pre-Production: `com.coffeeweb.app.pre`
+- **Commands**:
+  - APK: `flutter build apk -t lib/main-<flavor>.dart --flavor <flavor>`
+  - Bundle: `flutter build appbundle --flavor rel -t lib/main.dart`
+- **Scripts**:
+  - `cmds/run_basic.sh`: Clean artifacts.
+  - `cmds/build_apk.sh`: Build APK.
+  - `cmds/build_android_bundle.sh`: Build bundle.
+  - `cmds/run_ios_build.sh`: Prepare iOS build.
+
+## Additional Notes
+- Code must be compatible with Flutter 3.41.4 and Dart 3.11.1.
+- Use `GetX` for all asynchronous operations (e.g., `Future` in services, `Rx` in controllers).
+- For offline-first features, use ObjectBox with a clean repository layer.
+- Run `flutter pub global activate get_cli` for page generation.
+- Profile performance with DevTools before releases.
+
