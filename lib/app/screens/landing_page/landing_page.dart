@@ -608,7 +608,7 @@ class _HeroSection extends StatelessWidget {
   Widget build(BuildContext context) {
     final heroContentLeftInset = (120 - padding).clamp(0.0, 120.0);
     final viewportWidth = MediaQuery.sizeOf(context).width;
-    final dashboardDesktopScale = (viewportWidth / 1512).clamp(0.90, 1.0);
+    final dashboardDesktopScale = (viewportWidth / 1512).clamp(0.95, 1.0);
     // Match reference: copy fades out earlier while card enters.
     final textFadeProgress = ((scrollProgress - 0.10) / 0.38).clamp(0.0, 1.0);
     final textOpacity = 1 - Curves.easeInOut.transform(textFadeProgress);
