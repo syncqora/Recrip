@@ -711,115 +711,172 @@ class _HeroSection extends StatelessWidget {
               const SizedBox(width: 30),
               Expanded(
                 flex: 5,
-                child: AnimatedBuilder(
-                  animation: dashboardTapAnimation,
-                  builder: (context, child) {
-                    final dashboardTapLift = lerpDouble(
-                      0,
-                      -22,
-                      dashboardTapAnimation.value,
-                    )!;
-                    final dashboardTapScale = lerpDouble(
-                      1,
-                      1.02,
-                      dashboardTapAnimation.value,
-                    )!;
+                child: LayoutBuilder(
+                  builder: (context, constraints) {
+                    final laneWidth = constraints.maxWidth;
+                    final dashboardStartX = (laneWidth * 0.26).clamp(
+                      120.0,
+                      180.0,
+                    );
+                    final dashboardEndXBase = -(laneWidth * 1.05).clamp(
+                      520.0,
+                      680.0,
+                    );
+                    final panelStartX = (laneWidth * 1.30).clamp(560.0, 820.0);
+                    final panelRightInsetBase = (laneWidth * 0.36).clamp(
+                      150.0,
+                      230.0,
+                    );
+                    final rowWidth = (laneWidth * 11 / 5) + 30;
+                    final laneStartX = (laneWidth * 6 / 5) + 30;
+                    final dashboardLeftBase = laneStartX + dashboardEndXBase;
+                    final panelLeftBase =
+                        laneStartX + (laneWidth - panelRightInsetBase - 340);
+                    final groupLeftBase = dashboardLeftBase < panelLeftBase
+                        ? dashboardLeftBase
+                        : panelLeftBase;
+                    final dashboardRightBase = dashboardLeftBase + 725;
+                    final panelRightBase = panelLeftBase + 340;
+                    final groupRightBase = dashboardRightBase > panelRightBase
+                        ? dashboardRightBase
+                        : panelRightBase;
+                    const additionalRightShift = 72.0;
+                    final centerShift =
+                        (rowWidth / 2) - ((groupLeftBase + groupRightBase) / 2);
+                    final totalShift = centerShift + additionalRightShift;
+                    final dashboardEndX = dashboardEndXBase + totalShift;
+                    final panelRightInset = (panelRightInsetBase - totalShift)
+                        .clamp(40.0, 280.0);
 
-                    return Padding(
-                      padding: const EdgeInsets.only(top: 80),
-                      child: Stack(
-                        clipBehavior: Clip.none,
-                        children: [
-                          Padding(
-                            padding: const EdgeInsets.only(
-                              top: rightPanelTopInset,
-                            ),
-                            child: Transform.translate(
-                              offset: Offset(
-                                // Single image moves into center/text area.
-                                lerpDouble(150, -620, cardMoveProgress)!,
-                                lerpDouble(20, -220, cardMoveProgress)! +
-                                    dashboardTapLift,
-                              ),
-                              child: Transform.scale(
-                                scale:
-                                    lerpDouble(0.96, 1.08, cardMoveProgress)! *
-                                    dashboardTapScale,
-                                alignment: Alignment.topRight,
-                                child: GestureDetector(
-                                  onTap: onDashboardTap,
-                                  child: Opacity(
-                                    opacity: dashboardInitialOpacity,
-                                    child: _HeroDashboardCard(
-                                      imagePath: _previewImageFor(selectedTab),
-                                      dullOverlayOpacity:
-                                          dashboardDullOverlayOpacity,
+                    return AnimatedBuilder(
+                      animation: dashboardTapAnimation,
+                      builder: (context, child) {
+                        final dashboardTapLift = lerpDouble(
+                          0,
+                          -22,
+                          dashboardTapAnimation.value,
+                        )!;
+                        final dashboardTapScale = lerpDouble(
+                          1,
+                          1.02,
+                          dashboardTapAnimation.value,
+                        )!;
+
+                        return Padding(
+                          padding: const EdgeInsets.only(top: 80),
+                          child: Stack(
+                            clipBehavior: Clip.none,
+                            children: [
+                              Padding(
+                                padding: const EdgeInsets.only(
+                                  top: rightPanelTopInset,
+                                ),
+                                child: Transform.translate(
+                                  offset: Offset(
+                                    // Keep same motion feel, but tie travel
+                                    // distance to available lane width.
+                                    lerpDouble(
+                                      dashboardStartX,
+                                      dashboardEndX,
+                                      cardMoveProgress,
+                                    )!,
+                                    lerpDouble(20, -220, cardMoveProgress)! +
+                                        dashboardTapLift,
+                                  ),
+                                  child: Transform.scale(
+                                    scale:
+                                        lerpDouble(
+                                          0.96,
+                                          1.08,
+                                          cardMoveProgress,
+                                        )! *
+                                        dashboardTapScale,
+                                    alignment: Alignment.topRight,
+                                    child: GestureDetector(
+                                      onTap: onDashboardTap,
+                                      child: Opacity(
+                                        opacity: dashboardInitialOpacity,
+                                        child: _HeroDashboardCard(
+                                          imagePath: _previewImageFor(
+                                            selectedTab,
+                                          ),
+                                          dullOverlayOpacity:
+                                              dashboardDullOverlayOpacity,
+                                        ),
+                                      ),
                                     ),
                                   ),
                                 ),
                               ),
-                            ),
-                          ),
-                          Positioned(
-                            right: 210,
-                            top: rightPanelTopInset,
-                            child: Transform.translate(
-                              offset: Offset(
-                                lerpDouble(800, 0, cardMoveProgress)!,
-                                // Start fully off-screen and enter with hero motion.
-                                lerpDouble(0, -220, cardMoveProgress)!,
-                              ),
-                              child: SizedBox(
-                                width: 340,
-                                height: cardVisualHeight,
-                                child: Column(
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    RichText(
-                                      text: TextSpan(
-                                        style: Theme.of(context)
-                                            .textTheme
-                                            .headlineMedium
-                                            ?.copyWith(
-                                              fontSize: 46,
-                                              fontWeight: FontWeight.w900,
-                                              height: 0.93,
-                                              color: Colors.white,
-                                            ),
-                                        children: const [
-                                          TextSpan(text: 'Built for Modern'),
-                                          TextSpan(
-                                            text: '\nTeams',
-                                            style: TextStyle(
-                                              color: Color(0xFF5F57F8),
-                                            ),
+                              Positioned(
+                                right: panelRightInset,
+                                top: rightPanelTopInset,
+                                child: Transform.translate(
+                                  offset: Offset(
+                                    lerpDouble(
+                                      panelStartX,
+                                      0,
+                                      cardMoveProgress,
+                                    )!,
+                                    // Start fully off-screen and enter with hero motion.
+                                    lerpDouble(0, -220, cardMoveProgress)!,
+                                  ),
+                                  child: SizedBox(
+                                    width: 340,
+                                    height: cardVisualHeight,
+                                    child: Column(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.center,
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        RichText(
+                                          text: TextSpan(
+                                            style: Theme.of(context)
+                                                .textTheme
+                                                .headlineMedium
+                                                ?.copyWith(
+                                                  fontSize: 46,
+                                                  fontWeight: FontWeight.w900,
+                                                  height: 0.93,
+                                                  color: Colors.white,
+                                                ),
+                                            children: const [
+                                              TextSpan(
+                                                text: 'Built for Modern',
+                                              ),
+                                              TextSpan(
+                                                text: '\nTeams',
+                                                style: TextStyle(
+                                                  color: Color(0xFF5F57F8),
+                                                ),
+                                              ),
+                                            ],
                                           ),
-                                        ],
-                                      ),
+                                        ),
+                                        const SizedBox(height: 48),
+                                        ..._PreviewTab.values.map((tab) {
+                                          return Padding(
+                                            padding: const EdgeInsets.only(
+                                              bottom: 16,
+                                            ),
+                                            child: _PreviewNavItem(
+                                              label: _previewLabel(tab),
+                                              iconAsset: _previewIcon(tab),
+                                              selected: tab == selectedTab,
+                                              onTap: () => onTabSelected(tab),
+                                            ),
+                                          );
+                                        }),
+                                      ],
                                     ),
-                                    const SizedBox(height: 48),
-                                    //const Spacer(),
-                                    ..._PreviewTab.values.map((tab) {
-                                      return Padding(
-                                        padding: const EdgeInsets.only(
-                                          bottom: 16,
-                                        ),
-                                        child: _PreviewNavItem(
-                                          label: _previewLabel(tab),
-                                          iconAsset: _previewIcon(tab),
-                                          selected: tab == selectedTab,
-                                          onTap: () => onTabSelected(tab),
-                                        ),
-                                      );
-                                    }),
-                                  ],
+                                  ),
                                 ),
                               ),
-                            ),
+                            ],
                           ),
-                        ],
-                      ),
+                        );
+                      },
                     );
                   },
                 ),
