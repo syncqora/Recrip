@@ -607,6 +607,8 @@ class _HeroSection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final heroContentLeftInset = (120 - padding).clamp(0.0, 120.0);
+    final viewportWidth = MediaQuery.sizeOf(context).width;
+    final dashboardDesktopScale = (viewportWidth / 1512).clamp(0.90, 1.0);
     // Match reference: copy fades out earlier while card enters.
     final textFadeProgress = ((scrollProgress - 0.10) / 0.38).clamp(0.0, 1.0);
     final textOpacity = 1 - Curves.easeInOut.transform(textFadeProgress);
@@ -802,6 +804,7 @@ class _HeroSection extends StatelessWidget {
                                           ),
                                           dullOverlayOpacity:
                                               dashboardDullOverlayOpacity,
+                                          sizeScale: dashboardDesktopScale,
                                         ),
                                       ),
                                     ),
@@ -1021,16 +1024,18 @@ class _HeroDashboardCard extends StatelessWidget {
   const _HeroDashboardCard({
     required this.imagePath,
     this.dullOverlayOpacity = 0,
+    this.sizeScale = 1,
   });
 
   final String imagePath;
   final double dullOverlayOpacity;
+  final double sizeScale;
 
   @override
   Widget build(BuildContext context) {
     return SizedBox(
-      width: 725,
-      height: 453,
+      width: 725 * sizeScale,
+      height: 453 * sizeScale,
       child: Container(
         clipBehavior: Clip.antiAlias,
         decoration: BoxDecoration(
