@@ -624,6 +624,11 @@ class _HeroSection extends StatelessWidget {
       ((viewportHeight - 820) / 180).clamp(0.0, 1.0),
     )!;
     final dashboardEndVisualScale = endScaleByWidth * endScaleByHeight;
+    final animationAreaScale = lerpDouble(
+      0.90,
+      1.0,
+      ((viewportWidth - 1280) / 232).clamp(0.0, 1.0),
+    )!;
     // Match reference: copy fades out earlier while card enters.
     final textFadeProgress = ((scrollProgress - 0.10) / 0.38).clamp(0.0, 1.0);
     final textOpacity = 1 - Curves.easeInOut.transform(textFadeProgress);
@@ -779,119 +784,123 @@ class _HeroSection extends StatelessWidget {
                           dashboardTapAnimation.value,
                         )!;
 
-                        return Padding(
-                          padding: const EdgeInsets.only(top: 80),
-                          child: Stack(
-                            clipBehavior: Clip.none,
-                            children: [
-                              Padding(
-                                padding: const EdgeInsets.only(
-                                  top: rightPanelTopInset,
-                                ),
-                                child: Transform.translate(
-                                  offset: Offset(
-                                    // Keep same motion feel, but tie travel
-                                    // distance to available lane width.
-                                    lerpDouble(
-                                      dashboardStartX,
-                                      dashboardEndX,
-                                      cardMoveProgress,
-                                    )!,
-                                    lerpDouble(20, -220, cardMoveProgress)! +
-                                        dashboardTapLift,
+                        return Transform.scale(
+                          scale: animationAreaScale,
+                          alignment: Alignment.topCenter,
+                          child: Padding(
+                            padding: const EdgeInsets.only(top: 80),
+                            child: Stack(
+                              clipBehavior: Clip.none,
+                              children: [
+                                Padding(
+                                  padding: const EdgeInsets.only(
+                                    top: rightPanelTopInset,
                                   ),
-                                  child: Transform.scale(
-                                    scale:
-                                        lerpDouble(
-                                          0.96,
-                                          dashboardEndVisualScale,
-                                          cardMoveProgress,
-                                        )! *
-                                        dashboardTapScale,
-                                    alignment: Alignment.topRight,
-                                    child: GestureDetector(
-                                      onTap: onDashboardTap,
-                                      child: Opacity(
-                                        opacity: dashboardInitialOpacity,
-                                        child: _HeroDashboardCard(
-                                          imagePath: _previewImageFor(
-                                            selectedTab,
+                                  child: Transform.translate(
+                                    offset: Offset(
+                                      // Keep same motion feel, but tie travel
+                                      // distance to available lane width.
+                                      lerpDouble(
+                                        dashboardStartX,
+                                        dashboardEndX,
+                                        cardMoveProgress,
+                                      )!,
+                                      lerpDouble(20, -220, cardMoveProgress)! +
+                                          dashboardTapLift,
+                                    ),
+                                    child: Transform.scale(
+                                      scale:
+                                          lerpDouble(
+                                            0.96,
+                                            dashboardEndVisualScale,
+                                            cardMoveProgress,
+                                          )! *
+                                          dashboardTapScale,
+                                      alignment: Alignment.topRight,
+                                      child: GestureDetector(
+                                        onTap: onDashboardTap,
+                                        child: Opacity(
+                                          opacity: dashboardInitialOpacity,
+                                          child: _HeroDashboardCard(
+                                            imagePath: _previewImageFor(
+                                              selectedTab,
+                                            ),
+                                            dullOverlayOpacity:
+                                                dashboardDullOverlayOpacity,
+                                            sizeScale: dashboardDesktopScale,
                                           ),
-                                          dullOverlayOpacity:
-                                              dashboardDullOverlayOpacity,
-                                          sizeScale: dashboardDesktopScale,
                                         ),
                                       ),
                                     ),
                                   ),
                                 ),
-                              ),
-                              Positioned(
-                                right: panelRightInset,
-                                top: rightPanelTopInset,
-                                child: Transform.translate(
-                                  offset: Offset(
-                                    lerpDouble(
-                                      panelStartX,
-                                      0,
-                                      cardMoveProgress,
-                                    )!,
-                                    // Start fully off-screen and enter with hero motion.
-                                    lerpDouble(0, -220, cardMoveProgress)!,
-                                  ),
-                                  child: SizedBox(
-                                    width: 340,
-                                    height: cardVisualHeight,
-                                    child: Column(
-                                      mainAxisAlignment:
-                                          MainAxisAlignment.center,
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
-                                      children: [
-                                        RichText(
-                                          text: TextSpan(
-                                            style: Theme.of(context)
-                                                .textTheme
-                                                .headlineMedium
-                                                ?.copyWith(
-                                                  fontSize: 46,
-                                                  fontWeight: FontWeight.w900,
-                                                  height: 0.93,
-                                                  color: Colors.white,
+                                Positioned(
+                                  right: panelRightInset,
+                                  top: rightPanelTopInset,
+                                  child: Transform.translate(
+                                    offset: Offset(
+                                      lerpDouble(
+                                        panelStartX,
+                                        0,
+                                        cardMoveProgress,
+                                      )!,
+                                      // Start fully off-screen and enter with hero motion.
+                                      lerpDouble(0, -220, cardMoveProgress)!,
+                                    ),
+                                    child: SizedBox(
+                                      width: 340,
+                                      height: cardVisualHeight,
+                                      child: Column(
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.center,
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [
+                                          RichText(
+                                            text: TextSpan(
+                                              style: Theme.of(context)
+                                                  .textTheme
+                                                  .headlineMedium
+                                                  ?.copyWith(
+                                                    fontSize: 46,
+                                                    fontWeight: FontWeight.w900,
+                                                    height: 0.93,
+                                                    color: Colors.white,
+                                                  ),
+                                              children: const [
+                                                TextSpan(
+                                                  text: 'Built for Modern',
                                                 ),
-                                            children: const [
-                                              TextSpan(
-                                                text: 'Built for Modern',
-                                              ),
-                                              TextSpan(
-                                                text: '\nTeams',
-                                                style: TextStyle(
-                                                  color: Color(0xFF5F57F8),
+                                                TextSpan(
+                                                  text: '\nTeams',
+                                                  style: TextStyle(
+                                                    color: Color(0xFF5F57F8),
+                                                  ),
                                                 ),
-                                              ),
-                                            ],
+                                              ],
+                                            ),
                                           ),
-                                        ),
-                                        const SizedBox(height: 48),
-                                        ..._PreviewTab.values.map((tab) {
-                                          return Padding(
-                                            padding: const EdgeInsets.only(
-                                              bottom: 16,
-                                            ),
-                                            child: _PreviewNavItem(
-                                              label: _previewLabel(tab),
-                                              iconAsset: _previewIcon(tab),
-                                              selected: tab == selectedTab,
-                                              onTap: () => onTabSelected(tab),
-                                            ),
-                                          );
-                                        }),
-                                      ],
+                                          const SizedBox(height: 48),
+                                          ..._PreviewTab.values.map((tab) {
+                                            return Padding(
+                                              padding: const EdgeInsets.only(
+                                                bottom: 16,
+                                              ),
+                                              child: _PreviewNavItem(
+                                                label: _previewLabel(tab),
+                                                iconAsset: _previewIcon(tab),
+                                                selected: tab == selectedTab,
+                                                onTap: () => onTabSelected(tab),
+                                              ),
+                                            );
+                                          }),
+                                        ],
+                                      ),
                                     ),
                                   ),
                                 ),
-                              ),
-                            ],
+                              ],
+                            ),
                           ),
                         );
                       },
