@@ -1,6 +1,8 @@
 import 'dart:math' as math;
 import 'dart:ui' show lerpDouble;
 
+import 'package:flutter/foundation.dart'
+    show TargetPlatform, defaultTargetPlatform, kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter_svg/flutter_svg.dart';
@@ -264,7 +266,15 @@ class _LandingPageState extends State<LandingPage>
     }
 
     final horizontalPadding = width > 1440 ? 88.0 : 72.0;
-    final desktopScale = math.min(width / 1440, height / 900).clamp(0.80, 1.0);
+    // On Windows + Chrome/Edge at 100% browser zoom the layout often matches
+    // what you see at ~80% zoom (tighter, no edge bands). Apply that factor here
+    // so users do not need to change browser zoom.
+    final windowsWebZoomComfort =
+        kIsWeb && defaultTargetPlatform == TargetPlatform.windows ? 0.8 : 1.0;
+    final desktopScale =
+        (math.min(width / 1440, height / 900).clamp(0.80, 1.0) *
+                windowsWebZoomComfort)
+            .clamp(0.55, 1.0);
 
     return Scaffold(
       backgroundColor: const Color(0xFF090611),
