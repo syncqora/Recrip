@@ -289,6 +289,9 @@ class _LandingPageState extends State<LandingPage>
             alignment: Alignment.topCenter,
             child: SizedBox(
               width: width / desktopScale,
+              // Match logical size to viewport so scaling fills height; avoids
+              // letterboxing gaps on some Windows / Web viewports.
+              height: height / desktopScale,
               child: Column(
                 children: [
                   SafeArea(
