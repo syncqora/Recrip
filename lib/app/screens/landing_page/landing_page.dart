@@ -1,10 +1,7 @@
 import 'dart:math' as math;
 import 'dart:ui' show lerpDouble;
 
-import 'package:flutter/foundation.dart'
-    show TargetPlatform, defaultTargetPlatform, kIsWeb;
 import 'package:flutter/material.dart';
-import 'package:saas/app/screens/landing_page/landing_page_desktop_host.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:get/get.dart';
@@ -266,16 +263,9 @@ class _LandingPageState extends State<LandingPage>
       return const LandingPageTabletView();
     }
 
-    final horizontalPadding = width > 1440 ? 88.0 : 72.0;
-    // Match ~80% browser zoom at 100% on Windows (web UA + native). Using only
-    // [defaultTargetPlatform] is unreliable on Flutter web.
-    final windowsHpZoomComfort =
-        (kIsWeb && isLikelyWindowsDesktopHost()) ||
-            (!kIsWeb && defaultTargetPlatform == TargetPlatform.windows)
-        ? 0.8
-        : 1.0;
-    final ratio = math.min(width / 1440, height / 900).clamp(0.0, 1.0);
-    final desktopScale = (ratio * windowsHpZoomComfort).clamp(0.40, 1.0);
+    // One horizontal rhythm for nav + sections; scales on 13" / narrow windows.
+    final horizontalPadding = (width * 0.055).clamp(40.0, 96.0);
+    final desktopScale = math.min(width / 1440, height / 900).clamp(0.72, 1.0);
 
     return Scaffold(
       backgroundColor: const Color(0xFF090611),
@@ -308,7 +298,12 @@ class _LandingPageState extends State<LandingPage>
                   SafeArea(
                     bottom: false,
                     child: Padding(
-                      padding: EdgeInsets.fromLTRB(120, 18, 120, 12),
+                      padding: EdgeInsets.fromLTRB(
+                        horizontalPadding,
+                        18,
+                        horizontalPadding,
+                        12,
+                      ),
                       child: _TopNav(
                         selectedTab: _activeNavTab,
                         onFeatures: () =>
@@ -421,12 +416,14 @@ class _LandingPageState extends State<LandingPage>
                                 ),
                               ),
                               RepaintBoundary(
-                                child: _ContactSection(padding: 120),
+                                child: _ContactSection(
+                                  padding: horizontalPadding,
+                                ),
                               ),
                               RepaintBoundary(
                                 child: _FaqSection(
                                   key: _contactKey,
-                                  padding: 120,
+                                  padding: horizontalPadding,
                                 ),
                               ),
                               RepaintBoundary(
@@ -435,7 +432,9 @@ class _LandingPageState extends State<LandingPage>
                                 ),
                               ),
                               RepaintBoundary(
-                                child: _FooterSection(padding: 120),
+                                child: _FooterSection(
+                                  padding: horizontalPadding,
+                                ),
                               ),
                             ] else ...[
                               LandingSectionSkeleton(
@@ -482,6 +481,7 @@ class _TopNav extends StatelessWidget {
       required _TopNavTab tab,
       required String label,
       required VoidCallback onTap,
+      required double pillHorizontalPadding,
     }) {
       final selected = selectedTab == tab;
       return InkWell(
@@ -490,7 +490,10 @@ class _TopNav extends StatelessWidget {
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 180),
           height: 35,
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+          padding: EdgeInsets.symmetric(
+            horizontal: pillHorizontalPadding,
+            vertical: 4,
+          ),
           alignment: Alignment.center,
           decoration: BoxDecoration(
             color: selected ? Colors.white : Colors.transparent,
@@ -508,113 +511,140 @@ class _TopNav extends StatelessWidget {
       );
     }
 
-    return Row(
-      children: [
-        Row(
-          mainAxisSize: MainAxisSize.min,
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final w = constraints.maxWidth;
+        final compact = w < 1020;
+        final tight = w < 900;
+        final pillGap = compact ? 10.0 : 24.0;
+        final pillHPad = tight ? 12.0 : 16.0;
+        final navShellHPad = tight ? 4.0 : 8.0;
+
+        return Row(
           children: [
-            Image.asset(
-              'assets/images/brand-logo.png',
-              height: 42,
-              fit: BoxFit.contain,
-            ),
-            const SizedBox(width: 10),
-            Image.asset(
-              'assets/images/recrip.png',
-              height: 42,
-              fit: BoxFit.contain,
-            ),
-          ],
-        ),
-        const Spacer(),
-        SizedBox(
-          height: 48,
-          child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6.5),
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(30),
-              border: Border.all(color: const Color(0xFF4F46E5), width: 1),
-              color: const Color(0x14000000),
-            ),
-            child: Row(
+            Row(
+              mainAxisSize: MainAxisSize.min,
               children: [
-                navPill(
-                  tab: _TopNavTab.features,
-                  label: 'Features',
-                  onTap: onFeatures,
+                Image.asset(
+                  'assets/images/brand-logo.png',
+                  height: 42,
+                  fit: BoxFit.contain,
                 ),
-                const SizedBox(width: 24),
-                navPill(
-                  tab: _TopNavTab.howItWorks,
-                  label: 'How it works',
-                  onTap: onSteps,
-                ),
-                const SizedBox(width: 24),
-                navPill(
-                  tab: _TopNavTab.pricing,
-                  label: 'Pricing',
-                  onTap: onPricing,
-                ),
-                const SizedBox(width: 24),
-                navPill(
-                  tab: _TopNavTab.contact,
-                  label: 'Contact',
-                  onTap: onContact,
+                const SizedBox(width: 10),
+                Image.asset(
+                  'assets/images/recrip.png',
+                  height: 42,
+                  fit: BoxFit.contain,
                 ),
               ],
             ),
-          ),
-        ),
-        const Spacer(),
-        TextButton(
-          onPressed: () => appNav.changePage(AppRoutes.login),
-          style: TextButton.styleFrom(
-            foregroundColor: Colors.white,
-            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
-          ),
-          child: Text(
-            'Log in',
-            style: Get.theme.textTheme.bodyMedium?.copyWith(
-              color: Colors.white,
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-        ),
-        const SizedBox(width: 12),
-        SizedBox(
-          width: 142,
-          height: 48,
-          child: DecoratedBox(
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(30),
-              gradient: const LinearGradient(
-                begin: Alignment.bottomCenter,
-                end: Alignment.topCenter,
-                colors: [Color(0xFF4F46E5), Color(0xFF2C277F)],
+            const Spacer(),
+            SizedBox(
+              height: 48,
+              child: Container(
+                padding: EdgeInsets.symmetric(
+                  horizontal: navShellHPad,
+                  vertical: 6.5,
+                ),
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(30),
+                  border: Border.all(color: const Color(0xFF4F46E5), width: 1),
+                  color: const Color(0x14000000),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    navPill(
+                      tab: _TopNavTab.features,
+                      label: 'Features',
+                      onTap: onFeatures,
+                      pillHorizontalPadding: pillHPad,
+                    ),
+                    SizedBox(width: pillGap),
+                    navPill(
+                      tab: _TopNavTab.howItWorks,
+                      label: 'How it works',
+                      onTap: onSteps,
+                      pillHorizontalPadding: pillHPad,
+                    ),
+                    SizedBox(width: pillGap),
+                    navPill(
+                      tab: _TopNavTab.pricing,
+                      label: 'Pricing',
+                      onTap: onPricing,
+                      pillHorizontalPadding: pillHPad,
+                    ),
+                    SizedBox(width: pillGap),
+                    navPill(
+                      tab: _TopNavTab.contact,
+                      label: 'Contact',
+                      onTap: onContact,
+                      pillHorizontalPadding: pillHPad,
+                    ),
+                  ],
+                ),
               ),
             ),
-            child: FilledButton(
+            const Spacer(),
+            TextButton(
               onPressed: () => appNav.changePage(AppRoutes.login),
-              style: FilledButton.styleFrom(
-                backgroundColor: Colors.transparent,
+              style: TextButton.styleFrom(
                 foregroundColor: Colors.white,
-                shadowColor: Colors.transparent,
-                padding: const EdgeInsets.fromLTRB(24, 10, 24, 10),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(30),
+                padding: EdgeInsets.symmetric(
+                  horizontal: tight ? 12 : 20,
+                  vertical: 14,
                 ),
               ),
               child: Text(
-                'Get Started',
+                'Log in',
                 style: Get.theme.textTheme.bodyMedium?.copyWith(
                   color: Colors.white,
                   fontWeight: FontWeight.w600,
                 ),
               ),
             ),
-          ),
-        ),
-      ],
+            SizedBox(width: tight ? 8 : 12),
+            SizedBox(
+              width: tight ? 128 : 142,
+              height: 48,
+              child: DecoratedBox(
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(30),
+                  gradient: const LinearGradient(
+                    begin: Alignment.bottomCenter,
+                    end: Alignment.topCenter,
+                    colors: [Color(0xFF4F46E5), Color(0xFF2C277F)],
+                  ),
+                ),
+                child: FilledButton(
+                  onPressed: () => appNav.changePage(AppRoutes.login),
+                  style: FilledButton.styleFrom(
+                    backgroundColor: Colors.transparent,
+                    foregroundColor: Colors.white,
+                    shadowColor: Colors.transparent,
+                    padding: EdgeInsets.fromLTRB(
+                      tight ? 16 : 24,
+                      10,
+                      tight ? 16 : 24,
+                      10,
+                    ),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(30),
+                    ),
+                  ),
+                  child: Text(
+                    'Get Started',
+                    style: Get.theme.textTheme.bodyMedium?.copyWith(
+                      color: Colors.white,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ],
+        );
+      },
     );
   }
 }
@@ -644,13 +674,14 @@ class _HeroSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final heroContentLeftInset = (120 - padding).clamp(0.0, 120.0);
+    // Section padding matches top nav; no legacy 120px offset needed.
+    const heroContentLeftInset = 0.0;
     final viewportWidth = MediaQuery.sizeOf(context).width;
     final viewportHeight = MediaQuery.sizeOf(context).height;
-    final widthAdaptiveScale = (viewportWidth / 1512).clamp(0.94, 1.0);
-    final heightAdaptiveScale = (viewportHeight / 900).clamp(0.92, 1.0);
+    final widthAdaptiveScale = (viewportWidth / 1512).clamp(0.76, 1.0);
+    final heightAdaptiveScale = (viewportHeight / 900).clamp(0.76, 1.0);
     final dashboardDesktopScale = (widthAdaptiveScale * heightAdaptiveScale)
-        .clamp(0.90, 1.0);
+        .clamp(0.72, 1.0);
     final endScaleByWidth = lerpDouble(
       1.0,
       1.06,
