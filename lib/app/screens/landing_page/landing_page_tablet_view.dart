@@ -7,6 +7,7 @@ import 'package:saas/app/screens/landing_page/landing_hero_login_form.dart';
 import 'package:saas/core/di/get_injector.dart';
 import 'package:saas/routes/app_pages.dart';
 import 'package:saas/shared/constants/app_icons.dart';
+import 'package:saas/shared/widgets/faq_section_heading.dart';
 import 'package:saas/shared/widgets/landing_section_skeleton.dart';
 
 class LandingPageTabletView extends StatefulWidget {
@@ -741,7 +742,9 @@ class _TabletDashboardMock extends StatelessWidget {
                             index++
                           )
                             _TabletPreviewCard(
-                              key: ValueKey<_TabletPreviewTab>(orderedCards[index]),
+                              key: ValueKey<_TabletPreviewTab>(
+                                orderedCards[index],
+                              ),
                               tab: orderedCards[index],
                               layerIndex: index,
                               layerCount: orderedCards.length,
@@ -1232,14 +1235,10 @@ class _TabletFaqSection extends StatelessWidget {
       padding: EdgeInsets.fromLTRB(padding, 48, padding, 32),
       child: Column(
         children: [
-          Text(
-            'Frequently Asked Questions',
-            textAlign: TextAlign.center,
-            style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-              fontSize: 36,
-              fontWeight: FontWeight.w900,
-              color: const Color(0xFF0F172A),
-            ),
+          const FaqSectionHeading(
+            leadColor: Color(0xFF4F46E5),
+            restColor: Color(0xFF0F172A),
+            fontSize: 36,
           ),
           const SizedBox(height: 28),
           for (final faq in _tabletFaqs) ...[

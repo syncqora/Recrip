@@ -1,16 +1,19 @@
 import 'dart:math' as math;
 import 'dart:ui' show lerpDouble;
+import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:get/get.dart';
+import 'package:http/http.dart' as http;
 import 'package:saas/app/screens/authentication/login/views/login_controller.dart';
 import 'package:saas/app/screens/landing_page/landing_page_mobile_view.dart';
 import 'package:saas/app/screens/landing_page/landing_page_tablet_view.dart';
 import 'package:saas/core/di/get_injector.dart';
 import 'package:saas/routes/app_pages.dart';
 import 'package:saas/shared/constants/app_icons.dart';
+import 'package:saas/shared/widgets/faq_section_heading.dart';
 import 'package:saas/shared/widgets/landing_section_skeleton.dart';
 
 class LandingPage extends StatefulWidget {
@@ -1782,91 +1785,238 @@ class _ContactSection extends StatelessWidget {
   }
 }
 
-class _LeadCard extends StatelessWidget {
+class _LeadCard extends StatefulWidget {
   const _LeadCard();
+
+  @override
+  State<_LeadCard> createState() => _LeadCardState();
+}
+
+class _LeadCardState extends State<_LeadCard> {
+  final _formKey = GlobalKey<FormState>();
+  final _fullNameController = TextEditingController();
+  final _businessNameController = TextEditingController();
+  final _emailController = TextEditingController();
+  final _phoneController = TextEditingController();
+
+  bool _isSending = false;
+
+  static final _emailRegex = RegExp(r'^[^\s@]+@[^\s@]+\.[^\s@]+$');
+  static final _phoneRegex = RegExp(r'^\+?[0-9 ]{7,15}$');
+
+  @override
+  void dispose() {
+    _fullNameController.dispose();
+    _businessNameController.dispose();
+    _emailController.dispose();
+    _phoneController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _submit() async {
+    final form = _formKey.currentState;
+    if (form == null || !form.validate()) return;
+
+    setState(() => _isSending = true);
+    try {
+      final endpoint = Uri.parse('https://formsubmit.co/ajax/admin@recrip.com');
+      final response = await http.post(
+        endpoint,
+        headers: const {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+        },
+        body: jsonEncode({
+          'name': _fullNameController.text.trim(),
+          'business_name': _businessNameController.text.trim(),
+          'email': _emailController.text.trim(),
+          'phone': _phoneController.text.trim(),
+          'subject': 'New enquiry from Recrip landing page',
+          '_captcha': 'false',
+          '_template': 'table',
+        }),
+      );
+
+      if (response.statusCode < 200 || response.statusCode >= 300) {
+        throw Exception('Submission failed with ${response.statusCode}');
+      }
+      final decoded = jsonDecode(response.body);
+      final successValue = decoded is Map<String, dynamic>
+          ? decoded['success']?.toString().toLowerCase()
+          : null;
+      if (successValue != 'true') {
+        final message = decoded is Map<String, dynamic>
+            ? decoded['message']?.toString()
+            : null;
+        throw Exception(message ?? 'Submission rejected by provider.');
+      }
+
+      if (mounted) {
+        form.reset();
+        _fullNameController.clear();
+        _businessNameController.clear();
+        _emailController.clear();
+        _phoneController.clear();
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Enquiry sent successfully.')),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              'Could not send enquiry. ${e.toString().replaceFirst('Exception: ', '')}',
+            ),
+          ),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _isSending = false);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     return Container(
       width: 689,
-      height: 431,
       padding: const EdgeInsets.only(top: 32, left: 48, right: 48, bottom: 32),
       decoration: BoxDecoration(
         color: const Color(0xFF08042A),
         borderRadius: BorderRadius.circular(50),
         border: Border.all(color: const Color(0xFFCBD5E1), width: 1),
       ),
-      child: Column(
-        children: [
-          const Row(
-            children: [
-              Expanded(
-                child: _DarkField(label: 'Full Name', hint: 'Enter Full Name'),
-              ),
-              SizedBox(width: 14),
-              Expanded(
-                child: _DarkField(
-                  label: 'Business Name',
-                  hint: 'Enter Business Name',
+      child: Form(
+        key: _formKey,
+        child: Column(
+          children: [
+            Row(
+              children: [
+                Expanded(
+                  child: _DarkField(
+                    label: 'Full Name',
+                    hint: 'Enter Full Name',
+                    controller: _fullNameController,
+                    validator: (value) {
+                      if (value == null || value.trim().isEmpty) {
+                        return 'Full name is required';
+                      }
+                      return null;
+                    },
+                  ),
                 ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 18),
-          const Row(
-            children: [
-              Expanded(
-                child: _DarkField(
-                  label: 'Email Address',
-                  hint: 'Enter Email Address',
+                const SizedBox(width: 14),
+                Expanded(
+                  child: _DarkField(
+                    label: 'Business Name',
+                    hint: 'Enter Business Name',
+                    controller: _businessNameController,
+                    validator: (value) {
+                      if (value == null || value.trim().isEmpty) {
+                        return 'Business name is required';
+                      }
+                      return null;
+                    },
+                  ),
                 ),
-              ),
-              SizedBox(width: 14),
-              Expanded(
-                child: _DarkField(
-                  label: 'Phone Number',
-                  hint: 'Enter Phone Number',
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 32),
-          Container(
-            width: double.infinity,
-            padding: const EdgeInsets.symmetric(vertical: 15),
-            decoration: BoxDecoration(
-              color: const Color(0xFF5C5BFF),
-              borderRadius: BorderRadius.circular(14),
+              ],
             ),
-            child: Text(
-              'Request Enquiry',
+            const SizedBox(height: 18),
+            Row(
+              children: [
+                Expanded(
+                  child: _DarkField(
+                    label: 'Email Address',
+                    hint: 'Enter Email Address',
+                    controller: _emailController,
+                    keyboardType: TextInputType.emailAddress,
+                    validator: (value) {
+                      final v = value?.trim() ?? '';
+                      if (v.isEmpty) return 'Email is required';
+                      if (!_emailRegex.hasMatch(v)) return 'Enter valid email';
+                      return null;
+                    },
+                  ),
+                ),
+                const SizedBox(width: 14),
+                Expanded(
+                  child: _DarkField(
+                    label: 'Phone Number',
+                    hint: 'Enter Phone Number',
+                    controller: _phoneController,
+                    keyboardType: TextInputType.phone,
+                    validator: (value) {
+                      final v = value?.trim() ?? '';
+                      if (v.isEmpty) return 'Phone number is required';
+                      if (!_phoneRegex.hasMatch(v)) return 'Enter valid phone';
+                      return null;
+                    },
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 32),
+            SizedBox(
+              width: double.infinity,
+              child: FilledButton(
+                onPressed: _isSending ? null : _submit,
+                style: FilledButton.styleFrom(
+                  backgroundColor: const Color(0xFF5C5BFF),
+                  disabledBackgroundColor: const Color(0xFF5C5BFF),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(14),
+                  ),
+                  padding: const EdgeInsets.symmetric(vertical: 15),
+                ),
+                child: _isSending
+                    ? const SizedBox(
+                        width: 18,
+                        height: 18,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2.2,
+                          color: Colors.white,
+                        ),
+                      )
+                    : Text(
+                        'Request Enquiry',
+                        textAlign: TextAlign.center,
+                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                          color: Colors.white,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+              ),
+            ),
+            const SizedBox(height: 32),
+            Text(
+              'Request enquiry and we will get back to you. Thank you!',
               textAlign: TextAlign.center,
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                color: Colors.white,
+              style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                color: const Color(0xFF475569),
                 fontWeight: FontWeight.w600,
               ),
             ),
-          ),
-          const SizedBox(height: 32),
-          Text(
-            'Request enquiry and we will get back to you.Thank you!',
-            textAlign: TextAlign.center,
-            style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-              color: const Color(0xFF475569),
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
 }
 
 class _DarkField extends StatelessWidget {
-  const _DarkField({required this.label, required this.hint});
+  const _DarkField({
+    required this.label,
+    required this.hint,
+    required this.controller,
+    required this.validator,
+    this.keyboardType,
+  });
 
   final String label;
   final String hint;
+  final TextEditingController controller;
+  final FormFieldValidator<String> validator;
+  final TextInputType? keyboardType;
 
   @override
   Widget build(BuildContext context) {
@@ -1881,10 +2031,14 @@ class _DarkField extends StatelessWidget {
           ),
         ),
         const SizedBox(height: 8),
-        TextField(
+        TextFormField(
+          controller: controller,
+          validator: validator,
+          keyboardType: keyboardType,
           style: const TextStyle(color: Colors.white),
           decoration: InputDecoration(
             hintText: hint,
+            errorStyle: const TextStyle(color: Color(0xFFFCA5A5), fontSize: 11),
             hintStyle: Theme.of(
               context,
             ).textTheme.bodySmall?.copyWith(color: const Color(0xFF8E9AC7)),
@@ -1902,6 +2056,14 @@ class _DarkField extends StatelessWidget {
             focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
               borderSide: const BorderSide(color: Color(0xFF5C5BFF)),
+            ),
+            errorBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: const BorderSide(color: Color(0xFFFCA5A5)),
+            ),
+            focusedErrorBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: const BorderSide(color: Color(0xFFFCA5A5)),
             ),
           ),
         ),
@@ -1921,30 +2083,30 @@ class _FaqSection extends StatelessWidget {
       padding: EdgeInsets.fromLTRB(padding, 0, padding, 120),
       child: Column(
         children: [
-          _SectionTitle(
-            title: 'Frequently',
-            accent: 'Asked Questions',
-            description: null,
-            accentOnNewLine: false,
+          const FaqSectionHeading(
+            leadColor: Color(0xFF4F46E5),
+            restColor: Colors.white,
+            fontSize: 40,
           ),
           const SizedBox(height: 48),
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Expanded(
-                flex: 5,
+                flex: 6,
                 child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: faqs
                       .map(
                         (faq) => Padding(
-                          padding: const EdgeInsets.only(bottom: 18),
-                          child: _ExpandableFaqCard(faq: faq),
+                          padding: const EdgeInsets.only(bottom: 24),
+                          child: _FaqCard(faq: faq),
                         ),
                       )
                       .toList(),
                 ),
               ),
-              const SizedBox(width: 22),
+              const SizedBox(width: 35),
               const Expanded(flex: 6, child: _QuestionCard()),
             ],
           ),
@@ -1954,42 +2116,40 @@ class _FaqSection extends StatelessWidget {
   }
 }
 
-class _ExpandableFaqCard extends StatelessWidget {
-  const _ExpandableFaqCard({required this.faq});
+class _FaqCard extends StatelessWidget {
+  const _FaqCard({required this.faq});
+
+  static const double _kBorderRadius = 20;
 
   final _Faq faq;
 
   @override
   Widget build(BuildContext context) {
     return Container(
+      width: double.infinity,
       decoration: BoxDecoration(
         color: const Color(0xFF08042A),
-        borderRadius: BorderRadius.circular(18),
+        borderRadius: BorderRadius.circular(_kBorderRadius),
         border: Border.all(color: const Color(0xFFDCE3F3), width: 1),
       ),
+      padding: const EdgeInsets.fromLTRB(20, 20, 20, 20),
       child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
         children: [
-          Padding(
-            padding: const EdgeInsets.fromLTRB(18, 18, 18, 16),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  faq.question,
-                  style: Get.theme.textTheme.titleSmall?.copyWith(
-                    color: Colors.white,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-                const SizedBox(height: 10),
-                Text(
-                  faq.answer,
-                  style: Get.theme.textTheme.bodyMedium?.copyWith(
-                    color: const Color(0xFF64748B),
-                    height: 1.45,
-                  ),
-                ),
-              ],
+          Text(
+            faq.question,
+            style: Get.theme.textTheme.bodyLarge?.copyWith(
+              color: Colors.white,
+              fontSize: 20,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+          const SizedBox(height: 10),
+          Text(
+            faq.answer,
+            style: Get.theme.textTheme.bodySmall?.copyWith(
+              color: const Color(0xFF64748B),
             ),
           ),
         ],

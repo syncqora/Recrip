@@ -7,6 +7,7 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:saas/core/di/get_injector.dart';
 import 'package:saas/routes/app_pages.dart';
 import 'package:saas/shared/constants/app_icons.dart';
+import 'package:saas/shared/widgets/faq_section_heading.dart';
 import 'package:saas/shared/widgets/landing_section_skeleton.dart';
 
 class LandingPageMobileView extends StatefulWidget {
@@ -1213,14 +1214,10 @@ class _MobileFaqSection extends StatelessWidget {
       padding: EdgeInsets.fromLTRB(padding, 36, padding, 28),
       child: Column(
         children: [
-          Text(
-            'Frequently Asked Questions',
-            textAlign: TextAlign.center,
-            style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-              fontSize: 30,
-              fontWeight: FontWeight.w900,
-              color: const Color(0xFF0F172A),
-            ),
+          const FaqSectionHeading(
+            leadColor: Color(0xFF4F46E5),
+            restColor: Color(0xFF0F172A),
+            fontSize: 30,
           ),
           const SizedBox(height: 22),
           for (final faq in _mobileFaqs) ...[
