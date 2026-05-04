@@ -530,7 +530,9 @@ class _TopNav extends StatelessWidget {
               children: [
                 Image.asset(
                   'assets/images/brand-logo.png',
-                  height: 42,
+                  width: 34,
+                  height: 34,
+
                   fit: BoxFit.contain,
                 ),
                 const SizedBox(width: 10),
@@ -1880,7 +1882,7 @@ class _LeadCardState extends State<_LeadCard> {
   Widget build(BuildContext context) {
     return Container(
       width: 689,
-      padding: const EdgeInsets.only(top: 32, left: 48, right: 48, bottom: 32),
+      padding: const EdgeInsets.only(top: 32, left: 48, right: 48, bottom: 51),
       decoration: BoxDecoration(
         color: const Color(0xFF08042A),
         borderRadius: BorderRadius.circular(50),
@@ -1905,7 +1907,7 @@ class _LeadCardState extends State<_LeadCard> {
                     },
                   ),
                 ),
-                const SizedBox(width: 14),
+                const SizedBox(width: 32),
                 Expanded(
                   child: _DarkField(
                     label: 'Business Name',
@@ -1921,7 +1923,7 @@ class _LeadCardState extends State<_LeadCard> {
                 ),
               ],
             ),
-            const SizedBox(height: 18),
+            const SizedBox(height: 32),
             Row(
               children: [
                 Expanded(
@@ -1938,7 +1940,7 @@ class _LeadCardState extends State<_LeadCard> {
                     },
                   ),
                 ),
-                const SizedBox(width: 14),
+                const SizedBox(width: 32),
                 Expanded(
                   child: _DarkField(
                     label: 'Phone Number',
@@ -1958,6 +1960,7 @@ class _LeadCardState extends State<_LeadCard> {
             const SizedBox(height: 32),
             SizedBox(
               width: double.infinity,
+              height: 44,
               child: FilledButton(
                 onPressed: _isSending ? null : _submit,
                 style: FilledButton.styleFrom(
@@ -1989,7 +1992,7 @@ class _LeadCardState extends State<_LeadCard> {
             ),
             const SizedBox(height: 32),
             Text(
-              'Request enquiry and we will get back to you. Thank you!',
+              'Request enquiry and we will get back to you.\nThank you!',
               textAlign: TextAlign.center,
               style: Theme.of(context).textTheme.bodyLarge?.copyWith(
                 color: const Color(0xFF475569),
@@ -2030,40 +2033,57 @@ class _DarkField extends StatelessWidget {
             fontWeight: FontWeight.w600,
           ),
         ),
-        const SizedBox(height: 8),
-        TextFormField(
-          controller: controller,
-          validator: validator,
-          keyboardType: keyboardType,
-          style: const TextStyle(color: Colors.white),
-          decoration: InputDecoration(
-            hintText: hint,
-            errorStyle: const TextStyle(color: Color(0xFFFCA5A5), fontSize: 11),
-            hintStyle: Theme.of(
-              context,
-            ).textTheme.bodySmall?.copyWith(color: const Color(0xFF8E9AC7)),
-            isDense: true,
-            filled: true,
-            fillColor: const Color(0xFF0F172A),
-            contentPadding: const EdgeInsets.symmetric(
-              horizontal: 14,
-              vertical: 12,
+        const SizedBox(height: 16),
+        SizedBox(
+          height: 44,
+          child: TextFormField(
+            controller: controller,
+            validator: validator,
+            keyboardType: keyboardType,
+            textAlign: TextAlign.start,
+            textAlignVertical: TextAlignVertical.center,
+            style: Get.theme.textTheme.labelMedium?.copyWith(
+              color: Colors.white,
+              fontWeight: FontWeight.w500,
             ),
-            enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-              borderSide: const BorderSide(color: Color(0xFF31457D)),
-            ),
-            focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-              borderSide: const BorderSide(color: Color(0xFF5C5BFF)),
-            ),
-            errorBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-              borderSide: const BorderSide(color: Color(0xFFFCA5A5)),
-            ),
-            focusedErrorBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-              borderSide: const BorderSide(color: Color(0xFFFCA5A5)),
+            decoration: InputDecoration(
+              hintText: hint,
+              errorStyle: const TextStyle(
+                color: Color(0xFFFCA5A5),
+                fontSize: 11,
+              ),
+              hintStyle: Theme.of(
+                context,
+              ).textTheme.bodySmall?.copyWith(color: const Color(0xFF8E9AC7)),
+              isDense: false,
+              filled: true,
+              fillColor: const Color(0xFF0F172A),
+              contentPadding: const EdgeInsets.symmetric(
+                horizontal: 14,
+                vertical: 10,
+              ),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(10),
+                borderSide: const BorderSide(
+                  color: Color(0xFFE2E8F0),
+                  width: 1,
+                ),
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(10),
+                borderSide: const BorderSide(
+                  color: Color(0xFFE2E8F0),
+                  width: 1,
+                ),
+              ),
+              errorBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(10),
+                borderSide: const BorderSide(color: Color(0xFFFCA5A5)),
+              ),
+              focusedErrorBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(10),
+                borderSide: const BorderSide(color: Color(0xFFFCA5A5)),
+              ),
             ),
           ),
         ),
@@ -2246,6 +2266,7 @@ class _QuestionCard extends StatelessWidget {
           const SizedBox(height: 22),
           SizedBox(
             width: double.infinity,
+            height: 44,
             child: FilledButton(
               onPressed: () {},
               style: FilledButton.styleFrom(
