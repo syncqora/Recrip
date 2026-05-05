@@ -158,6 +158,9 @@ class _LandingPageMobileViewState extends State<LandingPageMobileView> {
                       _MobileStepSection(padding: padding),
                       _MobileCtaSection(key: _pricingKey, padding: padding),
                       _MobileContactSection(key: _contactKey, padding: padding),
+                      _MobileFaqSection(padding: padding),
+                      _MobileBottomCtaSection(padding: padding),
+                      _MobileFooterSection(padding: padding),
                     ] else ...[
                       const LandingSectionSkeleton(
                         padding: padding,
@@ -1408,14 +1411,19 @@ class _MobileFaqSection extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       width: double.infinity,
-      color: Colors.white,
+      color: Colors.transparent,
       padding: EdgeInsets.fromLTRB(padding, 36, padding, 28),
       child: Column(
         children: [
-          const FaqSectionHeading(
-            leadColor: Color(0xFF4F46E5),
-            restColor: Color(0xFF0F172A),
-            fontSize: 30,
+          FaqSectionHeading(
+            leadColor: const Color(0xFF4F46E5),
+            restColor: Colors.white,
+            fontSize: 24,
+            breakAfterFirstWordOnMobile: true,
+            baseStyle: Get.theme.textTheme.bodyLarge?.copyWith(
+              color: Colors.white,
+              fontWeight: FontWeight.w900,
+            ),
           ),
           const SizedBox(height: 22),
           for (final faq in _mobileFaqs) ...[
@@ -1439,9 +1447,9 @@ class _MobileQuestionCard extends StatelessWidget {
       width: double.infinity,
       padding: const EdgeInsets.fromLTRB(18, 18, 18, 24),
       decoration: BoxDecoration(
-        color: const Color(0xFFF8FAFC),
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: const Color(0xFFCBD5E1)),
+        color: const Color(0xFF08042A),
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: const Color(0xFFCBD5E1), width: 1),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -1454,7 +1462,7 @@ class _MobileQuestionCard extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 20),
-          const _MobileInputField(hint: 'Email Address', height: 48),
+          const _MobileInputField(hint: 'Email Address', height: 44),
           const SizedBox(height: 16),
           const _MobileInputField(
             hint: 'Type your message here....',
@@ -1465,19 +1473,20 @@ class _MobileQuestionCard extends StatelessWidget {
           const SizedBox(height: 18),
           SizedBox(
             width: double.infinity,
+            height: 58,
             child: FilledButton(
               onPressed: () {},
               style: FilledButton.styleFrom(
-                backgroundColor: const Color(0xFF5C5BFF),
-                foregroundColor: Colors.white,
-                minimumSize: const Size.fromHeight(48),
+                backgroundColor: const Color(0xFF3A2F9D),
+                foregroundColor: const Color(0xFF8C8FAE),
+                minimumSize: const Size.fromHeight(58),
                 shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(999),
                 ),
               ),
               child: const Text(
                 'Send',
-                style: TextStyle(fontWeight: FontWeight.w700),
+                style: TextStyle(fontWeight: FontWeight.w700, fontSize: 19),
               ),
             ),
           ),
@@ -1509,27 +1518,36 @@ class _MobileInputField extends StatelessWidget {
         maxLines: expands ? null : maxLines,
         minLines: expands ? null : 1,
         expands: expands,
-        textAlignVertical: TextAlignVertical.top,
+        textAlign: TextAlign.start,
+        textAlignVertical: expands
+            ? TextAlignVertical.top
+            : TextAlignVertical.center,
+        style: const TextStyle(
+          color: Colors.white,
+          fontSize: 16,
+          fontWeight: FontWeight.w500,
+        ),
         decoration: InputDecoration(
           hintText: hint,
-          hintStyle: Theme.of(
-            context,
-          ).textTheme.bodySmall?.copyWith(color: const Color(0xFF9CA3AF)),
+          hintStyle: Get.theme.textTheme.labelMedium?.copyWith(
+            color: const Color(0xFF94A3B8),
+            fontWeight: FontWeight.w500,
+          ),
           filled: true,
-          fillColor: Colors.white,
+          fillColor: const Color(0xFF0F172A),
           contentPadding: EdgeInsets.fromLTRB(
-            12,
-            expands ? 11 : 13,
-            12,
-            expands ? 11 : 13,
+            14,
+            expands ? 11 : 11,
+            14,
+            expands ? 11 : 11,
           ),
           enabledBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(expands ? 10 : 12),
-            borderSide: const BorderSide(color: Color(0xFFDCE3F3)),
+            borderRadius: BorderRadius.circular(10),
+            borderSide: const BorderSide(color: Color(0xFFE2E8F0), width: 1),
           ),
           focusedBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(expands ? 10 : 12),
-            borderSide: const BorderSide(color: Color(0xFF4F46E5)),
+            borderRadius: BorderRadius.circular(10),
+            borderSide: const BorderSide(color: Color(0xFFE2E8F0), width: 1),
           ),
         ),
       ),
@@ -1555,7 +1573,7 @@ class _MobileExpandableFaqCardState extends State<_MobileExpandableFaqCard> {
     return Container(
       width: double.infinity,
       decoration: BoxDecoration(
-        color: const Color(0xFFF8FAFC),
+        color: const Color(0xFF08042A),
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: const Color(0xFFCBD5E1)),
       ),
@@ -1573,7 +1591,7 @@ class _MobileExpandableFaqCardState extends State<_MobileExpandableFaqCard> {
                     child: Text(
                       widget.faq.question,
                       style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                        color: const Color(0xFF0F172A),
+                        color: Colors.white,
                         fontWeight: FontWeight.w700,
                       ),
                     ),
@@ -1582,7 +1600,7 @@ class _MobileExpandableFaqCardState extends State<_MobileExpandableFaqCard> {
                     _open
                         ? Icons.expand_less_rounded
                         : Icons.expand_more_rounded,
-                    color: const Color(0xFF64748B),
+                    color: const Color(0xFF94A3B8),
                   ),
                 ],
               ),
@@ -1595,7 +1613,7 @@ class _MobileExpandableFaqCardState extends State<_MobileExpandableFaqCard> {
               child: Text(
                 widget.faq.answer,
                 style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  color: const Color(0xFF64748B),
+                  color: const Color(0xFF94A3B8),
                   height: 1.55,
                 ),
               ),
@@ -1604,6 +1622,120 @@ class _MobileExpandableFaqCardState extends State<_MobileExpandableFaqCard> {
                 ? CrossFadeState.showSecond
                 : CrossFadeState.showFirst,
             duration: const Duration(milliseconds: 200),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _MobileBottomCtaSection extends StatelessWidget {
+  const _MobileBottomCtaSection({required this.padding});
+
+  final double padding;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      padding: EdgeInsets.fromLTRB(padding, 28, padding, 36),
+      child: Column(
+        children: [
+          Text.rich(
+            TextSpan(
+              children: [
+                TextSpan(
+                  text: 'Ready to transform your\n',
+                  style: Get.theme.textTheme.bodyLarge?.copyWith(
+                    color: Colors.white,
+                    fontWeight: FontWeight.w900,
+                  ),
+                ),
+                TextSpan(
+                  text: 'Renewal Process?',
+                  style: Get.theme.textTheme.bodyLarge?.copyWith(
+                    color: const Color(0xFF4F46E5),
+                    fontWeight: FontWeight.w900,
+                  ),
+                ),
+              ],
+            ),
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: 14),
+          Text(
+            'Join thousands of teams who have reduced churn and increased retention with Recrip.\nStart your free trial today.',
+            textAlign: TextAlign.center,
+            style: Get.theme.textTheme.bodySmall?.copyWith(
+              color: const Color(0xFFE2DDF7),
+              fontWeight: FontWeight.w600,
+              height: 1.35,
+            ),
+          ),
+          const SizedBox(height: 24),
+          SizedBox(
+            width: 168,
+            height: 48,
+            child: DecoratedBox(
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(30),
+                gradient: const LinearGradient(
+                  begin: Alignment.bottomCenter,
+                  end: Alignment.topCenter,
+                  colors: [Color(0xFF4F46E5), Color(0xFF2C277F)],
+                ),
+              ),
+              child: FilledButton(
+                onPressed: () => appNav.changePage(AppRoutes.login),
+                style: FilledButton.styleFrom(
+                  backgroundColor: Colors.transparent,
+                  foregroundColor: Colors.white,
+                  shadowColor: Colors.transparent,
+                  padding: const EdgeInsets.fromLTRB(24, 10, 24, 10),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(30),
+                  ),
+                ),
+                child: Text(
+                  'Book a Free Trial',
+                  style: Get.theme.textTheme.bodySmall?.copyWith(
+                    color: Colors.white,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(height: 12),
+          SizedBox(
+            width: 174,
+            height: 48,
+            child: OutlinedButton(
+              onPressed: () {},
+              style: OutlinedButton.styleFrom(
+                foregroundColor: Colors.white,
+                side: const BorderSide(color: Color(0xFF4F46E5), width: 1),
+                padding: const EdgeInsets.fromLTRB(24, 10, 24, 10),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(30),
+                ),
+              ),
+              child: Text(
+                'Schedule a Demo',
+                style: Get.theme.textTheme.bodySmall?.copyWith(
+                  color: Colors.white,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(height: 18),
+          Text(
+            'No credit card required • 14-day free trial • Cancel anytime',
+            textAlign: TextAlign.center,
+            style: Get.theme.textTheme.labelMedium?.copyWith(
+              color: const Color(0xFF475569),
+            ),
           ),
         ],
       ),
@@ -1620,24 +1752,68 @@ class _MobileFooterSection extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       width: double.infinity,
-      color: const Color(0xFFF5F4FF),
-      padding: EdgeInsets.fromLTRB(padding, 24, padding, 30),
+      color: const Color(0xFF0D0820),
+      padding: EdgeInsets.fromLTRB(padding, 30, padding, 32),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Image.asset(AppIcons.recripLogo, height: 32, fit: BoxFit.contain),
-          const SizedBox(height: 10),
+          Image.asset(AppIcons.recripLogo, height: 36, fit: BoxFit.contain),
+          const SizedBox(height: 14),
           Text(
             'Most powerful subscription renewal management platform. Built for business that want to scale without losing revenue.',
             style: Theme.of(context).textTheme.bodyMedium?.copyWith(
               color: const Color(0xFF64748B),
-              fontWeight: FontWeight.w600,
-              height: 1.55,
+              fontWeight: FontWeight.w500,
+              height: 1.45,
             ),
           ),
           const SizedBox(height: 24),
-          const Divider(thickness: 1, color: Color(0xFFCBD5E1)),
-          const SizedBox(height: 18),
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(
+                child: _MobileFooterColumn(
+                  title: 'Product',
+                  items: const ['Features', 'Pricing'],
+                ),
+              ),
+              Expanded(
+                child: _MobileFooterColumn(
+                  title: 'Company',
+                  items: const ['About', 'Contact'],
+                ),
+              ),
+              Expanded(
+                child: _MobileFooterColumn(
+                  title: 'Legal',
+                  items: const ['Privacy Policy', 'Terms of Service'],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 20),
+          Text(
+            'Social',
+            style: Get.theme.textTheme.bodyMedium?.copyWith(
+              color: Colors.white,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+          const SizedBox(height: 10),
+          Row(
+            children: const [
+              _MobileFooterSocialIcon('assets/images/linkedin.png'),
+              SizedBox(width: 12),
+              _MobileFooterSocialIcon('assets/images/insta.png'),
+              SizedBox(width: 12),
+              _MobileFooterSocialIcon('assets/images/twitter-x.png'),
+              SizedBox(width: 12),
+              _MobileFooterSocialIcon('assets/images/facebook.png'),
+            ],
+          ),
+          const SizedBox(height: 24),
+          const Divider(thickness: 0.8, color: Color(0xFFB4BDD4)),
+          const SizedBox(height: 16),
           Text(
             '\u00A9 2026 Recrip. All rights reserved.',
             style: Theme.of(context).textTheme.bodyMedium?.copyWith(
@@ -1648,6 +1824,53 @@ class _MobileFooterSection extends StatelessWidget {
         ],
       ),
     );
+  }
+}
+
+class _MobileFooterColumn extends StatelessWidget {
+  const _MobileFooterColumn({required this.title, required this.items});
+
+  final String title;
+  final List<String> items;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          title,
+          style: Get.theme.textTheme.bodyMedium?.copyWith(
+            color: Colors.white,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+        const SizedBox(height: 12),
+        ...items.map(
+          (item) => Padding(
+            padding: const EdgeInsets.only(bottom: 8),
+            child: Text(
+              item,
+              style: Get.theme.textTheme.bodySmall?.copyWith(
+                color: const Color(0xFF64748B),
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _MobileFooterSocialIcon extends StatelessWidget {
+  const _MobileFooterSocialIcon(this.assetPath);
+
+  final String assetPath;
+
+  @override
+  Widget build(BuildContext context) {
+    return Image.asset(assetPath, width: 28, height: 28, fit: BoxFit.contain);
   }
 }
 

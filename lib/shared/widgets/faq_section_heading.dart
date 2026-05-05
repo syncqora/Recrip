@@ -9,19 +9,25 @@ class FaqSectionHeading extends StatelessWidget {
     required this.restColor,
     this.textAlign = TextAlign.center,
     this.fontSize = 40,
+    this.baseStyle,
+    this.breakAfterFirstWordOnMobile = false,
   });
 
   final Color leadColor;
   final Color restColor;
   final TextAlign textAlign;
   final double fontSize;
+  final TextStyle? baseStyle;
+  final bool breakAfterFirstWordOnMobile;
 
   static const _words = ['Frequently', 'Asked', 'Questions'];
 
   @override
   Widget build(BuildContext context) {
+    final isMobileWidth = MediaQuery.sizeOf(context).width <= 600;
+    final useMobileBreak = breakAfterFirstWordOnMobile && isMobileWidth;
     final base =
-        Theme.of(context).textTheme.headlineMedium?.copyWith(
+        (baseStyle ?? Theme.of(context).textTheme.headlineMedium)?.copyWith(
           fontSize: fontSize,
           fontWeight: FontWeight.w900,
         ) ??
@@ -35,7 +41,7 @@ class FaqSectionHeading extends StatelessWidget {
           for (var i = 0; i < _words.length; i++) ...[
             if (i > 0)
               TextSpan(
-                text: ' ',
+                text: useMobileBreak && i == 1 ? '\n' : ' ',
                 style: base.copyWith(color: restColor),
               ),
             TextSpan(
