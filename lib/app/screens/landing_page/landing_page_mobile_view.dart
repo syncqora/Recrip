@@ -1,7 +1,7 @@
-import 'dart:ui' show ImageFilter;
-
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:get/get.dart';
+
 // import 'package:saas/app/screens/authentication/widgets/auth_widgets.dart';
 // import 'package:saas/app/screens/landing_page/landing_hero_login_form.dart';
 import 'package:saas/core/di/get_injector.dart';
@@ -23,7 +23,6 @@ class _LandingPageMobileViewState extends State<LandingPageMobileView> {
   final _pricingKey = GlobalKey();
   final _contactKey = GlobalKey();
   _MobileNavTab _activeNavTab = _MobileNavTab.features;
-  _MobilePreviewTab _selectedPreviewTab = _MobilePreviewTab.dashboard;
   bool _renderDeferredSections = false;
 
   @override
@@ -123,40 +122,55 @@ class _LandingPageMobileViewState extends State<LandingPageMobileView> {
     const padding = 20.0;
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF5F7FF),
-      body: Column(
-        children: [
-          _MobileTopBar(onMenuTap: _openNavSheet),
-          Expanded(
-            child: SingleChildScrollView(
-              child: Column(
-                children: [
-                  _MobileHeroSection(padding: padding),
-                  if (_renderDeferredSections) ...[
-                    _MobileFeatureSection(key: _featuresKey, padding: padding),
-                    _MobilePreviewSection(
-                      key: _previewKey,
-                      padding: padding,
-                      selectedTab: _selectedPreviewTab,
-                      onPreviewSelected: (tab) =>
-                          setState(() => _selectedPreviewTab = tab),
+      backgroundColor: const Color(0xFF090611),
+      body: Container(
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.centerRight,
+            end: Alignment.centerLeft,
+            stops: [0.0, 0.3413, 0.6202, 1.0],
+            colors: [
+              Color(0xFF120E3D),
+              Color(0xFF210F5C),
+              Color(0xFF1F0D41),
+              Color(0xFF000000),
+            ],
+          ),
+        ),
+        child: Column(
+          children: [
+            _MobileTopBar(onMenuTap: _openNavSheet),
+            Expanded(
+              child: SingleChildScrollView(
+                child: Column(
+                  children: [
+                    SizedBox(height: 32),
+                    _MobileHeroSection(padding: padding),
+                    Padding(
+                      padding: EdgeInsets.fromLTRB(padding, 28, padding, 8),
+                      child: _MobileHeroDashboardCarousel(),
                     ),
-                    _MobileStepSection(padding: padding),
-                    _MobileCtaSection(key: _pricingKey, padding: padding),
-                    _MobileFaqSection(key: _contactKey, padding: padding),
-                    _MobileFooterSection(padding: padding),
-                  ] else ...[
-                    const LandingSectionSkeleton(
-                      padding: padding,
-                      blockCount: 3,
-                      includeWideBlock: true,
-                    ),
+                    if (_renderDeferredSections) ...[
+                      _MobileFeatureSection(
+                        key: _featuresKey,
+                        padding: padding,
+                      ),
+                      _MobileStepSection(padding: padding),
+                      _MobileCtaSection(key: _pricingKey, padding: padding),
+                      _MobileContactSection(key: _contactKey, padding: padding),
+                    ] else ...[
+                      const LandingSectionSkeleton(
+                        padding: padding,
+                        blockCount: 3,
+                        includeWideBlock: true,
+                      ),
+                    ],
                   ],
-                ],
+                ),
               ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -171,8 +185,8 @@ class _MobileTopBar extends StatelessWidget {
 
   final VoidCallback onMenuTap;
 
-  static const Color _barBg = Color(0xFFFDFDFE);
-  static const Color _menuIcon = Color(0xFF1E293B);
+  static const Color _barBg = Colors.transparent;
+  static const Color _menuIcon = Colors.white;
 
   @override
   Widget build(BuildContext context) {
@@ -184,11 +198,8 @@ class _MobileTopBar extends StatelessWidget {
         bottom: false,
         child: Container(
           width: double.infinity,
-          decoration: const BoxDecoration(
-            border: Border(bottom: BorderSide(color: Color(0xFFE7EBF3))),
-          ),
           child: SizedBox(
-            height: 52,
+            height: 64,
             child: Stack(
               alignment: Alignment.center,
               children: [
@@ -212,12 +223,41 @@ class _MobileTopBar extends StatelessWidget {
                     ),
                   ),
                 ),
+                Align(
+                  alignment: Alignment.centerRight,
+                  child: TextButton(
+                    onPressed: () => appNav.changePage(AppRoutes.login),
+                    style: TextButton.styleFrom(
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.only(right: 12, left: 16),
+                    ),
+                    child: Text(
+                      'Log in',
+                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                        color: Colors.white,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                  ),
+                ),
                 Center(
-                  child: Image.asset(
-                    AppIcons.recripLogo,
-                    height: 28,
-                    fit: BoxFit.contain,
-                    filterQuality: FilterQuality.high,
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Image.asset(
+                        'assets/images/brand-logo.png',
+                        width: 32,
+                        height: 32,
+
+                        fit: BoxFit.contain,
+                      ),
+                      const SizedBox(width: 10),
+                      Image.asset(
+                        'assets/images/recrip.png',
+                        height: 32,
+                        fit: BoxFit.contain,
+                      ),
+                    ],
                   ),
                 ),
               ],
@@ -236,95 +276,332 @@ class _MobileHeroSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final headingStyle = Theme.of(context).textTheme.headlineMedium?.copyWith(
-      fontSize: 38,
-      fontWeight: FontWeight.w900,
-      color: const Color(0xFF0F172A),
-      height: 1.05,
+    final headingStyle = Theme.of(context).textTheme.bodyLarge?.copyWith(
+      fontSize: 24,
+      fontWeight: FontWeight.w400,
+      color: Colors.white,
+      height: 1.5,
     );
 
     return Container(
       width: double.infinity,
-      decoration: const BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
-          colors: [Colors.white, Color(0xFFF6F7FF)],
-        ),
-      ),
-      child: Stack(
-        children: [
-          Positioned(
-            top: 460,
-            right: -90,
-            child: Container(
-              width: 580,
-              height: 460,
-              decoration: const BoxDecoration(
-                color: Color(0xFF111C3B),
-                borderRadius: BorderRadius.only(
-                  topLeft: Radius.circular(90),
-                  bottomLeft: Radius.circular(90),
+      child: Padding(
+        padding: EdgeInsets.symmetric(horizontal: 16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text.rich(
+              TextSpan(
+                children: [
+                  TextSpan(
+                    text: 'Never Lose Revenue\nfrom ',
+                    style: headingStyle,
+                  ),
+                  TextSpan(
+                    text: 'Expired Subscriptions',
+                    style: headingStyle?.copyWith(
+                      color: const Color(0xFF4F46E5),
+                      fontWeight: FontWeight.w900,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 16),
+            Text(
+              'Recrip helps businesses automate renewals, track customers, and recover missed payments — all from one powerful dashboard.',
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                color: const Color(0xFFCBD5E1),
+                fontWeight: FontWeight.w400,
+              ),
+            ),
+            const SizedBox(height: 24),
+            SizedBox(
+              width: 168,
+              height: 48,
+              child: DecoratedBox(
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(30),
+                  gradient: const LinearGradient(
+                    begin: Alignment.bottomCenter,
+                    end: Alignment.topCenter,
+                    colors: [Color(0xFF4F46E5), Color(0xFF2C277F)],
+                  ),
+                ),
+                child: FilledButton(
+                  onPressed: () => appNav.changePage(AppRoutes.login),
+                  style: FilledButton.styleFrom(
+                    backgroundColor: Colors.transparent,
+                    foregroundColor: Colors.white,
+                    shadowColor: Colors.transparent,
+                    padding: const EdgeInsets.fromLTRB(24, 10, 24, 10),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(30),
+                    ),
+                  ),
+                  child: Text(
+                    'Book a Free Trial',
+                    style: Get.theme.textTheme.bodySmall?.copyWith(
+                      color: Colors.white,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
                 ),
               ),
             ),
-          ),
-          Padding(
-            padding: EdgeInsets.fromLTRB(padding, 24, padding, 40),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text.rich(
-                  TextSpan(
-                    children: [
-                      TextSpan(
-                        text: 'Never Lose\nRevenue from ',
-                        style: headingStyle,
-                      ),
-                      TextSpan(
-                        text: 'Expired\nSubscriptions',
-                        style: headingStyle?.copyWith(
-                          color: const Color(0xFF4F46E5),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: 16),
-                Text(
-                  'Recrip helps businesses automate renewals, track customers, and recover missed payments from one powerful dashboard.',
-                  style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                    color: const Color(0xFF475569),
-                    fontWeight: FontWeight.w600,
-                    height: 1.5,
-                  ),
-                ),
-                const SizedBox(height: 20),
-                Row(
-                  children: [
-                    Expanded(
-                      child: FilledButton(
-                        onPressed: () => appNav.changePage(AppRoutes.login),
-                        style: FilledButton.styleFrom(
-                          backgroundColor: const Color(0xFF5C5BFF),
-                          foregroundColor: Colors.white,
-                          minimumSize: const Size.fromHeight(48),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(14),
+            const SizedBox(height: 16),
+            Text(
+              'No credit card required • 14-day free trial • Cancel anytime',
+              style: Get.theme.textTheme.labelMedium?.copyWith(
+                color: const Color(0xFF475569),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _MobileHeroDashboardCarousel extends StatefulWidget {
+  const _MobileHeroDashboardCarousel();
+
+  @override
+  State<_MobileHeroDashboardCarousel> createState() =>
+      _MobileHeroDashboardCarouselState();
+}
+
+class _MobileHeroDashboardCarouselState
+    extends State<_MobileHeroDashboardCarousel> {
+  /// Design: front card 370 × 232, radius 10; three deck “spines” below (mock).
+  static const double _designCardW = 370;
+  static const double _designCardH = 232;
+  static const double _cardRadius = 10;
+
+  /// Vertical offset per deck layer (~8–12px in mock).
+  static const double _deckStepY = 10;
+
+  /// Each deeper layer narrows by this amount on each side (~5px per step).
+  static const double _deckSideInsetStep = 5.5;
+  static const int _deckLayerCount = 3;
+
+  static const Duration _imageSwitch = Duration(milliseconds: 380);
+  static const Curve _imageSwitchIn = Curves.easeOutCubic;
+  static const Curve _imageSwitchOut = Curves.easeInCubic;
+
+  int _frontIndex = 0;
+  int _slideSign = 1;
+
+  void _go(int delta) {
+    final len = _MobilePreviewTab.values.length;
+    if (delta == 0) return;
+    _slideSign = delta.sign;
+    setState(() => _frontIndex = (_frontIndex + delta + len) % len);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final tab = _MobilePreviewTab.values[_frontIndex];
+
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final maxW = constraints.maxWidth;
+        final cardW = maxW <= _designCardW ? maxW : _designCardW;
+        final cardH = cardW * (_designCardH / _designCardW);
+        final leftInset = (maxW - cardW) / 2;
+        final stackFootprintH = cardH + _deckLayerCount * _deckStepY + 10;
+
+        return Column(
+          children: [
+            SizedBox(
+              width: maxW,
+              height: stackFootprintH,
+              child: Stack(
+                clipBehavior: Clip.none,
+                alignment: Alignment.topCenter,
+                children: [
+                  for (var d = _deckLayerCount; d >= 1; d--)
+                    Positioned(
+                      top: d * _deckStepY,
+                      left: leftInset + d * _deckSideInsetStep,
+                      width: cardW - 2 * d * _deckSideInsetStep,
+                      height: cardH,
+                      child: _MobileDeckSpineLayer(radius: _cardRadius),
+                    ),
+                  Positioned(
+                    top: 0,
+                    left: leftInset,
+                    width: cardW,
+                    height: cardH,
+                    child: DecoratedBox(
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(_cardRadius),
+                        boxShadow: const [
+                          BoxShadow(
+                            color: Color(0x480F172A),
+                            blurRadius: 26,
+                            offset: Offset(0, 14),
+                            spreadRadius: -3,
                           ),
-                        ),
-                        child: const Text(
-                          'Start Free Trial',
-                          style: TextStyle(fontWeight: FontWeight.w700),
+                        ],
+                      ),
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(_cardRadius),
+                        child: ColoredBox(
+                          color: Colors.white,
+                          child: AnimatedSwitcher(
+                            duration: _imageSwitch,
+                            switchInCurve: _imageSwitchIn,
+                            switchOutCurve: _imageSwitchOut,
+                            layoutBuilder: (currentChild, previousChildren) {
+                              return Stack(
+                                alignment: Alignment.topCenter,
+                                children: [
+                                  ...previousChildren,
+                                  if (currentChild != null) currentChild,
+                                ],
+                              );
+                            },
+                            transitionBuilder: (child, animation) {
+                              final curved = CurvedAnimation(
+                                parent: animation,
+                                curve: _imageSwitchIn,
+                                reverseCurve: _imageSwitchOut,
+                              );
+                              return FadeTransition(
+                                opacity: curved,
+                                child: SlideTransition(
+                                  position: Tween<Offset>(
+                                    begin: Offset(0.07 * _slideSign, 0),
+                                    end: Offset.zero,
+                                  ).animate(curved),
+                                  child: child,
+                                ),
+                              );
+                            },
+                            child: Image.asset(
+                              _mobilePreviewImage(tab),
+                              key: ValueKey<int>(_frontIndex),
+                              fit: BoxFit.cover,
+                              alignment: Alignment.topCenter,
+                              width: cardW,
+                              height: cardH,
+                              cacheWidth: 720,
+                              filterQuality: FilterQuality.high,
+                            ),
+                          ),
                         ),
                       ),
                     ),
-                  ],
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 20),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                GestureDetector(
+                  onTap: () => _go(-1),
+                  behavior: HitTestBehavior.opaque,
+                  child: Image.asset(
+                    'assets/icons/circle-arrow-left.png',
+                    width: 48,
+                    height: 48,
+                    filterQuality: FilterQuality.high,
+                  ),
                 ),
-                const SizedBox(height: 14),
-                // const SizedBox(height: 24),
-                // const _MobileHeroLoginCard(),
+                const SizedBox(width: 14),
+                _MobilePreviewPill(tab: tab),
+                const SizedBox(width: 14),
+                GestureDetector(
+                  onTap: () => _go(1),
+                  behavior: HitTestBehavior.opaque,
+                  child: Image.asset(
+                    'assets/icons/circle-arrow-right.png',
+                    width: 48,
+                    height: 48,
+                    filterQuality: FilterQuality.high,
+                  ),
+                ),
               ],
+            ),
+          ],
+        );
+      },
+    );
+  }
+}
+
+/// Decorative layer under the main preview (muted purple-grey, inset).
+class _MobileDeckSpineLayer extends StatelessWidget {
+  const _MobileDeckSpineLayer({required this.radius});
+
+  final double radius;
+
+  static const Color _fill = Color(0xFF3B3B54);
+  static const Color _border = Color(0xFF4A4A64);
+
+  @override
+  Widget build(BuildContext context) {
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: _fill,
+        borderRadius: BorderRadius.circular(radius),
+        border: Border.all(color: _border, width: 1),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.22),
+            blurRadius: 8,
+            offset: const Offset(0, 3),
+            spreadRadius: -1,
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _MobilePreviewPill extends StatelessWidget {
+  const _MobilePreviewPill({required this.tab});
+
+  final _MobilePreviewTab tab;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      constraints: const BoxConstraints(minWidth: 160),
+      padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 12),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(999),
+        boxShadow: const [
+          BoxShadow(
+            color: Color(0x140F172A),
+            blurRadius: 12,
+            offset: Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          SvgPicture.asset(
+            _mobilePreviewIcon(tab),
+            width: 20,
+            height: 20,
+            colorFilter: const ColorFilter.mode(
+              Color(0xFF4F46E5),
+              BlendMode.srcIn,
+            ),
+          ),
+          const SizedBox(width: 10),
+          Text(
+            _mobilePreviewLabel(tab),
+            style: Theme.of(context).textTheme.titleSmall?.copyWith(
+              color: const Color(0xFF1E1B4B),
+              fontWeight: FontWeight.w800,
             ),
           ),
         ],
@@ -411,479 +688,125 @@ class _MobileFeatureSection extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       width: double.infinity,
-      color: const Color(0xFFF5F4FF),
-      padding: EdgeInsets.fromLTRB(padding, 36, padding, 40),
-      child: Column(
-        children: [
-          Text.rich(
-            TextSpan(
-              children: [
-                TextSpan(
-                  text: 'Everything you need\nto ',
-                  style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                    fontSize: 30,
-                    fontWeight: FontWeight.w900,
-                    color: const Color(0xFF0F172A),
-                    height: 1.12,
-                  ),
-                ),
-                TextSpan(
-                  text: 'scale faster',
-                  style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                    fontSize: 30,
-                    fontWeight: FontWeight.w900,
-                    color: const Color(0xFF4F46E5),
-                  ),
-                ),
-              ],
-            ),
-            textAlign: TextAlign.center,
+      padding: EdgeInsets.fromLTRB(padding + 12, 26, padding + 12, 34),
+      child: Container(
+        width: double.infinity,
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(28),
+          border: Border.all(color: const Color(0xFF4042AC)),
+          gradient: const LinearGradient(
+            begin: Alignment.centerLeft,
+            end: Alignment.centerRight,
+            colors: [Color(0xFF120635), Color(0xFF1A0D56), Color(0xFF120635)],
           ),
-          const SizedBox(height: 12),
-          Text(
-            'Stop manually tracking spreadsheets. Recrip automates the boring stuff so you can focus on growth.',
-            textAlign: TextAlign.center,
-            style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-              color: const Color(0xFF64748B),
-              fontWeight: FontWeight.w600,
-              height: 1.5,
-            ),
-          ),
-          const SizedBox(height: 24),
-          for (final feature in _mobileFeatures) ...[
-            _MobileFeatureCard(feature: feature),
-            if (feature != _mobileFeatures.last) const SizedBox(height: 14),
+        ),
+        child: Column(
+          children: [
+            for (var index = 0; index < _mobileFeatures.length; index++) ...[
+              _MobileFeatureListRow(feature: _mobileFeatures[index]),
+              if (index < _mobileFeatures.length - 1)
+                Container(
+                  height: 1,
+                  width: double.infinity,
+                  color: const Color(0xFF3C3FA2),
+                ),
+            ],
           ],
-        ],
-      ),
-    );
-  }
-}
-
-class _MobileFeatureCard extends StatelessWidget {
-  const _MobileFeatureCard({required this.feature});
-
-  final _MobileFeature feature;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(18),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: const Color(0xFFE6EAF6)),
-        boxShadow: const [
-          BoxShadow(
-            color: Color(0x060F172A),
-            blurRadius: 20,
-            offset: Offset(0, 8),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Container(
-            width: 56,
-            height: 56,
-            decoration: BoxDecoration(
-              color: feature.color,
-              borderRadius: BorderRadius.circular(16),
-              boxShadow: const [
-                BoxShadow(
-                  color: Color(0x29383737),
-                  offset: Offset(0, 12),
-                  blurRadius: 18,
-                ),
-              ],
-            ),
-            alignment: Alignment.center,
-            child: SvgPicture.asset(
-              feature.iconAsset,
-              width: 24,
-              height: 24,
-              colorFilter: const ColorFilter.mode(
-                Colors.white,
-                BlendMode.srcIn,
-              ),
-            ),
-          ),
-          const SizedBox(height: 18),
-          Text(
-            feature.title,
-            style: Theme.of(context).textTheme.titleMedium?.copyWith(
-              fontWeight: FontWeight.w800,
-              color: const Color(0xFF0F172A),
-            ),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            feature.description,
-            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-              color: const Color(0xFF64748B),
-              height: 1.55,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _MobilePreviewSection extends StatelessWidget {
-  const _MobilePreviewSection({
-    super.key,
-    required this.padding,
-    required this.selectedTab,
-    required this.onPreviewSelected,
-  });
-
-  final double padding;
-  final _MobilePreviewTab selectedTab;
-  final ValueChanged<_MobilePreviewTab> onPreviewSelected;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: double.infinity,
-      padding: EdgeInsets.fromLTRB(padding, 32, padding, 40),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text.rich(
-            TextSpan(
-              children: [
-                TextSpan(
-                  text: 'Built for ',
-                  style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                    fontSize: 30,
-                    fontWeight: FontWeight.w900,
-                    color: const Color(0xFF0F172A),
-                  ),
-                ),
-                TextSpan(
-                  text: 'Modern Teams',
-                  style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                    fontSize: 30,
-                    fontWeight: FontWeight.w900,
-                    color: const Color(0xFF4F46E5),
-                  ),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(height: 10),
-          Text(
-            'A focused renewal workflow for fast-moving teams, now simplified for mobile browsing.',
-            style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-              color: const Color(0xFF64748B),
-              fontWeight: FontWeight.w600,
-              height: 1.5,
-            ),
-          ),
-          const SizedBox(height: 18),
-          Container(
-            width: double.infinity,
-            padding: const EdgeInsets.all(6),
-            decoration: BoxDecoration(
-              color: const Color(0xFFF8FAFC),
-              borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: const Color(0xFFCBD5E1)),
-            ),
-            child: Wrap(
-              spacing: 6,
-              runSpacing: 6,
-              children: _MobilePreviewTab.values.map((tab) {
-                final selected = tab == selectedTab;
-                return SizedBox(
-                  width:
-                      ((MediaQuery.sizeOf(context).width - (padding * 2) - 24) /
-                              2)
-                          .clamp(120.0, 220.0),
-                  child: InkWell(
-                    onTap: () => onPreviewSelected(tab),
-                    borderRadius: BorderRadius.circular(12),
-                    child: AnimatedContainer(
-                      duration: const Duration(milliseconds: 220),
-                      curve: Curves.easeOutCubic,
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 10,
-                        vertical: 10,
-                      ),
-                      decoration: BoxDecoration(
-                        color: selected
-                            ? const Color(0xFF4F46E5)
-                            : Colors.transparent,
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          SvgPicture.asset(
-                            _mobilePreviewIcon(tab),
-                            width: 15,
-                            height: 15,
-                            colorFilter: ColorFilter.mode(
-                              selected ? Colors.white : const Color(0xFF64748B),
-                              BlendMode.srcIn,
-                            ),
-                          ),
-                          const SizedBox(width: 7),
-                          Flexible(
-                            child: Text(
-                              _mobilePreviewLabel(tab),
-                              overflow: TextOverflow.ellipsis,
-                              style: Theme.of(context).textTheme.bodySmall
-                                  ?.copyWith(
-                                    color: selected
-                                        ? Colors.white
-                                        : const Color(0xFF334155),
-                                    fontWeight: FontWeight.w700,
-                                  ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                );
-              }).toList(),
-            ),
-          ),
-          const SizedBox(height: 18),
-          GestureDetector(
-            onHorizontalDragEnd: (details) {
-              const minSwipeVelocity = 140.0;
-              final velocity = details.primaryVelocity ?? 0;
-              if (velocity.abs() < minSwipeVelocity) return;
-              if (velocity < 0) {
-                onPreviewSelected(_nextMobilePreviewTab(selectedTab));
-              } else {
-                onPreviewSelected(_previousMobilePreviewTab(selectedTab));
-              }
-            },
-            child: _MobileDashboardMock(selectedTab: selectedTab),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-_MobilePreviewTab _nextMobilePreviewTab(_MobilePreviewTab tab) {
-  final tabs = _MobilePreviewTab.values;
-  final current = tabs.indexOf(tab);
-  final next = (current + 1) % tabs.length;
-  return tabs[next];
-}
-
-_MobilePreviewTab _previousMobilePreviewTab(_MobilePreviewTab tab) {
-  final tabs = _MobilePreviewTab.values;
-  final current = tabs.indexOf(tab);
-  final previous = (current - 1 + tabs.length) % tabs.length;
-  return tabs[previous];
-}
-
-class _MobileDashboardMock extends StatelessWidget {
-  const _MobileDashboardMock({required this.selectedTab});
-
-  final _MobilePreviewTab selectedTab;
-  static const double _aspect = 392 / 792;
-  static const double _innerPadding = 8;
-
-  @override
-  Widget build(BuildContext context) {
-    // Keep all 4 tabs in the stack; selected tab stays on top/front.
-    final orderedCards = [
-      for (final tab in _MobilePreviewTab.values)
-        if (tab != selectedTab) tab,
-      selectedTab,
-    ];
-
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final w = constraints.maxWidth.isFinite && constraints.maxWidth > 0
-            ? constraints.maxWidth
-            : 360.0;
-        final h = w * _aspect;
-
-        return SizedBox(
-          width: w,
-          height: h,
-          child: ClipRRect(
-            borderRadius: BorderRadius.circular(22),
-            child: ColoredBox(
-              color: const Color(0xFF0F1835),
-              child: Padding(
-                padding: const EdgeInsets.all(_innerPadding),
-                child: LayoutBuilder(
-                  builder: (context, inner) {
-                    final iw = inner.maxWidth;
-                    final ih = inner.maxHeight;
-                    return RepaintBoundary(
-                      child: Stack(
-                        clipBehavior: Clip.hardEdge,
-                        fit: StackFit.expand,
-                        children: [
-                          for (
-                            var index = 0;
-                            index < orderedCards.length;
-                            index++
-                          )
-                            _MobilePreviewCard(
-                              key: ValueKey<_MobilePreviewTab>(
-                                orderedCards[index],
-                              ),
-                              tab: orderedCards[index],
-                              layerIndex: index,
-                              layerCount: orderedCards.length,
-                              isFront: orderedCards[index] == selectedTab,
-                              stackW: iw,
-                              stackH: ih,
-                            ),
-                        ],
-                      ),
-                    );
-                  },
-                ),
-              ),
-            ),
-          ),
-        );
-      },
-    );
-  }
-}
-
-class _MobilePreviewCard extends StatelessWidget {
-  const _MobilePreviewCard({
-    super.key,
-    required this.tab,
-    required this.layerIndex,
-    required this.layerCount,
-    required this.isFront,
-    required this.stackW,
-    required this.stackH,
-  });
-
-  final _MobilePreviewTab tab;
-  final int layerIndex;
-  final int layerCount;
-  final bool isFront;
-  final double stackW;
-  final double stackH;
-
-  @override
-  Widget build(BuildContext context) {
-    final w = stackW;
-    final h = stackH;
-
-    final cardW = (w * 0.60).clamp(0.0, 220.0);
-    final cardH = h * 0.88;
-    final top = (h - cardH) / 2;
-    final baseLeft = w * 0.04;
-    // Half-overlap rule: each next/lower card starts from half of the card above.
-    final stepOffset = cardW * 0.20;
-    final stepsFromFront = (layerCount - 1) - layerIndex;
-    final left = baseLeft + (stepOffset * stepsFromFront);
-    final depthScale = (1.0 - (0.04 * stepsFromFront)).clamp(0.84, 1.0);
-
-    return AnimatedPositioned(
-      duration: const Duration(milliseconds: 420),
-      curve: Curves.easeInOutCubic,
-      left: left,
-      top: top,
-      width: cardW,
-      height: cardH,
-      child: AnimatedScale(
-        duration: const Duration(milliseconds: 420),
-        curve: Curves.easeInOutCubic,
-        scale: depthScale,
-        alignment: Alignment.center,
-        child: AnimatedOpacity(
-          duration: const Duration(milliseconds: 320),
-          curve: Curves.easeOutCubic,
-          opacity: isFront ? 1.0 : 0.92,
-          child: AnimatedContainer(
-            duration: const Duration(milliseconds: 320),
-            curve: Curves.easeOutCubic,
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(18),
-              border: Border.all(
-                color: isFront ? const Color(0x150F172A) : Colors.transparent,
-              ),
-              boxShadow: [
-                BoxShadow(
-                  color: isFront
-                      ? const Color(0x300F172A)
-                      : const Color(0x1A0F172A),
-                  blurRadius: isFront ? 24 : 16,
-                  offset: Offset(0, isFront ? 10 : 7),
-                ),
-              ],
-            ),
-            clipBehavior: Clip.antiAlias,
-            child: _mobileStackPreviewImage(tab: tab, isFront: isFront),
-          ),
         ),
       ),
     );
   }
 }
 
-Widget _mobileStackPreviewImage({
-  required _MobilePreviewTab tab,
-  required bool isFront,
-}) {
-  final path = _mobilePreviewImage(tab);
-  Widget img = Image.asset(
-    path,
-    fit: BoxFit.contain,
-    alignment: Alignment.center,
-    cacheWidth: isFront ? 720 : 520,
-    filterQuality: isFront ? FilterQuality.high : FilterQuality.medium,
-    isAntiAlias: true,
-  );
-  if (!isFront) {
-    img = ImageFiltered(
-      imageFilter: ImageFilter.blur(sigmaX: 3, sigmaY: 3),
-      child: img,
+class _MobileFeatureListRow extends StatelessWidget {
+  const _MobileFeatureListRow({required this.feature});
+
+  final _MobileFeature feature;
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      width: double.infinity,
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(22, 18, 22, 18),
+        child: Column(
+          children: [
+            Container(
+              width: 48,
+              height: 48,
+              decoration: BoxDecoration(
+                color: feature.color,
+                borderRadius: BorderRadius.circular(11),
+                boxShadow: const [
+                  BoxShadow(
+                    color: Color(0x300F172A),
+                    offset: Offset(0, 8),
+                    blurRadius: 14,
+                  ),
+                ],
+              ),
+              alignment: Alignment.center,
+              child: SvgPicture.asset(
+                feature.iconAsset,
+                width: 24,
+                height: 24,
+                colorFilter: const ColorFilter.mode(
+                  Colors.white,
+                  BlendMode.srcIn,
+                ),
+              ),
+            ),
+            const SizedBox(height: 12),
+            Text(
+              feature.title,
+              textAlign: TextAlign.center,
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                fontWeight: FontWeight.w900,
+                color: feature.color,
+              ),
+            ),
+            const SizedBox(height: 10),
+            Text(
+              feature.description,
+              textAlign: TextAlign.center,
+              style: Theme.of(context).textTheme.labelMedium?.copyWith(
+                color: const Color(0xFFE2E8F0),
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
-  return img;
 }
 
 class _MobileStepSection extends StatelessWidget {
   const _MobileStepSection({required this.padding});
 
   final double padding;
+  static const double _stepTextGap = 48;
 
   @override
   Widget build(BuildContext context) {
     return Container(
       width: double.infinity,
-      color: const Color(0xFFF5F4FF),
-      padding: EdgeInsets.fromLTRB(padding, 32, padding, 42),
+      padding: EdgeInsets.fromLTRB(padding, 26, padding, 34),
       child: Column(
         children: [
           Text.rich(
             TextSpan(
               children: [
                 TextSpan(
-                  text: 'Get started in ',
-                  style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                    fontSize: 30,
+                  text: 'Get started\n',
+                  style: Theme.of(context).textTheme.bodyLarge?.copyWith(
                     fontWeight: FontWeight.w900,
-                    color: const Color(0xFF0F172A),
+                    color: Colors.white,
                   ),
                 ),
                 TextSpan(
-                  text: 'three simple steps',
-                  style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                    fontSize: 30,
+                  text: 'in 3 simple steps',
+                  style: Theme.of(context).textTheme.bodyLarge?.copyWith(
                     fontWeight: FontWeight.w900,
                     color: const Color(0xFF4F46E5),
                   ),
@@ -893,19 +816,29 @@ class _MobileStepSection extends StatelessWidget {
             textAlign: TextAlign.center,
           ),
           const SizedBox(height: 12),
-          Text(
-            'Move from manual follow-ups to automated renewals without changing how your team already works.',
-            textAlign: TextAlign.center,
-            style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-              color: const Color(0xFF64748B),
-              fontWeight: FontWeight.w600,
-              height: 1.5,
+          FittedBox(
+            fit: BoxFit.scaleDown,
+            child: Text(
+              'Identify, Support & Retain',
+              maxLines: 1,
+              textAlign: TextAlign.center,
+              style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                fontSize: 28,
+                fontWeight: FontWeight.w900,
+                foreground: Paint()
+                  ..style = PaintingStyle.stroke
+                  ..strokeWidth = 1
+                  ..color = const Color(0x33FFFFFF),
+              ),
             ),
           ),
           const SizedBox(height: 22),
           for (var i = 0; i < _mobileSteps.length; i++) ...[
-            _MobileStepCard(index: i + 1, step: _mobileSteps[i]),
-            if (i != _mobileSteps.length - 1) const SizedBox(height: 14),
+            _MobileStepCard(
+              index: i + 1,
+              step: _mobileSteps[i],
+              isLast: i == _mobileSteps.length - 1,
+            ),
           ],
         ],
       ),
@@ -914,79 +847,84 @@ class _MobileStepSection extends StatelessWidget {
 }
 
 class _MobileStepCard extends StatelessWidget {
-  const _MobileStepCard({required this.index, required this.step});
+  const _MobileStepCard({
+    required this.index,
+    required this.step,
+    required this.isLast,
+  });
 
   final int index;
   final _MobileStep step;
+  final bool isLast;
+  static const double _itemBottomGap = 48;
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(18),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: const Color(0xFFCBD5E1)),
-      ),
+    return IntrinsicHeight(
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Container(
-            width: 48,
-            height: 48,
-            decoration: BoxDecoration(
-              color: const Color(0xFF4F46E5),
-              borderRadius: BorderRadius.circular(14),
-            ),
-            alignment: Alignment.center,
-            child: Text(
-              '$index',
-              style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                color: Colors.white,
-                fontWeight: FontWeight.w900,
-              ),
-            ),
-          ),
-          const SizedBox(width: 14),
-          Expanded(
+          SizedBox(
+            width: 72,
             child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  step.title,
-                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.w800,
-                    color: const Color(0xFF0F172A),
+                Container(
+                  width: 58,
+                  height: 58,
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF4F46E5),
+                    borderRadius: BorderRadius.circular(16),
+                    boxShadow: const [
+                      BoxShadow(
+                        color: Color(0x664F46E5),
+                        blurRadius: 22,
+                        spreadRadius: -4,
+                        offset: Offset(0, 8),
+                      ),
+                    ],
+                  ),
+                  alignment: Alignment.center,
+                  child: SvgPicture.asset(
+                    step.iconAsset,
+                    width: 36,
+                    height: 36,
+                    colorFilter: const ColorFilter.mode(
+                      Colors.white,
+                      BlendMode.srcIn,
+                    ),
                   ),
                 ),
-                const SizedBox(height: 8),
-                Text(
-                  step.description,
-                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: const Color(0xFF64748B),
-                    height: 1.5,
+                if (!isLast)
+                  Expanded(
+                    child: Container(width: 1, color: const Color(0x80E2E8F0)),
                   ),
-                ),
               ],
             ),
           ),
-          const SizedBox(width: 10),
-          Container(
-            width: 42,
-            height: 42,
-            decoration: BoxDecoration(
-              color: const Color(0xFFEEF2FF),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            alignment: Alignment.center,
-            child: SvgPicture.asset(
-              step.iconAsset,
-              width: 20,
-              height: 20,
-              colorFilter: const ColorFilter.mode(
-                Color(0xFF4F46E5),
-                BlendMode.srcIn,
+          const SizedBox(width: 12),
+          Expanded(
+            child: Padding(
+              padding: const EdgeInsets.only(top: 2, bottom: _itemBottomGap),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    step.title,
+                    style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                      color: Colors.white,
+                      fontWeight: FontWeight.w600,
+                      fontSize: 20,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    step.description,
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      color: const Color(0xFF9AA0B8),
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ],
               ),
             ),
           ),
@@ -996,8 +934,236 @@ class _MobileStepCard extends StatelessWidget {
   }
 }
 
-class _MobileCtaSection extends StatelessWidget {
+class _MobileCtaSection extends StatefulWidget {
   const _MobileCtaSection({super.key, required this.padding});
+
+  final double padding;
+
+  @override
+  State<_MobileCtaSection> createState() => _MobileCtaSectionState();
+}
+
+class _MobileCtaSectionState extends State<_MobileCtaSection> {
+  int _selectedPlanIndex = 0;
+
+  @override
+  Widget build(BuildContext context) {
+    final plan = _mobilePricingPlans[_selectedPlanIndex];
+
+    return Container(
+      width: double.infinity,
+      color: Colors.transparent,
+      padding: EdgeInsets.fromLTRB(widget.padding, 26, widget.padding, 34),
+      child: Column(
+        children: [
+          Text.rich(
+            TextSpan(
+              children: [
+                TextSpan(
+                  text: 'Simple &\n',
+                  style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                    color: Colors.white,
+                    fontWeight: FontWeight.w900,
+                  ),
+                ),
+                TextSpan(
+                  text: 'transparent pricing',
+                  style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                    color: const Color(0xFF4F46E5),
+                    fontWeight: FontWeight.w900,
+                  ),
+                ),
+              ],
+            ),
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: 22),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              _MobilePlanPill(
+                label: _mobilePricingPlans[0].name,
+                selected: _selectedPlanIndex == 0,
+                onTap: () => setState(() => _selectedPlanIndex = 0),
+              ),
+              const SizedBox(width: 16),
+              _MobilePlanPill(
+                label: _mobilePricingPlans[1].name,
+                selected: _selectedPlanIndex == 1,
+                onTap: () => setState(() => _selectedPlanIndex = 1),
+              ),
+            ],
+          ),
+          const SizedBox(height: 22),
+          Stack(
+            alignment: Alignment.center,
+            clipBehavior: Clip.none,
+            children: [
+              Positioned(
+                top: 10,
+                right: -8,
+                child: Container(
+                  width: 286,
+                  height: 392,
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF1A1F60),
+                    borderRadius: BorderRadius.circular(30),
+                    border: Border.all(
+                      color: const Color(0xFF2F33A8),
+                      width: 0.8,
+                    ),
+                  ),
+                ),
+              ),
+              SizedBox(
+                width: 286,
+                height: 392,
+                child: Container(
+                  padding: const EdgeInsets.fromLTRB(20, 24, 20, 26),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF08042A),
+                    borderRadius: BorderRadius.circular(30),
+                    border: Border.all(
+                      color: const Color(0xFF4F46E5),
+                      width: 1,
+                    ),
+                    boxShadow: const [
+                      BoxShadow(
+                        color: Color(0x7A4F46E5),
+                        blurRadius: 76,
+                        spreadRadius: -14,
+                        offset: Offset(0, 12),
+                      ),
+                      BoxShadow(
+                        color: Color(0x3D4F46E5),
+                        blurRadius: 24,
+                        spreadRadius: -8,
+                        offset: Offset(0, 6),
+                      ),
+                    ],
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Align(
+                        alignment: Alignment.center,
+                        child: RichText(
+                          textAlign: TextAlign.center,
+                          text: TextSpan(
+                            children: [
+                              TextSpan(
+                                text: plan.price,
+                                style: Get.theme.textTheme.headlineMedium
+                                    ?.copyWith(
+                                      color: Colors.white,
+                                      fontWeight: FontWeight.w700,
+                                      fontSize: 32,
+                                    ),
+                              ),
+                              TextSpan(
+                                text: '/month',
+                                style: Get.theme.textTheme.titleMedium
+                                    ?.copyWith(
+                                      color: const Color(0xFF4B517C),
+                                      fontWeight: FontWeight.w700,
+                                      fontSize: 20,
+                                    ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 18),
+                      for (final item in plan.items) ...[
+                        Text(
+                          item,
+                          style: Get.theme.textTheme.bodySmall?.copyWith(
+                            color: const Color(0xFF9AA0B8),
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                        const SizedBox(height: 16),
+                      ],
+                      const SizedBox(height: 18),
+                      Center(
+                        child: OutlinedButton(
+                          onPressed: () => appNav.changePage(AppRoutes.login),
+                          style: OutlinedButton.styleFrom(
+                            side: const BorderSide(color: Color(0xFF4F46E5)),
+                            minimumSize: const Size(0, 54),
+                            padding: const EdgeInsets.symmetric(horizontal: 34),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(999),
+                            ),
+                            foregroundColor: Colors.white,
+                          ),
+                          child: Text(
+                            'Contact sales',
+                            style: Theme.of(context).textTheme.bodySmall
+                                ?.copyWith(
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _MobilePlanPill extends StatelessWidget {
+  const _MobilePlanPill({
+    required this.label,
+    required this.selected,
+    required this.onTap,
+  });
+
+  final String label;
+  final bool selected;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        width: 123,
+        height: 44,
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(999),
+          border: Border.all(color: const Color(0xFFFE9A00)),
+          gradient: selected
+              ? const LinearGradient(
+                  begin: Alignment.centerLeft,
+                  end: Alignment.centerRight,
+                  colors: [Color(0xFF5C5BFF), Color(0xFF3A2F9D)],
+                )
+              : null,
+          color: selected ? null : const Color(0x1008042A),
+        ),
+        alignment: Alignment.center,
+        child: Text(
+          label,
+          style: Theme.of(context).textTheme.titleMedium?.copyWith(
+            color: Colors.white,
+            fontWeight: FontWeight.w700,
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _MobileContactSection extends StatelessWidget {
+  const _MobileContactSection({super.key, required this.padding});
 
   final double padding;
 
@@ -1005,82 +1171,95 @@ class _MobileCtaSection extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       width: double.infinity,
-      color: const Color(0xFF101934),
-      padding: EdgeInsets.fromLTRB(padding, 34, padding, 34),
+      color: Colors.transparent,
+      padding: EdgeInsets.fromLTRB(padding, 30, padding, 34),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text.rich(
             TextSpan(
               children: [
                 TextSpan(
                   text: 'Start Automating\n',
-                  style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                    fontSize: 32,
-                    fontWeight: FontWeight.w900,
+                  style: Get.theme.textTheme.bodyLarge?.copyWith(
                     color: Colors.white,
-                    height: 1.0,
+                    fontWeight: FontWeight.w900,
                   ),
                 ),
                 TextSpan(
                   text: 'Your Renewals Today',
-                  style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                    fontSize: 32,
-                    fontWeight: FontWeight.w900,
+                  style: Get.theme.textTheme.bodyLarge?.copyWith(
                     color: const Color(0xFF4F46E5),
+                    fontWeight: FontWeight.w900,
                   ),
                 ),
               ],
             ),
+            textAlign: TextAlign.center,
           ),
-          const SizedBox(height: 14),
+          const SizedBox(height: 16),
           Text(
-            'Join hundreds of businesses recovering lost revenue every day. No credit card required to start.',
-            style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-              color: const Color(0xFFCBD5E1),
-              height: 1.45,
+            'Join hundreds of businesses that are recovering\nlost revenue every single day. No credit card\nrequired to start.',
+            textAlign: TextAlign.center,
+            style: Get.theme.textTheme.bodySmall?.copyWith(
+              color: const Color(0xFF475569),
             ),
           ),
-          const SizedBox(height: 18),
-          for (final item in const [
-            'Free 14-day trial',
-            'No Setup Fee',
-            'Cancel Anytime',
-            '24/7 Priority Support',
-          ])
-            Padding(
-              padding: const EdgeInsets.only(bottom: 10),
-              child: Row(
-                children: [
-                  Container(
-                    width: 28,
-                    height: 28,
-                    decoration: const BoxDecoration(
-                      color: Color(0xFF4F46E5),
-                      shape: BoxShape.circle,
-                    ),
-                    alignment: Alignment.center,
-                    child: SvgPicture.asset(
-                      AppIcons.circleCheck,
-                      width: 14,
-                      height: 14,
-                    ),
-                  ),
-                  const SizedBox(width: 10),
-                  Text(
-                    item,
-                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      color: const Color(0xFFE2E8F0),
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          const SizedBox(height: 20),
+          const SizedBox(height: 32),
+          for (final item in _mobileContactPoints) ...[
+            _MobileContactPoint(text: item),
+            const SizedBox(height: 24),
+          ],
+          const SizedBox(height: 14),
           const _MobileLeadCard(),
         ],
       ),
+    );
+  }
+}
+
+class _MobileContactPoint extends StatelessWidget {
+  const _MobileContactPoint({required this.text});
+
+  final String text;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        Container(
+          width: 32,
+          height: 32,
+          decoration: BoxDecoration(
+            color: const Color(0xFF4F46E5),
+            shape: BoxShape.circle,
+            boxShadow: const [
+              BoxShadow(
+                color: Color(0x734F46E5),
+                blurRadius: 20,
+                spreadRadius: -5,
+                offset: Offset(0, 8),
+              ),
+            ],
+          ),
+          alignment: Alignment.center,
+          child: SvgPicture.asset(
+            AppIcons.circleCheck,
+            width: 20,
+            height: 20,
+            colorFilter: const ColorFilter.mode(Colors.white, BlendMode.srcIn),
+          ),
+        ),
+        const SizedBox(width: 18),
+        Expanded(
+          child: Text(
+            text,
+            style: Get.theme.textTheme.bodyMedium?.copyWith(
+              color: const Color(0xFF6D7598),
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ),
+      ],
     );
   }
 }
@@ -1092,24 +1271,24 @@ class _MobileLeadCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(20),
+      padding: const EdgeInsets.fromLTRB(18, 32, 18, 24),
       decoration: BoxDecoration(
-        color: const Color(0xFF16224A),
-        borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: const Color(0xFFCBD5E1)),
+        color: const Color(0xFF08042A),
+        borderRadius: BorderRadius.circular(30),
+        border: Border.all(color: const Color(0xFFCBD5E1), width: 1),
       ),
       child: Column(
         children: const [
           _MobileDarkField('Full Name'),
-          SizedBox(height: 14),
+          SizedBox(height: 24),
           _MobileDarkField('Business Name'),
-          SizedBox(height: 14),
+          SizedBox(height: 24),
           _MobileDarkField('Email Address'),
-          SizedBox(height: 14),
+          SizedBox(height: 24),
           _MobileDarkField('Phone Number'),
-          SizedBox(height: 18),
+          SizedBox(height: 32),
           _MobileEnquiryButton(),
-          SizedBox(height: 18),
+          SizedBox(height: 24),
           _MobileLeadCopy(),
         ],
       ),
@@ -1129,28 +1308,46 @@ class _MobileDarkField extends StatelessWidget {
       children: [
         Text(
           label,
-          style: Theme.of(context).textTheme.bodySmall?.copyWith(
-            color: const Color(0xFFC6D1F7),
+          style: Theme.of(context).textTheme.labelMedium?.copyWith(
+            color: const Color(0xFFE2E8F0),
             fontWeight: FontWeight.w600,
           ),
         ),
-        const SizedBox(height: 8),
-        TextField(
-          style: const TextStyle(color: Colors.white),
-          decoration: InputDecoration(
-            filled: true,
-            fillColor: const Color(0xFF16224A),
-            contentPadding: const EdgeInsets.symmetric(
-              horizontal: 12,
-              vertical: 12,
+        const SizedBox(height: 16),
+        SizedBox(
+          width: 280,
+          height: 44,
+          child: TextField(
+            textAlign: TextAlign.start,
+            textAlignVertical: TextAlignVertical.center,
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 16,
+              fontWeight: FontWeight.w500,
             ),
-            enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-              borderSide: const BorderSide(color: Color(0xFF31457D)),
-            ),
-            focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-              borderSide: const BorderSide(color: Color(0xFF5C5BFF)),
+            decoration: InputDecoration(
+              hintText: 'Enter $label',
+              hintStyle: Get.theme.textTheme.labelMedium?.copyWith(
+                color: const Color(0xFF94A3B8),
+                fontWeight: FontWeight.w500,
+              ),
+              filled: true,
+              fillColor: const Color(0xFF0F172A),
+              contentPadding: const EdgeInsets.fromLTRB(14, 11, 14, 11),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(10),
+                borderSide: const BorderSide(
+                  color: Color(0xFFE2E8F0),
+                  width: 1,
+                ),
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(10),
+                borderSide: const BorderSide(
+                  color: Color(0xFFE2E8F0),
+                  width: 1,
+                ),
+              ),
             ),
           ),
         ),
@@ -1166,19 +1363,20 @@ class _MobileEnquiryButton extends StatelessWidget {
   Widget build(BuildContext context) {
     return SizedBox(
       width: double.infinity,
+      height: 58,
       child: FilledButton(
         onPressed: () {},
         style: FilledButton.styleFrom(
-          backgroundColor: const Color(0xFF5C5BFF),
-          foregroundColor: Colors.white,
-          minimumSize: const Size.fromHeight(48),
+          backgroundColor: const Color(0xFF3A2F9D),
+          foregroundColor: const Color(0xFF8C8FAE),
+          minimumSize: const Size.fromHeight(58),
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(14),
+            borderRadius: BorderRadius.circular(999),
           ),
         ),
         child: const Text(
           'Request Enquiry',
-          style: TextStyle(fontWeight: FontWeight.w700),
+          style: TextStyle(fontWeight: FontWeight.w700, fontSize: 19),
         ),
       ),
     );
@@ -1194,8 +1392,8 @@ class _MobileLeadCopy extends StatelessWidget {
       'Request a demo and we will get back to you. Thank you!',
       textAlign: TextAlign.center,
       style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-        color: const Color(0xFFCBD5E1),
-        height: 1.4,
+        color: const Color(0xFF475569),
+        fontWeight: FontWeight.w500,
       ),
     );
   }
@@ -1460,7 +1658,7 @@ String _mobilePreviewImage(_MobilePreviewTab tab) {
     case _MobilePreviewTab.members:
       return 'assets/images/Members.webp';
     case _MobilePreviewTab.subscriptions:
-      return 'assets/images/Members.webp';
+      return 'assets/images/subscriptions.webp';
     case _MobilePreviewTab.renewals:
       return 'assets/images/Renewals.webp';
   }
@@ -1500,22 +1698,10 @@ const _mobileFeatures = [
     Color(0xFF2B7FFF),
   ),
   _MobileFeature(
-    'Payment Recovery',
-    'Recover missed payments and reduce churn effortlessly with automated retries.',
-    AppIcons.creditCard,
-    Color(0xFF5FC7FF),
-  ),
-  _MobileFeature(
     'Analytics Dashboard',
     'Track revenue, renewals, and customer behavior with deep visual insights.',
     AppIcons.chartPie,
     Color(0xFF8E51FF),
-  ),
-  _MobileFeature(
-    'Customer Management',
-    'All your subscription data in one place. Search, filter, and manage with ease.',
-    AppIcons.usersRound,
-    Color(0xFFE12AFB),
   ),
   _MobileFeature(
     'Auto Renewals',
@@ -1524,10 +1710,22 @@ const _mobileFeatures = [
     Color(0xFF00BC7D),
   ),
   _MobileFeature(
-    'Business Insights',
-    'Track revenue, renewals, and customer behavior with deep visual insights.',
+    'Customer Management',
+    'All your subscription data in one place. Search, filter, and manage with ease.',
+    AppIcons.usersRound,
+    Color(0xFFE12AFB),
+  ),
+  _MobileFeature(
+    'Payment Recovery',
+    'Recover missed payments and reduce churn effortlessly with automated retries.',
+    AppIcons.creditCard,
+    Color(0xFF5FC7FF),
+  ),
+  _MobileFeature(
+    'Integrations',
+    'Work seamlessly with your existing tools like Stripe, Razorpay, and more.',
     AppIcons.globe,
-    Color(0xFFFE9A00),
+    Color(0xFFFFB019),
   ),
 ];
 
@@ -1543,8 +1741,8 @@ const _mobileSteps = [
     AppIcons.clock,
   ),
   _MobileStep(
-    'Automate and track revenue',
-    'Sit back while Recrip handles the follow-ups and gives your team real-time growth visibility.',
+    'Automate & track revenue',
+    'Sit back while Recrip handles the follow-ups and provides real-time growth data.',
     AppIcons.trendingUp,
   ),
 ];
@@ -1562,6 +1760,38 @@ const _mobileFaqs = [
     'What businesses is Recrip best for?',
     'Recrip is designed for any business with recurring subscriptions, including gyms, salons, clinics, SaaS, and service providers.',
   ),
+];
+
+const _mobilePricingPlans = [
+  _MobilePricingPlan(
+    name: 'Starter',
+    price: '₹1499',
+    items: [
+      '300 Members',
+      'WhatsApp Reminders',
+      'Renewal Alerts',
+      'Default Reminders',
+      'Export Report (Current Month)',
+    ],
+  ),
+  _MobilePricingPlan(
+    name: 'Growth',
+    price: '₹2499',
+    items: [
+      '700 Members',
+      'WhatsApp Reminders',
+      'Renewal Alerts',
+      'Custom Reminders',
+      'Export Report (Current Month)',
+    ],
+  ),
+];
+
+const _mobileContactPoints = [
+  'Free 14-day trial',
+  'No Setup fees',
+  'Cancel Anytime',
+  '24/7 Priority Support',
 ];
 
 class _MobileFeature {
@@ -1591,4 +1821,16 @@ class _MobileFaq {
 
   final String question;
   final String answer;
+}
+
+class _MobilePricingPlan {
+  const _MobilePricingPlan({
+    required this.name,
+    required this.price,
+    required this.items,
+  });
+
+  final String name;
+  final String price;
+  final List<String> items;
 }
