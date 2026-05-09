@@ -17,6 +17,10 @@ import 'package:saas/shared/widgets/landing_section_skeleton.dart';
 
 part 'landing_page_tablet_view.dart';
 
+/// Scroll-spy anchor: safe-area top + this offset lands below [_TopNav] padding
+/// (18 top + 48 nav shell + 12 bottom).
+const double _kLandingNavSpyAnchorBelowSafeTop = 78;
+
 class LandingPage extends StatefulWidget {
   const LandingPage({super.key});
 
@@ -44,6 +48,7 @@ class _LandingPageState extends State<LandingPage>
   _PreviewTab _selectedPreviewTab = _PreviewTab.dashboard;
   bool _renderDeferredSections = false;
   bool _isSnappingHeroTransition = false;
+  bool _suppressScrollSpy = false;
   late final AnimationController _dashboardTapController;
   late final Animation<double> _dashboardTapAnimation;
 
@@ -59,6 +64,7 @@ class _LandingPageState extends State<LandingPage>
       curve: Curves.easeOutCubic,
     );
     LoginController.registerHeroIfNeeded();
+    _scrollController.addListener(_syncNavHighlightFromScroll);
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
       setState(() => _renderDeferredSections = true);
@@ -70,11 +76,15 @@ class _LandingPageState extends State<LandingPage>
       ]) {
         precacheImage(AssetImage(path), context);
       }
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) _syncNavHighlightFromScroll();
+      });
     });
   }
 
   @override
   void dispose() {
+    _scrollController.removeListener(_syncNavHighlightFromScroll);
     _dashboardTapController.dispose();
     _scrollController.dispose();
     LoginController.deleteHeroIfRegistered();
@@ -158,22 +168,55 @@ class _LandingPageState extends State<LandingPage>
     );
   }
 
-  Future<void> _onNavTap(_TopNavTab tab, GlobalKey key) async {
-    setState(() => _activeNavTab = tab);
-    if (tab == _TopNavTab.features && _scrollController.hasClients) {
-      final target = (_fullScrollUnlockTarget - 90).clamp(
-        0.0,
-        _scrollController.position.maxScrollExtent,
-      );
-      await _scrollController.animateTo(
-        target,
-        duration: const Duration(milliseconds: 500),
-        curve: Curves.easeOutCubic,
-      );
+  void _syncNavHighlightFromScroll() {
+    if (!mounted || _suppressScrollSpy || !_scrollController.hasClients) {
       return;
     }
-    final targetAlignment = tab == _TopNavTab.features ? 0.0 : 0.05;
-    await _scrollTo(key, alignment: targetAlignment);
+    final next = _activeTabFromScrollPhysics(context);
+    if (next != _activeNavTab) {
+      setState(() => _activeNavTab = next);
+    }
+  }
+
+  /// Last section (in order) whose top has crossed the anchor — above features
+  /// leaves no tab selected.
+  _TopNavTab? _activeTabFromScrollPhysics(BuildContext context) {
+    final anchorY =
+        MediaQuery.paddingOf(context).top + _kLandingNavSpyAnchorBelowSafeTop;
+
+    final tabs = <({_TopNavTab tab, GlobalKey key})>[
+      (tab: _TopNavTab.features, key: _featuresKey),
+      (tab: _TopNavTab.howItWorks, key: _stepsKey),
+      (tab: _TopNavTab.pricing, key: _pricingKey),
+      (tab: _TopNavTab.contact, key: _contactKey),
+    ];
+
+    _TopNavTab? chosen;
+    for (final (:tab, :key) in tabs) {
+      final target = key.currentContext;
+      if (target == null) continue;
+      final ro = target.findRenderObject();
+      if (ro is! RenderBox || !ro.hasSize) continue;
+      final dy = ro.localToGlobal(Offset.zero).dy;
+      if (dy <= anchorY) {
+        chosen = tab;
+      }
+    }
+    return chosen;
+  }
+
+  Future<void> _onNavTap(_TopNavTab tab, GlobalKey key) async {
+    if (!mounted) return;
+    setState(() {
+      _suppressScrollSpy = true;
+      _activeNavTab = tab;
+    });
+    await _scrollTo(key, alignment: 0.04);
+    if (!mounted) return;
+    await Future<void>.delayed(const Duration(milliseconds: 460));
+    if (!mounted) return;
+    setState(() => _suppressScrollSpy = false);
+    _syncNavHighlightFromScroll();
   }
 
   Future<void> _scrollToFeaturesFromArrow() async {
@@ -421,14 +464,12 @@ class _LandingPageState extends State<LandingPage>
                               ),
                               RepaintBoundary(
                                 child: _ContactSection(
+                                  key: _contactKey,
                                   padding: horizontalPadding,
                                 ),
                               ),
                               RepaintBoundary(
-                                child: _FaqSection(
-                                  key: _contactKey,
-                                  padding: horizontalPadding,
-                                ),
+                                child: _FaqSection(padding: horizontalPadding),
                               ),
                               RepaintBoundary(
                                 child: _BottomCtaSection(
@@ -1693,7 +1734,7 @@ class _PricingPlanBadge extends StatelessWidget {
 }
 
 class _ContactSection extends StatelessWidget {
-  const _ContactSection({required this.padding});
+  const _ContactSection({super.key, required this.padding});
 
   final double padding;
 

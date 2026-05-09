@@ -43,20 +43,43 @@ class LandingPageMobileView extends StatefulWidget {
 class _LandingPageMobileViewState extends State<LandingPageMobileView> {
   final _featuresKey = GlobalKey();
   final _previewKey = GlobalKey();
+  final _stepsKey = GlobalKey();
   final _pricingKey = GlobalKey();
   final _contactKey = GlobalKey();
-  _MobileNavTab _activeNavTab = _MobileNavTab.features;
+
+  final _scrollController = ScrollController();
+
+  /// No chip selected until user taps a pill or scrolls into a section.
+  _MobileNavTab? _activeNavTab;
+
   bool _renderDeferredSections = false;
   bool _lockPageScroll = false;
+
+  /// Avoid fighting [ScrollController] listener during [Scrollable.ensureVisible].
+  bool _suppressScrollSpy = false;
+
+  /// Approx sticky header offset for scroll-spy anchor (below safe area chip row).
+  static const double _navSpyHeaderBelowSafeArea = 118;
 
   @override
   void initState() {
     super.initState();
+    _scrollController.addListener(_syncNavHighlightFromScroll);
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
       unawaited(_precacheLandingRasters());
       setState(() => _renderDeferredSections = true);
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) _syncNavHighlightFromScroll();
+      });
     });
+  }
+
+  @override
+  void dispose() {
+    _scrollController.removeListener(_syncNavHighlightFromScroll);
+    _scrollController.dispose();
+    super.dispose();
   }
 
   /// Fills [ImageCache] for mobile landing rasters in parallel (Decode is still
@@ -82,8 +105,54 @@ class _LandingPageMobileViewState extends State<LandingPageMobileView> {
   }
 
   Future<void> _onNavTap(_MobileNavTab tab, GlobalKey key) async {
-    setState(() => _activeNavTab = tab);
+    if (!mounted) return;
+    setState(() {
+      _suppressScrollSpy = true;
+      _activeNavTab = tab;
+    });
     await _scrollTo(key);
+    if (!mounted) return;
+    await Future<void>.delayed(const Duration(milliseconds: 460));
+    if (!mounted) return;
+    setState(() => _suppressScrollSpy = false);
+    _syncNavHighlightFromScroll();
+  }
+
+  void _syncNavHighlightFromScroll() {
+    if (!mounted || _suppressScrollSpy || !_scrollController.hasClients) {
+      return;
+    }
+    final next = _activeTabFromScrollPhysics(context);
+    if (next != _activeNavTab) {
+      setState(() => _activeNavTab = next);
+    }
+  }
+
+  /// Picks the last section (in scroll order) whose top has crossed the anchor
+  /// band — matches “current section while reading”; above features → none.
+  _MobileNavTab? _activeTabFromScrollPhysics(BuildContext context) {
+    final anchorY =
+        MediaQuery.paddingOf(context).top + _navSpyHeaderBelowSafeArea;
+
+    final tabs = <({_MobileNavTab tab, GlobalKey key})>[
+      (tab: _MobileNavTab.features, key: _featuresKey),
+      (tab: _MobileNavTab.preview, key: _stepsKey),
+      (tab: _MobileNavTab.pricing, key: _pricingKey),
+      (tab: _MobileNavTab.contact, key: _contactKey),
+    ];
+
+    _MobileNavTab? chosen;
+    for (final (:tab, :key) in tabs) {
+      final target = key.currentContext;
+      if (target == null) continue;
+      final ro = target.findRenderObject();
+      if (ro is! RenderBox || !ro.hasSize) continue;
+      final dy = ro.localToGlobal(Offset.zero).dy;
+      if (dy <= anchorY) {
+        chosen = tab;
+      }
+    }
+    return chosen;
   }
 
   void _onLandingNavSelect(_MobileNavTab tab) {
@@ -91,7 +160,7 @@ class _LandingPageMobileViewState extends State<LandingPageMobileView> {
       case _MobileNavTab.features:
         _onNavTap(tab, _featuresKey);
       case _MobileNavTab.preview:
-        _onNavTap(tab, _previewKey);
+        _onNavTap(tab, _stepsKey);
       case _MobileNavTab.pricing:
         _onNavTap(tab, _pricingKey);
       case _MobileNavTab.contact:
@@ -127,6 +196,7 @@ class _LandingPageMobileViewState extends State<LandingPageMobileView> {
             ),
             Expanded(
               child: SingleChildScrollView(
+                controller: _scrollController,
                 physics: _lockPageScroll
                     ? const NeverScrollableScrollPhysics()
                     : const ClampingScrollPhysics(),
@@ -155,7 +225,7 @@ class _LandingPageMobileViewState extends State<LandingPageMobileView> {
                         key: _featuresKey,
                         padding: padding,
                       ),
-                      _MobileStepSection(padding: padding),
+                      _MobileStepSection(key: _stepsKey, padding: padding),
                       _MobileCtaSection(
                         key: _pricingKey,
                         padding: padding,
@@ -202,7 +272,7 @@ class _MobileLandingHeader extends StatelessWidget {
     required this.onNavSelect,
   });
 
-  final _MobileNavTab activeNavTab;
+  final _MobileNavTab? activeNavTab;
   final ValueChanged<_MobileNavTab> onNavSelect;
 
   static const Color _inactiveBorder = Color(0xFF4B517C);
@@ -988,7 +1058,7 @@ class _MobileFeatureListRow extends StatelessWidget {
 }
 
 class _MobileStepSection extends StatelessWidget {
-  const _MobileStepSection({required this.padding});
+  const _MobileStepSection({super.key, required this.padding});
 
   final double padding;
   static const double _stepTextGap = 48;
