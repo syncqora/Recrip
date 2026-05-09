@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:saas/core/di/get_injector.dart';
 import '../../widgets/auth_widgets.dart';
 import 'package:saas/shared/constants/app_strings.dart';
 import 'login_controller.dart';
@@ -130,8 +131,34 @@ class _AuthFormCardMobile extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [Image.asset('assets/images/recrip.webp', height: 36)],
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              SizedBox(
+                width: 48,
+                height: 48,
+                child: IconButton(
+                  padding: EdgeInsets.zero,
+                  constraints: const BoxConstraints(
+                    minWidth: 48,
+                    minHeight: 48,
+                  ),
+                  tooltip: 'Back',
+                  onPressed: () => appNav.popPage(),
+                  icon: Image.asset(
+                    'assets/icons/move-left.png',
+                    width: 22,
+                    height: 22,
+                    filterQuality: FilterQuality.high,
+                  ),
+                ),
+              ),
+              Expanded(
+                child: Center(
+                  child: Image.asset('assets/images/recrip.webp', height: 36),
+                ),
+              ),
+              const SizedBox(width: 48),
+            ],
           ),
           const SizedBox(height: 32),
           Text(

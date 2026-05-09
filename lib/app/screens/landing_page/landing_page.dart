@@ -9,12 +9,13 @@ import 'package:get/get.dart';
 import 'package:http/http.dart' as http;
 import 'package:saas/app/screens/authentication/login/views/login_controller.dart';
 import 'package:saas/app/screens/landing_page/landing_page_mobile_view.dart';
-import 'package:saas/app/screens/landing_page/landing_page_tablet_view.dart';
 import 'package:saas/core/di/get_injector.dart';
 import 'package:saas/routes/app_pages.dart';
 import 'package:saas/shared/constants/app_icons.dart';
 import 'package:saas/shared/widgets/faq_section_heading.dart';
 import 'package:saas/shared/widgets/landing_section_skeleton.dart';
+
+part 'landing_page_tablet_view.dart';
 
 class LandingPage extends StatefulWidget {
   const LandingPage({super.key});

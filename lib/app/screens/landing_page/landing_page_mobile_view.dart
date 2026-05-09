@@ -1,3 +1,5 @@
+import 'dart:async' show unawaited;
+
 import 'package:flutter/material.dart';
 import 'package:flutter_swiper_view/flutter_swiper_view.dart';
 import 'package:flutter_svg/flutter_svg.dart';
@@ -7,6 +9,29 @@ import 'package:saas/routes/app_pages.dart';
 import 'package:saas/shared/constants/app_icons.dart';
 import 'package:saas/shared/widgets/faq_section_heading.dart';
 import 'package:saas/shared/widgets/landing_section_skeleton.dart';
+
+/// Decode size aligned to device DPI (cap avoids huge bitmaps / slow decode).
+int _landingRasterDecodePx(BuildContext context, double logical) {
+  final dpr = MediaQuery.devicePixelRatioOf(context);
+  return (logical * dpr).round().clamp(1, 4096);
+}
+
+/// All PNG/WebP raster assets referenced on mobile landing — warmed on first frame.
+const _landingMobileRasterWarmupPaths = <String>{
+  AppIcons.recripLogo,
+  'assets/images/brand-logo.png',
+  'assets/images/recrip.png',
+  'assets/icons/circle-arrow-left.png',
+  'assets/icons/circle-arrow-right.png',
+  'assets/images/dashboard-new.png',
+  'assets/images/members-new.png',
+  'assets/images/subscriptions-new.png',
+  'assets/images/renewals-new.png',
+  'assets/images/linkedin.png',
+  'assets/images/insta.png',
+  'assets/images/twitter-x.png',
+  'assets/images/facebook.png',
+};
 
 class LandingPageMobileView extends StatefulWidget {
   const LandingPageMobileView({super.key});
@@ -29,8 +54,20 @@ class _LandingPageMobileViewState extends State<LandingPageMobileView> {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
+      unawaited(_precacheLandingRasters());
       setState(() => _renderDeferredSections = true);
     });
+  }
+
+  /// Fills [ImageCache] for mobile landing rasters in parallel (Decode is still
+  /// capped via [cacheWidth]/[ResizeImage] where used).
+  Future<void> _precacheLandingRasters() async {
+    if (!mounted) return;
+    await Future.wait<void>(
+      _landingMobileRasterWarmupPaths.map(
+        (path) => precacheImage(AssetImage(path), context),
+      ),
+    );
   }
 
   Future<void> _scrollTo(GlobalKey key) async {
@@ -49,71 +86,17 @@ class _LandingPageMobileViewState extends State<LandingPageMobileView> {
     await _scrollTo(key);
   }
 
-  void _openNavSheet() {
-    showModalBottomSheet<void>(
-      context: context,
-      showDragHandle: true,
-      backgroundColor: Colors.white,
-      builder: (sheetContext) {
-        Widget navTile({
-          required String label,
-          required _MobileNavTab tab,
-          required GlobalKey key,
-        }) {
-          final selected = _activeNavTab == tab;
-          return ListTile(
-            contentPadding: const EdgeInsets.symmetric(horizontal: 8),
-            title: Text(
-              label,
-              style: Theme.of(sheetContext).textTheme.titleMedium?.copyWith(
-                color: selected
-                    ? const Color(0xFF4F46E5)
-                    : const Color(0xFF334155),
-                fontWeight: FontWeight.w700,
-              ),
-            ),
-            trailing: selected
-                ? const Icon(Icons.check_rounded, color: Color(0xFF4F46E5))
-                : null,
-            onTap: () {
-              Navigator.pop(sheetContext);
-              _onNavTap(tab, key);
-            },
-          );
-        }
-
-        return SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                navTile(
-                  label: 'Features',
-                  tab: _MobileNavTab.features,
-                  key: _featuresKey,
-                ),
-                navTile(
-                  label: 'How it works',
-                  tab: _MobileNavTab.preview,
-                  key: _previewKey,
-                ),
-                navTile(
-                  label: 'Pricing',
-                  tab: _MobileNavTab.pricing,
-                  key: _pricingKey,
-                ),
-                navTile(
-                  label: 'Contact',
-                  tab: _MobileNavTab.contact,
-                  key: _contactKey,
-                ),
-              ],
-            ),
-          ),
-        );
-      },
-    );
+  void _onLandingNavSelect(_MobileNavTab tab) {
+    switch (tab) {
+      case _MobileNavTab.features:
+        _onNavTap(tab, _featuresKey);
+      case _MobileNavTab.preview:
+        _onNavTap(tab, _previewKey);
+      case _MobileNavTab.pricing:
+        _onNavTap(tab, _pricingKey);
+      case _MobileNavTab.contact:
+        _onNavTap(tab, _contactKey);
+    }
   }
 
   @override
@@ -138,7 +121,10 @@ class _LandingPageMobileViewState extends State<LandingPageMobileView> {
         ),
         child: Column(
           children: [
-            _MobileTopBar(onMenuTap: _openNavSheet),
+            _MobileLandingHeader(
+              activeNavTab: _activeNavTab,
+              onNavSelect: _onLandingNavSelect,
+            ),
             Expanded(
               child: SingleChildScrollView(
                 physics: _lockPageScroll
@@ -149,15 +135,20 @@ class _LandingPageMobileViewState extends State<LandingPageMobileView> {
                     SizedBox(height: 32),
                     _MobileHeroSection(padding: padding),
                     SizedBox(height: 80),
-                    _MobileHeroDashboardCarousel(
-                      onInteractionStart: () {
-                        if (!mounted || _lockPageScroll) return;
-                        setState(() => _lockPageScroll = true);
-                      },
-                      onInteractionEnd: () {
-                        if (!mounted || !_lockPageScroll) return;
-                        setState(() => _lockPageScroll = false);
-                      },
+                    RepaintBoundary(
+                      child: KeyedSubtree(
+                        key: _previewKey,
+                        child: _MobileHeroDashboardCarousel(
+                          onInteractionStart: () {
+                            if (!mounted || _lockPageScroll) return;
+                            setState(() => _lockPageScroll = true);
+                          },
+                          onInteractionEnd: () {
+                            if (!mounted || !_lockPageScroll) return;
+                            setState(() => _lockPageScroll = false);
+                          },
+                        ),
+                      ),
                     ),
                     if (_renderDeferredSections) ...[
                       _MobileFeatureSection(
@@ -165,7 +156,18 @@ class _LandingPageMobileViewState extends State<LandingPageMobileView> {
                         padding: padding,
                       ),
                       _MobileStepSection(padding: padding),
-                      _MobileCtaSection(key: _pricingKey, padding: padding),
+                      _MobileCtaSection(
+                        key: _pricingKey,
+                        padding: padding,
+                        onSwiperInteractionStart: () {
+                          if (!mounted || _lockPageScroll) return;
+                          setState(() => _lockPageScroll = true);
+                        },
+                        onSwiperInteractionEnd: () {
+                          if (!mounted || !_lockPageScroll) return;
+                          setState(() => _lockPageScroll = false);
+                        },
+                      ),
                       _MobileContactSection(key: _contactKey, padding: padding),
                       _MobileFaqSection(padding: padding),
                       _MobileBottomCtaSection(padding: padding),
@@ -192,87 +194,167 @@ enum _MobileNavTab { features, preview, pricing, contact }
 
 enum _MobilePreviewTab { dashboard, members, subscriptions, renewals }
 
-class _MobileTopBar extends StatelessWidget {
-  const _MobileTopBar({required this.onMenuTap});
+/// Logo + log-in row and a horizontally scrollable in-page nav — matches landing
+/// colors (no white bottom sheet interrupting the gradient).
+class _MobileLandingHeader extends StatelessWidget {
+  const _MobileLandingHeader({
+    required this.activeNavTab,
+    required this.onNavSelect,
+  });
 
-  final VoidCallback onMenuTap;
+  final _MobileNavTab activeNavTab;
+  final ValueChanged<_MobileNavTab> onNavSelect;
 
-  static const Color _barBg = Colors.transparent;
-  static const Color _menuIcon = Colors.white;
+  static const Color _inactiveBorder = Color(0xFF4B517C);
+  static const Color _inactiveFill = Color(0x2608042A);
+
+  @override
+  Widget build(BuildContext context) {
+    final chips = <({_MobileNavTab tab, String label})>[
+      (tab: _MobileNavTab.features, label: 'Features'),
+      (tab: _MobileNavTab.preview, label: 'How it works'),
+      (tab: _MobileNavTab.pricing, label: 'Pricing'),
+      (tab: _MobileNavTab.contact, label: 'Contact'),
+    ];
+
+    return Material(
+      color: Colors.transparent,
+      elevation: 0,
+      child: SafeArea(
+        bottom: false,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            SizedBox(
+              height: 56,
+              child: Stack(
+                alignment: Alignment.center,
+                children: [
+                  Align(
+                    alignment: Alignment.centerRight,
+                    child: TextButton(
+                      onPressed: () => appNav.changePage(AppRoutes.login),
+                      style: TextButton.styleFrom(
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.only(right: 12, left: 16),
+                      ),
+                      child: Text(
+                        'Log in',
+                        style: Theme.of(context).textTheme.titleMedium
+                            ?.copyWith(
+                              color: Colors.white,
+                              fontWeight: FontWeight.w700,
+                            ),
+                      ),
+                    ),
+                  ),
+                  Center(
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Image.asset(
+                          'assets/images/brand-logo.png',
+                          width: 32,
+                          height: 32,
+                          fit: BoxFit.contain,
+                          gaplessPlayback: true,
+                          cacheWidth: _landingRasterDecodePx(context, 32),
+                          cacheHeight: _landingRasterDecodePx(context, 32),
+                          filterQuality: FilterQuality.medium,
+                        ),
+                        const SizedBox(width: 10),
+                        Image.asset(
+                          'assets/images/recrip.png',
+                          height: 32,
+                          fit: BoxFit.contain,
+                          gaplessPlayback: true,
+                          cacheHeight: _landingRasterDecodePx(context, 32),
+                          filterQuality: FilterQuality.medium,
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              physics: const BouncingScrollPhysics(),
+              padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+              child: Row(
+                children: [
+                  for (var i = 0; i < chips.length; i++) ...[
+                    if (i > 0) const SizedBox(width: 8),
+                    _MobileLandingNavChip(
+                      label: chips[i].label,
+                      selected: activeNavTab == chips[i].tab,
+                      borderColorSelected: const Color(0xFFFE9A00),
+                      gradientSelected: const LinearGradient(
+                        begin: Alignment.centerLeft,
+                        end: Alignment.centerRight,
+                        colors: [Color(0xFF5C5BFF), Color(0xFF3A2F9D)],
+                      ),
+                      inactiveFill: _inactiveFill,
+                      inactiveBorder: _inactiveBorder,
+                      onTap: () => onNavSelect(chips[i].tab),
+                    ),
+                  ],
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _MobileLandingNavChip extends StatelessWidget {
+  const _MobileLandingNavChip({
+    required this.label,
+    required this.selected,
+    required this.onTap,
+    required this.borderColorSelected,
+    required this.gradientSelected,
+    required this.inactiveFill,
+    required this.inactiveBorder,
+  });
+
+  final String label;
+  final bool selected;
+  final VoidCallback onTap;
+  final Color borderColorSelected;
+  final Gradient gradientSelected;
+  final Color inactiveFill;
+  final Color inactiveBorder;
 
   @override
   Widget build(BuildContext context) {
     return Material(
-      color: _barBg,
-      elevation: 0,
-      shadowColor: Colors.transparent,
-      child: SafeArea(
-        bottom: false,
-        child: Container(
-          width: double.infinity,
-          child: SizedBox(
-            height: 64,
-            child: Stack(
-              alignment: Alignment.center,
-              children: [
-                Align(
-                  alignment: Alignment.centerLeft,
-                  child: IconButton(
-                    onPressed: onMenuTap,
-                    padding: const EdgeInsets.only(left: 8, right: 16),
-                    constraints: const BoxConstraints(
-                      minWidth: 48,
-                      minHeight: 48,
-                    ),
-                    icon: SvgPicture.asset(
-                      AppIcons.menu,
-                      width: 26,
-                      height: 26,
-                      colorFilter: const ColorFilter.mode(
-                        _menuIcon,
-                        BlendMode.srcIn,
-                      ),
-                    ),
-                  ),
-                ),
-                Align(
-                  alignment: Alignment.centerRight,
-                  child: TextButton(
-                    onPressed: () => appNav.changePage(AppRoutes.login),
-                    style: TextButton.styleFrom(
-                      foregroundColor: Colors.white,
-                      padding: const EdgeInsets.only(right: 12, left: 16),
-                    ),
-                    child: Text(
-                      'Log in',
-                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                        color: Colors.white,
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
-                  ),
-                ),
-                Center(
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Image.asset(
-                        'assets/images/brand-logo.png',
-                        width: 32,
-                        height: 32,
-
-                        fit: BoxFit.contain,
-                      ),
-                      const SizedBox(width: 10),
-                      Image.asset(
-                        'assets/images/recrip.png',
-                        height: 32,
-                        fit: BoxFit.contain,
-                      ),
-                    ],
-                  ),
-                ),
-              ],
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(999),
+        splashColor: const Color(0x334F46E5),
+        highlightColor: const Color(0x224F46E5),
+        child: Ink(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(999),
+            border: Border.all(
+              color: selected ? borderColorSelected : inactiveBorder,
+              width: 1,
+            ),
+            gradient: selected ? gradientSelected : null,
+            color: selected ? null : inactiveFill,
+          ),
+          child: Text(
+            label,
+            style: Theme.of(context).textTheme.labelLarge?.copyWith(
+              color: Colors.white,
+              fontWeight: FontWeight.w700,
+              letterSpacing: 0.2,
             ),
           ),
         ),
@@ -413,11 +495,13 @@ class _MobileHeroDashboardCarouselState
 
     return SizedBox(
       width: MediaQuery.of(context).size.width,
-      height: 400,
       child: Column(
+        mainAxisSize: MainAxisSize.min,
         children: [
-          const SizedBox(height: 12),
-          Expanded(
+          const SizedBox(height: 8),
+          SizedBox(
+            height: _MobileSwiperBuilder.kDeckViewportHeight,
+            width: double.infinity,
             child: _MobileSwiperBuilder(
               controller: _swiperController,
               onIndexChanged: (index) =>
@@ -426,7 +510,7 @@ class _MobileHeroDashboardCarouselState
               onInteractionEnd: widget.onInteractionEnd,
             ),
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: 10),
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
@@ -435,9 +519,12 @@ class _MobileHeroDashboardCarouselState
                 behavior: HitTestBehavior.opaque,
                 child: Image.asset(
                   'assets/icons/circle-arrow-left.png',
-                  width: 24,
-                  height: 24,
-                  filterQuality: FilterQuality.high,
+                  width: 32,
+                  height: 32,
+                  gaplessPlayback: true,
+                  cacheWidth: _landingRasterDecodePx(context, 32),
+                  cacheHeight: _landingRasterDecodePx(context, 32),
+                  filterQuality: FilterQuality.medium,
                 ),
               ),
               const SizedBox(width: 14),
@@ -448,9 +535,12 @@ class _MobileHeroDashboardCarouselState
                 behavior: HitTestBehavior.opaque,
                 child: Image.asset(
                   'assets/icons/circle-arrow-right.png',
-                  width: 24,
-                  height: 24,
-                  filterQuality: FilterQuality.high,
+                  width: 32,
+                  height: 32,
+                  gaplessPlayback: true,
+                  cacheWidth: _landingRasterDecodePx(context, 32),
+                  cacheHeight: _landingRasterDecodePx(context, 32),
+                  filterQuality: FilterQuality.medium,
                 ),
               ),
             ],
@@ -477,6 +567,10 @@ class _MobileSwiperBuilder extends StatelessWidget {
   static const double _cardWidth = 370;
   static const double _cardHeight = 232;
   static const double _cardRadius = 10;
+
+  /// Tight viewport for vertical STACK so decks aren’t vertically centered in a
+  /// tall [Expanded], which left a huge gap above the arrows.
+  static const double kDeckViewportHeight = _cardHeight + 40;
 
   @override
   Widget build(BuildContext context) {
@@ -507,17 +601,83 @@ class _MobileSwiperBuilder extends StatelessWidget {
             scrollDirection: Axis.vertical,
             onIndexChanged: onIndexChanged,
             itemBuilder: (context, index) {
+              final wPx = _landingRasterDecodePx(context, _cardWidth);
+              final hPx = _landingRasterDecodePx(context, _cardHeight);
               return Container(
                 width: _cardWidth,
                 height: _cardHeight,
                 decoration: BoxDecoration(
-                  image: DecorationImage(image: AssetImage(imagePath[index])),
+                  image: DecorationImage(
+                    fit: BoxFit.cover,
+                    image: ResizeImage(
+                      AssetImage(imagePath[index]),
+                      width: wPx,
+                      height: hPx,
+                      allowUpscaling: false,
+                    ),
+                  ),
                   borderRadius: BorderRadius.circular(_cardRadius),
                 ),
               );
             },
             itemCount: imagePath.length,
             layout: SwiperLayout.STACK,
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Horizontal stack deck (same [SwiperLayout.STACK] as [_MobileSwiperBuilder], horizontal drag).
+class _MobilePricingStackSwiper extends StatelessWidget {
+  const _MobilePricingStackSwiper({
+    required this.controller,
+    required this.cardWidth,
+    required this.cardHeight,
+    required this.cardRadius,
+    required this.onInteractionStart,
+    required this.onInteractionEnd,
+    required this.onIndexChanged,
+  });
+
+  final SwiperController controller;
+  final double cardWidth;
+  final double cardHeight;
+  final double cardRadius;
+  final VoidCallback onInteractionStart;
+  final VoidCallback onInteractionEnd;
+  final ValueChanged<int> onIndexChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    return Listener(
+      onPointerDown: (_) => onInteractionStart(),
+      onPointerUp: (_) => onInteractionEnd(),
+      onPointerCancel: (_) => onInteractionEnd(),
+      child: RepaintBoundary(
+        child: SizedBox(
+          width: cardWidth,
+          height: cardHeight,
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(cardRadius),
+            clipBehavior: Clip.antiAliasWithSaveLayer,
+            child: Swiper(
+              controller: controller,
+              itemWidth: cardWidth,
+              itemHeight: cardHeight,
+              loop: false,
+              duration: 1200,
+              curve: Curves.easeOutCubic,
+              scrollDirection: Axis.horizontal,
+              axisDirection: AxisDirection.left,
+              onIndexChanged: onIndexChanged,
+              itemBuilder: (context, index) {
+                return _MobilePricingPlanCard(plan: _mobilePricingPlans[index]);
+              },
+              itemCount: _mobilePricingPlans.length,
+              layout: SwiperLayout.STACK,
+            ),
           ),
         ),
       ),
@@ -559,7 +719,8 @@ class _PreviewImageCard extends StatelessWidget {
             imagePath,
             fit: BoxFit.cover,
             alignment: Alignment.topCenter,
-            cacheWidth: 720,
+            gaplessPlayback: true,
+            cacheWidth: _landingRasterDecodePx(context, 360),
             filterQuality: FilterQuality.medium,
           ),
         ),
@@ -694,7 +855,7 @@ class _MobileFeatureSection extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       width: double.infinity,
-      padding: EdgeInsets.fromLTRB(padding + 12, 26, padding + 12, 34),
+      padding: EdgeInsets.fromLTRB(padding + 12, 80, padding + 12, 34),
       child: Column(
         children: [
           RichText(
@@ -980,21 +1141,37 @@ class _MobileStepCard extends StatelessWidget {
 }
 
 class _MobileCtaSection extends StatefulWidget {
-  const _MobileCtaSection({super.key, required this.padding});
+  const _MobileCtaSection({
+    super.key,
+    required this.padding,
+    required this.onSwiperInteractionStart,
+    required this.onSwiperInteractionEnd,
+  });
 
   final double padding;
+  final VoidCallback onSwiperInteractionStart;
+  final VoidCallback onSwiperInteractionEnd;
 
   @override
   State<_MobileCtaSection> createState() => _MobileCtaSectionState();
 }
 
 class _MobileCtaSectionState extends State<_MobileCtaSection> {
+  static const double _planCardWidth = 286;
+  static const double _planCardHeight = 392;
+  static const double _planCardRadius = 30;
+
+  final SwiperController _planSwiperController = SwiperController();
   int _selectedPlanIndex = 0;
 
   @override
-  Widget build(BuildContext context) {
-    final plan = _mobilePricingPlans[_selectedPlanIndex];
+  void dispose() {
+    _planSwiperController.dispose();
+    super.dispose();
+  }
 
+  @override
+  Widget build(BuildContext context) {
     return Container(
       width: double.infinity,
       color: Colors.transparent,
@@ -1029,13 +1206,21 @@ class _MobileCtaSectionState extends State<_MobileCtaSection> {
               _MobilePlanPill(
                 label: _mobilePricingPlans[0].name,
                 selected: _selectedPlanIndex == 0,
-                onTap: () => setState(() => _selectedPlanIndex = 0),
+                onTap: () {
+                  if (_selectedPlanIndex == 0) return;
+                  setState(() => _selectedPlanIndex = 0);
+                  _planSwiperController.move(0, animation: true);
+                },
               ),
               const SizedBox(width: 16),
               _MobilePlanPill(
                 label: _mobilePricingPlans[1].name,
                 selected: _selectedPlanIndex == 1,
-                onTap: () => setState(() => _selectedPlanIndex = 1),
+                onTap: () {
+                  if (_selectedPlanIndex == 1) return;
+                  setState(() => _selectedPlanIndex = 1);
+                  _planSwiperController.move(1, animation: true);
+                },
               ),
             ],
           ),
@@ -1047,116 +1232,140 @@ class _MobileCtaSectionState extends State<_MobileCtaSection> {
               Positioned(
                 top: 10,
                 right: -8,
-                child: Container(
-                  width: 286,
-                  height: 392,
-                  decoration: BoxDecoration(
-                    color: const Color(0xFF1A1F60),
-                    borderRadius: BorderRadius.circular(30),
-                    border: Border.all(
-                      color: const Color(0xFF2F33A8),
-                      width: 0.8,
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(_planCardRadius),
+                  clipBehavior: Clip.antiAlias,
+                  child: Container(
+                    width: _planCardWidth,
+                    height: _planCardHeight,
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF1A1F60),
+                      borderRadius: BorderRadius.circular(_planCardRadius),
+                      border: Border.all(
+                        color: const Color(0xFF2F33A8),
+                        width: 0.8,
+                      ),
                     ),
                   ),
                 ),
               ),
-              SizedBox(
-                width: 286,
-                height: 392,
-                child: Container(
-                  padding: const EdgeInsets.fromLTRB(20, 24, 20, 26),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFF08042A),
-                    borderRadius: BorderRadius.circular(30),
-                    border: Border.all(
-                      color: const Color(0xFF4F46E5),
-                      width: 1,
-                    ),
-                    boxShadow: const [
-                      BoxShadow(
-                        color: Color(0x7A4F46E5),
-                        blurRadius: 76,
-                        spreadRadius: -14,
-                        offset: Offset(0, 12),
-                      ),
-                      BoxShadow(
-                        color: Color(0x3D4F46E5),
-                        blurRadius: 24,
-                        spreadRadius: -8,
-                        offset: Offset(0, 6),
-                      ),
-                    ],
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Align(
-                        alignment: Alignment.center,
-                        child: RichText(
-                          textAlign: TextAlign.center,
-                          text: TextSpan(
-                            children: [
-                              TextSpan(
-                                text: plan.price,
-                                style: Get.theme.textTheme.headlineMedium
-                                    ?.copyWith(
-                                      color: Colors.white,
-                                      fontWeight: FontWeight.w700,
-                                      fontSize: 32,
-                                    ),
-                              ),
-                              TextSpan(
-                                text: '/month',
-                                style: Get.theme.textTheme.titleMedium
-                                    ?.copyWith(
-                                      color: const Color(0xFF4B517C),
-                                      fontWeight: FontWeight.w700,
-                                      fontSize: 20,
-                                    ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                      const SizedBox(height: 18),
-                      for (final item in plan.items) ...[
-                        Text(
-                          item,
-                          style: Get.theme.textTheme.bodySmall?.copyWith(
-                            color: const Color(0xFF9AA0B8),
-                            fontWeight: FontWeight.w500,
-                          ),
-                        ),
-                        const SizedBox(height: 16),
-                      ],
-                      const SizedBox(height: 18),
-                      Center(
-                        child: OutlinedButton(
-                          onPressed: () => appNav.changePage(AppRoutes.login),
-                          style: OutlinedButton.styleFrom(
-                            side: const BorderSide(color: Color(0xFF4F46E5)),
-                            minimumSize: const Size(0, 54),
-                            padding: const EdgeInsets.symmetric(horizontal: 34),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(999),
-                            ),
-                            foregroundColor: Colors.white,
-                          ),
-                          child: Text(
-                            'Contact sales',
-                            style: Theme.of(context).textTheme.bodySmall
-                                ?.copyWith(
-                                  color: Colors.white,
-                                  fontWeight: FontWeight.w600,
-                                ),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
+              _MobilePricingStackSwiper(
+                controller: _planSwiperController,
+                cardWidth: _planCardWidth,
+                cardHeight: _planCardHeight,
+                cardRadius: _planCardRadius,
+                onInteractionStart: widget.onSwiperInteractionStart,
+                onInteractionEnd: widget.onSwiperInteractionEnd,
+                onIndexChanged: (index) {
+                  if (!mounted) return;
+                  setState(() {
+                    _selectedPlanIndex = index % _mobilePricingPlans.length;
+                  });
+                },
               ),
             ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _MobilePricingPlanCard extends StatelessWidget {
+  const _MobilePricingPlanCard({required this.plan});
+
+  /// Keeps pricing stack and [PageView] clip math in sync.
+  static const double _kRadius = _MobileCtaSectionState._planCardRadius;
+
+  final _MobilePricingPlan plan;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      height: double.infinity,
+      padding: const EdgeInsets.fromLTRB(20, 24, 20, 26),
+      decoration: BoxDecoration(
+        color: const Color(0xFF08042A),
+        borderRadius: BorderRadius.circular(_kRadius),
+        border: Border.all(color: const Color(0xFF4F46E5), width: 1),
+        // Contained glow (stays inside ClipRRect better than huge spread blurs).
+        boxShadow: const [
+          BoxShadow(
+            color: Color(0x454F46E5),
+            blurRadius: 20,
+            spreadRadius: -2,
+            offset: Offset(0, 10),
+          ),
+          BoxShadow(
+            color: Color(0x284F46E5),
+            blurRadius: 12,
+            spreadRadius: 0,
+            offset: Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Align(
+            alignment: Alignment.center,
+            child: RichText(
+              textAlign: TextAlign.center,
+              text: TextSpan(
+                children: [
+                  TextSpan(
+                    text: plan.price,
+                    style: Get.theme.textTheme.headlineMedium?.copyWith(
+                      color: Colors.white,
+                      fontWeight: FontWeight.w700,
+                      fontSize: 32,
+                    ),
+                  ),
+                  TextSpan(
+                    text: '/month',
+                    style: Get.theme.textTheme.titleMedium?.copyWith(
+                      color: const Color(0xFF4B517C),
+                      fontWeight: FontWeight.w700,
+                      fontSize: 20,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          const SizedBox(height: 18),
+          for (final item in plan.items) ...[
+            Text(
+              item,
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                color: const Color(0xFF9AA0B8),
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+            const SizedBox(height: 16),
+          ],
+          const Spacer(),
+          Center(
+            child: OutlinedButton(
+              onPressed: () => appNav.changePage(AppRoutes.login),
+              style: OutlinedButton.styleFrom(
+                side: const BorderSide(color: Color(0xFF4F46E5)),
+                minimumSize: const Size(0, 54),
+                padding: const EdgeInsets.symmetric(horizontal: 34),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(999),
+                ),
+                foregroundColor: Colors.white,
+              ),
+              child: Text(
+                'Contact sales',
+                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                  color: Colors.white,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
           ),
         ],
       ),
@@ -1799,7 +2008,14 @@ class _MobileFooterSection extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Image.asset(AppIcons.recripLogo, height: 36, fit: BoxFit.contain),
+          Image.asset(
+            AppIcons.recripLogo,
+            height: 36,
+            fit: BoxFit.contain,
+            gaplessPlayback: true,
+            cacheHeight: _landingRasterDecodePx(context, 36),
+            filterQuality: FilterQuality.medium,
+          ),
           const SizedBox(height: 14),
           Text(
             'Most powerful subscription renewal management platform. Built for business that want to scale without losing revenue.',
@@ -1912,7 +2128,16 @@ class _MobileFooterSocialIcon extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Image.asset(assetPath, width: 28, height: 28, fit: BoxFit.contain);
+    return Image.asset(
+      assetPath,
+      width: 28,
+      height: 28,
+      fit: BoxFit.contain,
+      gaplessPlayback: true,
+      cacheWidth: _landingRasterDecodePx(context, 28),
+      cacheHeight: _landingRasterDecodePx(context, 28),
+      filterQuality: FilterQuality.medium,
+    );
   }
 }
 

@@ -1,20 +1,30 @@
-# Netlify / compatible static hosts: tune for your provider.
-# Copy into build/web after `flutter build web` if the host reads headers from the publish dir.
+# Netlify / Cloudflare Pages: copied to build/web in CI (deploy.yml).
+# GitHub Pages does NOT read _headers — use none PWA strategy + SW cleanup (index.html) instead.
 
+# HTML entry: never long-cache — must pick up script URL changes each deploy.
 /index.html
   Cache-Control: public, max-age=0, must-revalidate
 
 /flutter_bootstrap.js
   Cache-Control: public, max-age=0, must-revalidate
 
+/flutter.js
+  Cache-Control: public, max-age=0, must-revalidate
+
 /flutter_service_worker.js
   Cache-Control: public, max-age=0, must-revalidate
 
+# App bundles change every deploy — must NEVER match a long-lived /*.js rule.
+/main.dart.js
+  Cache-Control: public, max-age=0, must-revalidate
+
+# Dart2Wasm / chunked output (Flutter 3.16+): allow revalidation
+/main.dart.wasm
+  Cache-Control: public, max-age=0, must-revalidate
+
+# Long-lived: hashed or versioned blobs only (not entry JS).
+/canvaskit/*
+  Cache-Control: public, max-age=31536000, immutable
+
 /assets/*
-  Cache-Control: public, max-age=31536000, immutable
-
-/*.js
-  Cache-Control: public, max-age=31536000, immutable
-
-/*.wasm
   Cache-Control: public, max-age=31536000, immutable

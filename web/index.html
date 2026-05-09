@@ -158,6 +158,28 @@
       });
     };
   </script>
+  <!-- Migrate away from offline-first PWA installs: unregister SW + drop Flutter caches
+       so returning visitors load the current main.dart.js (not only in incognito). -->
+  <script>
+    (function () {
+      if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.getRegistrations().then(function (regs) {
+          regs.forEach(function (reg) {
+            reg.unregister();
+          });
+        });
+      }
+      if ('caches' in window) {
+        caches.keys().then(function (names) {
+          names.forEach(function (name) {
+            if (/flutter/i.test(String(name))) {
+              caches.delete(name);
+            }
+          });
+        });
+      }
+    })();
+  </script>
   <script src="flutter_bootstrap.js" async></script>
 </body>
 </html>

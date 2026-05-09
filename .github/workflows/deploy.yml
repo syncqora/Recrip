@@ -98,13 +98,15 @@ jobs:
 
       - name: 🏗️ Build Flutter Web
         run: |
+          # --pwa-strategy=none: avoid offline-first SW caching old main.dart.js
+          # (fixes "new design only in incognito").
           flutter build web \
             --release \
             --base-href "/" \
             --optimization-level=4 \
             --no-source-maps \
             --no-wasm-dry-run \
-            --pwa-strategy=offline-first \
+            --pwa-strategy=none \
             --dart-define=ENVIRONMENT=production
           cp web/_headers build/web/_headers
 
