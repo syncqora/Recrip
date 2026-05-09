@@ -1,9 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_swiper_view/flutter_swiper_view.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:get/get.dart';
-
-// import 'package:saas/app/screens/authentication/widgets/auth_widgets.dart';
-// import 'package:saas/app/screens/landing_page/landing_hero_login_form.dart';
 import 'package:saas/core/di/get_injector.dart';
 import 'package:saas/routes/app_pages.dart';
 import 'package:saas/shared/constants/app_icons.dart';
@@ -24,6 +22,7 @@ class _LandingPageMobileViewState extends State<LandingPageMobileView> {
   final _contactKey = GlobalKey();
   _MobileNavTab _activeNavTab = _MobileNavTab.features;
   bool _renderDeferredSections = false;
+  bool _lockPageScroll = false;
 
   @override
   void initState() {
@@ -142,13 +141,23 @@ class _LandingPageMobileViewState extends State<LandingPageMobileView> {
             _MobileTopBar(onMenuTap: _openNavSheet),
             Expanded(
               child: SingleChildScrollView(
+                physics: _lockPageScroll
+                    ? const NeverScrollableScrollPhysics()
+                    : const ClampingScrollPhysics(),
                 child: Column(
                   children: [
                     SizedBox(height: 32),
                     _MobileHeroSection(padding: padding),
-                    Padding(
-                      padding: EdgeInsets.fromLTRB(padding, 28, padding, 8),
-                      child: _MobileHeroDashboardCarousel(),
+                    SizedBox(height: 80),
+                    _MobileHeroDashboardCarousel(
+                      onInteractionStart: () {
+                        if (!mounted || _lockPageScroll) return;
+                        setState(() => _lockPageScroll = true);
+                      },
+                      onInteractionEnd: () {
+                        if (!mounted || !_lockPageScroll) return;
+                        setState(() => _lockPageScroll = false);
+                      },
                     ),
                     if (_renderDeferredSections) ...[
                       _MobileFeatureSection(
@@ -367,7 +376,13 @@ class _MobileHeroSection extends StatelessWidget {
 }
 
 class _MobileHeroDashboardCarousel extends StatefulWidget {
-  const _MobileHeroDashboardCarousel();
+  const _MobileHeroDashboardCarousel({
+    required this.onInteractionStart,
+    required this.onInteractionEnd,
+  });
+
+  final VoidCallback onInteractionStart;
+  final VoidCallback onInteractionEnd;
 
   @override
   State<_MobileHeroDashboardCarousel> createState() =>
@@ -376,190 +391,178 @@ class _MobileHeroDashboardCarousel extends StatefulWidget {
 
 class _MobileHeroDashboardCarouselState
     extends State<_MobileHeroDashboardCarousel> {
-  /// Design: front card 370 × 232, radius 10; three deck “spines” below (mock).
-  static const double _designCardW = 370;
-  static const double _designCardH = 232;
-  static const double _cardRadius = 10;
+  static const _previewTabs = <_MobilePreviewTab>[
+    _MobilePreviewTab.dashboard,
+    _MobilePreviewTab.members,
+    _MobilePreviewTab.subscriptions,
+    _MobilePreviewTab.renewals,
+  ];
 
-  /// Vertical offset per deck layer (~8–12px in mock).
-  static const double _deckStepY = 10;
+  final SwiperController _swiperController = SwiperController();
+  int _activeIndex = 0;
 
-  /// Each deeper layer narrows by this amount on each side (~5px per step).
-  static const double _deckSideInsetStep = 5.5;
-  static const int _deckLayerCount = 3;
-
-  static const Duration _imageSwitch = Duration(milliseconds: 380);
-  static const Curve _imageSwitchIn = Curves.easeOutCubic;
-  static const Curve _imageSwitchOut = Curves.easeInCubic;
-
-  int _frontIndex = 0;
-  int _slideSign = 1;
-
-  void _go(int delta) {
-    final len = _MobilePreviewTab.values.length;
-    if (delta == 0) return;
-    _slideSign = delta.sign;
-    setState(() => _frontIndex = (_frontIndex + delta + len) % len);
+  @override
+  void dispose() {
+    _swiperController.dispose();
+    super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    final tab = _MobilePreviewTab.values[_frontIndex];
+    final currentTab = _previewTabs[_activeIndex % _previewTabs.length];
 
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final maxW = constraints.maxWidth;
-        final cardW = maxW <= _designCardW ? maxW : _designCardW;
-        final cardH = cardW * (_designCardH / _designCardW);
-        final leftInset = (maxW - cardW) / 2;
-        final stackFootprintH = cardH + _deckLayerCount * _deckStepY + 10;
-
-        return Column(
-          children: [
-            SizedBox(
-              width: maxW,
-              height: stackFootprintH,
-              child: Stack(
-                clipBehavior: Clip.none,
-                alignment: Alignment.topCenter,
-                children: [
-                  for (var d = _deckLayerCount; d >= 1; d--)
-                    Positioned(
-                      top: d * _deckStepY,
-                      left: leftInset + d * _deckSideInsetStep,
-                      width: cardW - 2 * d * _deckSideInsetStep,
-                      height: cardH,
-                      child: _MobileDeckSpineLayer(radius: _cardRadius),
-                    ),
-                  Positioned(
-                    top: 0,
-                    left: leftInset,
-                    width: cardW,
-                    height: cardH,
-                    child: DecoratedBox(
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(_cardRadius),
-                        boxShadow: const [
-                          BoxShadow(
-                            color: Color(0x480F172A),
-                            blurRadius: 26,
-                            offset: Offset(0, 14),
-                            spreadRadius: -3,
-                          ),
-                        ],
-                      ),
-                      child: ClipRRect(
-                        borderRadius: BorderRadius.circular(_cardRadius),
-                        child: ColoredBox(
-                          color: Colors.white,
-                          child: AnimatedSwitcher(
-                            duration: _imageSwitch,
-                            switchInCurve: _imageSwitchIn,
-                            switchOutCurve: _imageSwitchOut,
-                            layoutBuilder: (currentChild, previousChildren) {
-                              return Stack(
-                                alignment: Alignment.topCenter,
-                                children: [
-                                  ...previousChildren,
-                                  if (currentChild != null) currentChild,
-                                ],
-                              );
-                            },
-                            transitionBuilder: (child, animation) {
-                              final curved = CurvedAnimation(
-                                parent: animation,
-                                curve: _imageSwitchIn,
-                                reverseCurve: _imageSwitchOut,
-                              );
-                              return FadeTransition(
-                                opacity: curved,
-                                child: SlideTransition(
-                                  position: Tween<Offset>(
-                                    begin: Offset(0.07 * _slideSign, 0),
-                                    end: Offset.zero,
-                                  ).animate(curved),
-                                  child: child,
-                                ),
-                              );
-                            },
-                            child: Image.asset(
-                              _mobilePreviewImage(tab),
-                              key: ValueKey<int>(_frontIndex),
-                              fit: BoxFit.cover,
-                              alignment: Alignment.topCenter,
-                              width: cardW,
-                              height: cardH,
-                              cacheWidth: 720,
-                              filterQuality: FilterQuality.high,
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
+    return SizedBox(
+      width: MediaQuery.of(context).size.width,
+      height: 400,
+      child: Column(
+        children: [
+          const SizedBox(height: 12),
+          Expanded(
+            child: _MobileSwiperBuilder(
+              controller: _swiperController,
+              onIndexChanged: (index) =>
+                  setState(() => _activeIndex = index % _previewTabs.length),
+              onInteractionStart: widget.onInteractionStart,
+              onInteractionEnd: widget.onInteractionEnd,
+            ),
+          ),
+          const SizedBox(height: 12),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              GestureDetector(
+                onTap: () => _swiperController.previous(animation: true),
+                behavior: HitTestBehavior.opaque,
+                child: Image.asset(
+                  'assets/icons/circle-arrow-left.png',
+                  width: 24,
+                  height: 24,
+                  filterQuality: FilterQuality.high,
+                ),
               ),
-            ),
-            const SizedBox(height: 20),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                GestureDetector(
-                  onTap: () => _go(-1),
-                  behavior: HitTestBehavior.opaque,
-                  child: Image.asset(
-                    'assets/icons/circle-arrow-left.png',
-                    width: 48,
-                    height: 48,
-                    filterQuality: FilterQuality.high,
-                  ),
+              const SizedBox(width: 14),
+              _MobilePreviewPill(tab: currentTab),
+              const SizedBox(width: 14),
+              GestureDetector(
+                onTap: () => _swiperController.next(animation: true),
+                behavior: HitTestBehavior.opaque,
+                child: Image.asset(
+                  'assets/icons/circle-arrow-right.png',
+                  width: 24,
+                  height: 24,
+                  filterQuality: FilterQuality.high,
                 ),
-                const SizedBox(width: 14),
-                _MobilePreviewPill(tab: tab),
-                const SizedBox(width: 14),
-                GestureDetector(
-                  onTap: () => _go(1),
-                  behavior: HitTestBehavior.opaque,
-                  child: Image.asset(
-                    'assets/icons/circle-arrow-right.png',
-                    width: 48,
-                    height: 48,
-                    filterQuality: FilterQuality.high,
-                  ),
-                ),
-              ],
-            ),
-          ],
-        );
-      },
+              ),
+            ],
+          ),
+        ],
+      ),
     );
   }
 }
 
-/// Decorative layer under the main preview (muted purple-grey, inset).
-class _MobileDeckSpineLayer extends StatelessWidget {
-  const _MobileDeckSpineLayer({required this.radius});
+class _MobileSwiperBuilder extends StatelessWidget {
+  const _MobileSwiperBuilder({
+    required this.controller,
+    required this.onIndexChanged,
+    this.onInteractionStart,
+    this.onInteractionEnd,
+  });
 
-  final double radius;
+  final SwiperController controller;
+  final ValueChanged<int> onIndexChanged;
 
-  static const Color _fill = Color(0xFF3B3B54);
-  static const Color _border = Color(0xFF4A4A64);
+  final VoidCallback? onInteractionStart;
+  final VoidCallback? onInteractionEnd;
+  static const double _cardWidth = 370;
+  static const double _cardHeight = 232;
+  static const double _cardRadius = 10;
 
   @override
   Widget build(BuildContext context) {
-    return DecoratedBox(
-      decoration: BoxDecoration(
-        color: _fill,
-        borderRadius: BorderRadius.circular(radius),
-        border: Border.all(color: _border, width: 1),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.22),
-            blurRadius: 8,
-            offset: const Offset(0, 3),
-            spreadRadius: -1,
+    const imagePath = <String>[
+      'assets/images/dashboard-new.png',
+      'assets/images/members-new.png',
+      'assets/images/subscriptions-new.png',
+      'assets/images/renewals-new.png',
+    ];
+
+    return Listener(
+      onPointerDown: (_) => onInteractionStart?.call(),
+      onPointerUp: (_) => onInteractionEnd?.call(),
+      onPointerCancel: (_) => onInteractionEnd?.call(),
+      child: ClipRRect(
+        borderRadius: const BorderRadius.only(
+          bottomLeft: Radius.circular(25),
+          bottomRight: Radius.circular(25),
+        ),
+        child: Align(
+          alignment: Alignment.bottomCenter,
+          child: Swiper(
+            controller: controller,
+            itemWidth: _cardWidth,
+            itemHeight: _cardHeight,
+            loop: true,
+            duration: 1200,
+            scrollDirection: Axis.vertical,
+            onIndexChanged: onIndexChanged,
+            itemBuilder: (context, index) {
+              return Container(
+                width: _cardWidth,
+                height: _cardHeight,
+                decoration: BoxDecoration(
+                  image: DecorationImage(image: AssetImage(imagePath[index])),
+                  borderRadius: BorderRadius.circular(_cardRadius),
+                ),
+              );
+            },
+            itemCount: imagePath.length,
+            layout: SwiperLayout.STACK,
           ),
-        ],
+        ),
+      ),
+    );
+  }
+}
+
+class _PreviewImageCard extends StatelessWidget {
+  const _PreviewImageCard({
+    super.key,
+    required this.imagePath,
+    required this.radius,
+    required this.borderColor,
+  });
+
+  final String imagePath;
+  final double radius;
+  final Color borderColor;
+
+  @override
+  Widget build(BuildContext context) {
+    return RepaintBoundary(
+      child: DecoratedBox(
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(radius),
+          border: Border.all(color: borderColor),
+          boxShadow: const [
+            BoxShadow(
+              color: Color(0x240F172A),
+              blurRadius: 16,
+              offset: Offset(0, 8),
+              spreadRadius: -4,
+            ),
+          ],
+        ),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(radius),
+          child: Image.asset(
+            imagePath,
+            fit: BoxFit.cover,
+            alignment: Alignment.topCenter,
+            cacheWidth: 720,
+            filterQuality: FilterQuality.medium,
+          ),
+        ),
       ),
     );
   }
@@ -573,7 +576,7 @@ class _MobilePreviewPill extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      constraints: const BoxConstraints(minWidth: 160),
+      constraints: const BoxConstraints(minWidth: 200),
       padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 12),
       decoration: BoxDecoration(
         color: Colors.white,
@@ -603,7 +606,7 @@ class _MobilePreviewPill extends StatelessWidget {
           Text(
             _mobilePreviewLabel(tab),
             style: Theme.of(context).textTheme.titleSmall?.copyWith(
-              color: const Color(0xFF1E1B4B),
+              color: const Color(0xFF4F46E5),
               fontWeight: FontWeight.w800,
             ),
           ),
@@ -692,30 +695,69 @@ class _MobileFeatureSection extends StatelessWidget {
     return Container(
       width: double.infinity,
       padding: EdgeInsets.fromLTRB(padding + 12, 26, padding + 12, 34),
-      child: Container(
-        width: double.infinity,
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(28),
-          border: Border.all(color: const Color(0xFF4042AC)),
-          gradient: const LinearGradient(
-            begin: Alignment.centerLeft,
-            end: Alignment.centerRight,
-            colors: [Color(0xFF120635), Color(0xFF1A0D56), Color(0xFF120635)],
-          ),
-        ),
-        child: Column(
-          children: [
-            for (var index = 0; index < _mobileFeatures.length; index++) ...[
-              _MobileFeatureListRow(feature: _mobileFeatures[index]),
-              if (index < _mobileFeatures.length - 1)
-                Container(
-                  height: 1,
-                  width: double.infinity,
-                  color: const Color(0xFF3C3FA2),
+      child: Column(
+        children: [
+          RichText(
+            textAlign: TextAlign.center,
+            text: TextSpan(
+              style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                color: Colors.white,
+                fontWeight: FontWeight.w900,
+                fontSize: 24,
+              ),
+              children: const [
+                TextSpan(text: 'Everything you need to\n'),
+                TextSpan(
+                  text: 'scale faster',
+                  style: TextStyle(color: Color(0xFF4F46E5)),
                 ),
-            ],
-          ],
-        ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 14),
+          Text(
+            'Stop manually tracking spreadsheets. Recrip automates the boring stuff so you can\nfocus on growth.',
+            textAlign: TextAlign.center,
+            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+              color: Colors.white,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+          const SizedBox(height: 32),
+          Container(
+            width: double.infinity,
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(28),
+              border: Border.all(color: const Color(0xFF4042AC)),
+              gradient: const LinearGradient(
+                begin: Alignment.centerLeft,
+                end: Alignment.centerRight,
+                colors: [
+                  Color(0xFF120635),
+                  Color(0xFF1A0D56),
+                  Color(0xFF120635),
+                ],
+              ),
+            ),
+            child: Column(
+              children: [
+                for (
+                  var index = 0;
+                  index < _mobileFeatures.length;
+                  index++
+                ) ...[
+                  _MobileFeatureListRow(feature: _mobileFeatures[index]),
+                  if (index < _mobileFeatures.length - 1)
+                    Container(
+                      height: 1,
+                      width: double.infinity,
+                      color: const Color(0xFF3C3FA2),
+                    ),
+                ],
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -794,7 +836,7 @@ class _MobileStepSection extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       width: double.infinity,
-      padding: EdgeInsets.fromLTRB(padding, 26, padding, 34),
+      padding: EdgeInsets.fromLTRB(padding, 80, padding, 34),
       child: Column(
         children: [
           Text.rich(
@@ -835,7 +877,7 @@ class _MobileStepSection extends StatelessWidget {
               ),
             ),
           ),
-          const SizedBox(height: 22),
+          const SizedBox(height: 49),
           for (var i = 0; i < _mobileSteps.length; i++) ...[
             _MobileStepCard(
               index: i + 1,
@@ -956,7 +998,7 @@ class _MobileCtaSectionState extends State<_MobileCtaSection> {
     return Container(
       width: double.infinity,
       color: Colors.transparent,
-      padding: EdgeInsets.fromLTRB(widget.padding, 26, widget.padding, 34),
+      padding: EdgeInsets.fromLTRB(widget.padding, 50, widget.padding, 34),
       child: Column(
         children: [
           Text.rich(
@@ -980,7 +1022,7 @@ class _MobileCtaSectionState extends State<_MobileCtaSection> {
             ),
             textAlign: TextAlign.center,
           ),
-          const SizedBox(height: 22),
+          const SizedBox(height: 32),
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
@@ -997,7 +1039,7 @@ class _MobileCtaSectionState extends State<_MobileCtaSection> {
               ),
             ],
           ),
-          const SizedBox(height: 22),
+          const SizedBox(height: 24),
           Stack(
             alignment: Alignment.center,
             clipBehavior: Clip.none,
@@ -1175,7 +1217,7 @@ class _MobileContactSection extends StatelessWidget {
     return Container(
       width: double.infinity,
       color: Colors.transparent,
-      padding: EdgeInsets.fromLTRB(padding, 30, padding, 34),
+      padding: EdgeInsets.fromLTRB(padding, 60, padding, 34),
       child: Column(
         children: [
           Text.rich(
@@ -1412,7 +1454,7 @@ class _MobileFaqSection extends StatelessWidget {
     return Container(
       width: double.infinity,
       color: Colors.transparent,
-      padding: EdgeInsets.fromLTRB(padding, 36, padding, 28),
+      padding: EdgeInsets.fromLTRB(padding, 60, padding, 28),
       child: Column(
         children: [
           FaqSectionHeading(
@@ -1638,7 +1680,7 @@ class _MobileBottomCtaSection extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       width: double.infinity,
-      padding: EdgeInsets.fromLTRB(padding, 28, padding, 36),
+      padding: EdgeInsets.fromLTRB(padding, 60, padding, 36),
       child: Column(
         children: [
           Text.rich(
@@ -1877,13 +1919,13 @@ class _MobileFooterSocialIcon extends StatelessWidget {
 String _mobilePreviewImage(_MobilePreviewTab tab) {
   switch (tab) {
     case _MobilePreviewTab.dashboard:
-      return 'assets/images/Dashboard.webp';
+      return 'assets/images/card_1.png';
     case _MobilePreviewTab.members:
-      return 'assets/images/Members.webp';
+      return 'assets/images/card_2.png';
     case _MobilePreviewTab.subscriptions:
-      return 'assets/images/subscriptions.webp';
+      return 'assets/images/card_3.png';
     case _MobilePreviewTab.renewals:
-      return 'assets/images/Renewals.webp';
+      return 'assets/images/card_1.png';
   }
 }
 

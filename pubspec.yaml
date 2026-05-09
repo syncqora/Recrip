@@ -83,6 +83,8 @@ dependencies:
   intl: ^0.20.2
   # Carousel slider.
   carousel_slider: ^5.1.1
+  # Swiper for stack/tinder card animations.
+  flutter_swiper_view: ^1.1.8
   # Cached network image.
   cached_network_image: ^3.4.1
   # Google Fonts (includes Inter).
