@@ -1,6 +1,7 @@
 import 'dart:async' show unawaited;
 
 import 'package:flutter/foundation.dart' show ValueListenable, ValueNotifier;
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_swiper_view/flutter_swiper_view.dart';
 import 'package:flutter_svg/flutter_svg.dart';
@@ -284,12 +285,7 @@ class _LandingPageMobileViewState extends State<LandingPageMobileView> {
                         padding: padding,
                       ),
                       _MobileStepSection(key: _stepsKey, padding: padding),
-                      _MobileCtaSection(
-                        key: _pricingKey,
-                        padding: padding,
-                        onSwiperInteractionStart: _onSwiperInteractionStart,
-                        onSwiperInteractionEnd: _onSwiperInteractionEnd,
-                      ),
+                      _MobileCtaSection(key: _pricingKey, padding: padding),
                       _MobileContactSection(key: _contactKey, padding: padding),
                       _MobileFaqSection(padding: padding),
                       _MobileBottomCtaSection(padding: padding),
@@ -359,15 +355,14 @@ class _MobileLandingHeader extends StatelessWidget {
                       onPressed: () => appNav.changePage(AppRoutes.login),
                       style: TextButton.styleFrom(
                         foregroundColor: Colors.white,
-                        padding: const EdgeInsets.only(right: 12, left: 16),
+                        padding: const EdgeInsets.only(right: 26, left: 16),
                       ),
                       child: Text(
                         'Log in',
-                        style: Theme.of(context).textTheme.titleMedium
-                            ?.copyWith(
-                              color: Colors.white,
-                              fontWeight: FontWeight.w700,
-                            ),
+                        style: Get.theme.textTheme.bodyMedium?.copyWith(
+                          color: Colors.white,
+                          fontWeight: FontWeight.w600,
+                        ),
                       ),
                     ),
                   ),
@@ -727,56 +722,85 @@ class _MobileSwiperBuilder extends StatelessWidget {
   }
 }
 
-/// Horizontal stack deck (same [SwiperLayout.STACK] as [_MobileSwiperBuilder], horizontal drag).
+/// Horizontal stack deck ([SwiperLayout.STACK]). User swipe is disabled: STACK ignores
+/// [ScrollPhysics]; we absorb horizontal drags above the CTA strip so pills still drive
+/// [SwiperController.move] with the same stack animation.
 class _MobilePricingStackSwiper extends StatelessWidget {
   const _MobilePricingStackSwiper({
     required this.controller,
     required this.cardWidth,
     required this.cardHeight,
     required this.cardRadius,
-    required this.onInteractionStart,
-    required this.onInteractionEnd,
     required this.onIndexChanged,
   });
+
+  /// Leave bottom area for "Contact sales" — must stay outside the drag shield.
+  static const double _ctaStripBottomInset = 108;
 
   final SwiperController controller;
   final double cardWidth;
   final double cardHeight;
   final double cardRadius;
-  final VoidCallback onInteractionStart;
-  final VoidCallback onInteractionEnd;
   final ValueChanged<int> onIndexChanged;
 
   @override
   Widget build(BuildContext context) {
-    return Listener(
-      behavior: HitTestBehavior.opaque,
-      onPointerDown: (_) => onInteractionStart(),
-      onPointerUp: (_) => onInteractionEnd(),
-      onPointerCancel: (_) => onInteractionEnd(),
-      child: SizedBox(
-        width: cardWidth,
-        height: cardHeight,
-        child: ClipRRect(
-          borderRadius: BorderRadius.circular(cardRadius),
-          clipBehavior: Clip.antiAlias,
-          child: Swiper(
-            controller: controller,
-            itemWidth: cardWidth,
-            itemHeight: cardHeight,
-            loop: false,
-            duration: 1200,
-            curve: Curves.easeOutCubic,
-            scrollDirection: Axis.horizontal,
-            axisDirection: AxisDirection.left,
-            onIndexChanged: onIndexChanged,
-            itemBuilder: (context, index) {
-              return _MobilePricingPlanCard(plan: _mobilePricingPlans[index]);
-            },
-            itemCount: _mobilePricingPlans.length,
-            layout: SwiperLayout.STACK,
+    return SizedBox(
+      width: cardWidth,
+      height: cardHeight,
+      child: Stack(
+        clipBehavior: Clip.none,
+        children: [
+          Positioned.fill(
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(cardRadius),
+              clipBehavior: Clip.antiAlias,
+              child: Swiper(
+                controller: controller,
+                physics: const NeverScrollableScrollPhysics(),
+                itemWidth: cardWidth,
+                itemHeight: cardHeight,
+                loop: false,
+                duration: 1200,
+                curve: Curves.easeOutCubic,
+                scrollDirection: Axis.horizontal,
+                axisDirection: AxisDirection.left,
+                onIndexChanged: onIndexChanged,
+                itemBuilder: (context, index) {
+                  return _MobilePricingPlanCard(
+                    plan: _mobilePricingPlans[index],
+                  );
+                },
+                itemCount: _mobilePricingPlans.length,
+                layout: SwiperLayout.STACK,
+              ),
+            ),
           ),
-        ),
+          Positioned(
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: _ctaStripBottomInset,
+            child: RawGestureDetector(
+              behavior: HitTestBehavior.opaque,
+              gestures: <Type, GestureRecognizerFactory>{
+                HorizontalDragGestureRecognizer:
+                    GestureRecognizerFactoryWithHandlers<
+                      HorizontalDragGestureRecognizer
+                    >(() => HorizontalDragGestureRecognizer(), (
+                      HorizontalDragGestureRecognizer instance,
+                    ) {
+                      instance
+                        ..onStart = (_) {}
+                        ..onUpdate = (_) {}
+                        ..onEnd = (_) {}
+                        ..onCancel = () {};
+                    }),
+              },
+              child: const SizedBox.expand(),
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -1247,16 +1271,9 @@ class _MobileStepCard extends StatelessWidget {
 }
 
 class _MobileCtaSection extends StatefulWidget {
-  const _MobileCtaSection({
-    super.key,
-    required this.padding,
-    required this.onSwiperInteractionStart,
-    required this.onSwiperInteractionEnd,
-  });
+  const _MobileCtaSection({super.key, required this.padding});
 
   final double padding;
-  final VoidCallback onSwiperInteractionStart;
-  final VoidCallback onSwiperInteractionEnd;
 
   @override
   State<_MobileCtaSection> createState() => _MobileCtaSectionState();
@@ -1268,10 +1285,11 @@ class _MobileCtaSectionState extends State<_MobileCtaSection> {
   static const double _planCardRadius = 30;
 
   final SwiperController _planSwiperController = SwiperController();
-  int _selectedPlanIndex = 0;
+  final ValueNotifier<int> _planIndexNotifier = ValueNotifier<int>(0);
 
   @override
   void dispose() {
+    _planIndexNotifier.dispose();
     _planSwiperController.dispose();
     super.dispose();
   }
@@ -1306,29 +1324,34 @@ class _MobileCtaSectionState extends State<_MobileCtaSection> {
             textAlign: TextAlign.center,
           ),
           const SizedBox(height: 32),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              _MobilePlanPill(
-                label: _mobilePricingPlans[0].name,
-                selected: _selectedPlanIndex == 0,
-                onTap: () {
-                  if (_selectedPlanIndex == 0) return;
-                  setState(() => _selectedPlanIndex = 0);
-                  _planSwiperController.move(0, animation: true);
-                },
-              ),
-              const SizedBox(width: 16),
-              _MobilePlanPill(
-                label: _mobilePricingPlans[1].name,
-                selected: _selectedPlanIndex == 1,
-                onTap: () {
-                  if (_selectedPlanIndex == 1) return;
-                  setState(() => _selectedPlanIndex = 1);
-                  _planSwiperController.move(1, animation: true);
-                },
-              ),
-            ],
+          ValueListenableBuilder<int>(
+            valueListenable: _planIndexNotifier,
+            builder: (context, planIdx, _) {
+              return Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  _MobilePlanPill(
+                    label: _mobilePricingPlans[0].name,
+                    selected: planIdx == 0,
+                    onTap: () {
+                      if (planIdx == 0) return;
+                      _planIndexNotifier.value = 0;
+                      unawaited(_planSwiperController.move(0, animation: true));
+                    },
+                  ),
+                  const SizedBox(width: 16),
+                  _MobilePlanPill(
+                    label: _mobilePricingPlans[1].name,
+                    selected: planIdx == 1,
+                    onTap: () {
+                      if (planIdx == 1) return;
+                      _planIndexNotifier.value = 1;
+                      unawaited(_planSwiperController.move(1, animation: true));
+                    },
+                  ),
+                ],
+              );
+            },
           ),
           const SizedBox(height: 24),
           // Fixed bounds so the Stack / Swiper subtree always has tight geometry.
@@ -1366,13 +1389,12 @@ class _MobileCtaSectionState extends State<_MobileCtaSection> {
                     cardWidth: _planCardWidth,
                     cardHeight: _planCardHeight,
                     cardRadius: _planCardRadius,
-                    onInteractionStart: widget.onSwiperInteractionStart,
-                    onInteractionEnd: widget.onSwiperInteractionEnd,
                     onIndexChanged: (index) {
                       if (!mounted) return;
-                      setState(() {
-                        _selectedPlanIndex = index % _mobilePricingPlans.length;
-                      });
+                      final i = index % _mobilePricingPlans.length;
+                      if (_planIndexNotifier.value != i) {
+                        _planIndexNotifier.value = i;
+                      }
                     },
                   ),
                 ],
@@ -1742,9 +1764,12 @@ class _MobileEnquiryButton extends StatelessWidget {
             borderRadius: BorderRadius.circular(999),
           ),
         ),
-        child: const Text(
+        child: Text(
           'Request Enquiry',
-          style: TextStyle(fontWeight: FontWeight.w700, fontSize: 19),
+          style: Get.theme.textTheme.bodyMedium?.copyWith(
+            color: Colors.white,
+            fontWeight: FontWeight.w600,
+          ),
         ),
       ),
     );
@@ -1850,9 +1875,12 @@ class _MobileQuestionCard extends StatelessWidget {
                     borderRadius: BorderRadius.circular(999),
                   ),
                 ),
-                child: const Text(
+                child: Text(
                   'Send',
-                  style: TextStyle(fontWeight: FontWeight.w700, fontSize: 19),
+                  style: Get.theme.textTheme.bodyMedium?.copyWith(
+                    color: Colors.white,
+                    fontWeight: FontWeight.w600,
+                  ),
                 ),
               ),
             ),
