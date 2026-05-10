@@ -14,16 +14,21 @@ class _LandingPageTabletViewState extends State<LandingPageTabletView> {
   final _contactKey = GlobalKey();
   final _scrollController = ScrollController();
 
-  _TopNavTab? _activeNavTab;
-  _PreviewTab _selectedPreviewTab = _PreviewTab.dashboard;
+  final ValueNotifier<_TopNavTab?> _navTabHighlight = ValueNotifier(null);
+  final ValueNotifier<_PreviewTab> _previewTabHighlight = ValueNotifier(
+    _PreviewTab.dashboard,
+  );
+
   bool _renderDeferredSections = false;
   bool _suppressScrollSpy = false;
+
+  bool _navSpyFramePending = false;
 
   @override
   void initState() {
     super.initState();
     LoginController.registerHeroIfNeeded();
-    _scrollController.addListener(_syncNavHighlightFromScroll);
+    _scrollController.addListener(_scheduleNavSpyIfNeeded);
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
       setState(() => _renderDeferredSections = true);
@@ -46,10 +51,27 @@ class _LandingPageTabletViewState extends State<LandingPageTabletView> {
 
   @override
   void dispose() {
-    _scrollController.removeListener(_syncNavHighlightFromScroll);
+    _scrollController.removeListener(_scheduleNavSpyIfNeeded);
     _scrollController.dispose();
+    _navTabHighlight.dispose();
+    _previewTabHighlight.dispose();
     LoginController.deleteHeroIfRegistered();
     super.dispose();
+  }
+
+  void _scheduleNavSpyIfNeeded() {
+    if (_suppressScrollSpy ||
+        !_scrollController.hasClients ||
+        _navSpyFramePending ||
+        !_renderDeferredSections) {
+      return;
+    }
+    _navSpyFramePending = true;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _navSpyFramePending = false;
+      if (!mounted || _suppressScrollSpy) return;
+      _syncNavHighlightFromScroll();
+    });
   }
 
   Future<void> _scrollTo(GlobalKey key, {double alignment = 0.05}) async {
@@ -67,10 +89,15 @@ class _LandingPageTabletViewState extends State<LandingPageTabletView> {
     if (!mounted || _suppressScrollSpy || !_scrollController.hasClients) {
       return;
     }
-    final next = _activeTabFromScrollPhysics(context);
-    if (next != _activeNavTab) {
-      setState(() => _activeNavTab = next);
-    }
+    Future.microtask(() {
+      if (!mounted || _suppressScrollSpy || !_scrollController.hasClients) {
+        return;
+      }
+      final next = _activeTabFromScrollPhysics(context);
+      if (next != _navTabHighlight.value) {
+        _navTabHighlight.value = next;
+      }
+    });
   }
 
   _TopNavTab? _activeTabFromScrollPhysics(BuildContext context) {
@@ -100,15 +127,13 @@ class _LandingPageTabletViewState extends State<LandingPageTabletView> {
 
   Future<void> _onNavTap(_TopNavTab tab, GlobalKey key) async {
     if (!mounted) return;
-    setState(() {
-      _suppressScrollSpy = true;
-      _activeNavTab = tab;
-    });
+    _suppressScrollSpy = true;
+    _navTabHighlight.value = tab;
     await _scrollTo(key, alignment: 0.04);
     if (!mounted) return;
     await Future<void>.delayed(const Duration(milliseconds: 460));
     if (!mounted) return;
-    setState(() => _suppressScrollSpy = false);
+    _suppressScrollSpy = false;
     _syncNavHighlightFromScroll();
   }
 
@@ -144,54 +169,92 @@ class _LandingPageTabletViewState extends State<LandingPageTabletView> {
                   horizontalPadding,
                   8,
                 ),
-                child: _TabletTopNav(
-                  selectedTab: _activeNavTab,
-                  onFeatures: () =>
-                      _onNavTap(_TopNavTab.features, _featuresKey),
-                  onSteps: () => _onNavTap(_TopNavTab.howItWorks, _stepsKey),
-                  onPricing: () => _onNavTap(_TopNavTab.pricing, _pricingKey),
-                  onContact: () => _onNavTap(_TopNavTab.contact, _contactKey),
+                child: ValueListenableBuilder<_TopNavTab?>(
+                  valueListenable: _navTabHighlight,
+                  builder: (context, activeNavTab, _) {
+                    return _TabletTopNav(
+                      selectedTab: activeNavTab,
+                      onFeatures: () =>
+                          _onNavTap(_TopNavTab.features, _featuresKey),
+                      onSteps: () =>
+                          _onNavTap(_TopNavTab.howItWorks, _stepsKey),
+                      onPricing: () =>
+                          _onNavTap(_TopNavTab.pricing, _pricingKey),
+                      onContact: () =>
+                          _onNavTap(_TopNavTab.contact, _contactKey),
+                    );
+                  },
                 ),
               ),
               Expanded(
-                child: SingleChildScrollView(
-                  controller: _scrollController,
-                  physics: const ClampingScrollPhysics(),
-                  child: Column(
-                    children: [
-                      _TabletHeroSection(
-                        padding: horizontalPadding,
-                        selectedTab: _selectedPreviewTab,
-                        onTabSelected: (tab) =>
-                            setState(() => _selectedPreviewTab = tab),
+                child: ScrollConfiguration(
+                  behavior: const _LandingScrollBehavior(),
+                  child: CustomScrollView(
+                    controller: _scrollController,
+                    physics: const AlwaysScrollableScrollPhysics(
+                      parent: ClampingScrollPhysics(),
+                    ),
+                    cacheExtent: 1000,
+                    slivers: [
+                      SliverToBoxAdapter(
+                        child: ValueListenableBuilder<_PreviewTab>(
+                          valueListenable: _previewTabHighlight,
+                          builder: (context, selectedPreviewTab, _) {
+                            return _TabletHeroSection(
+                              padding: horizontalPadding,
+                              selectedTab: selectedPreviewTab,
+                              onTabSelected: (tab) =>
+                                  _previewTabHighlight.value = tab,
+                            );
+                          },
+                        ),
                       ),
                       if (_renderDeferredSections) ...[
-                        _TabletFeatureSection(
-                          key: _featuresKey,
-                          padding: horizontalPadding,
+                        SliverToBoxAdapter(
+                          child: _TabletFeatureSection(
+                            key: _featuresKey,
+                            padding: horizontalPadding,
+                          ),
                         ),
-                        _TabletStepSection(
-                          key: _stepsKey,
-                          padding: horizontalPadding,
+                        SliverToBoxAdapter(
+                          child: _TabletStepSection(
+                            key: _stepsKey,
+                            padding: horizontalPadding,
+                          ),
                         ),
-                        _TabletPricingSection(
-                          key: _pricingKey,
-                          padding: horizontalPadding,
+                        SliverToBoxAdapter(
+                          child: _TabletPricingSection(
+                            key: _pricingKey,
+                            padding: horizontalPadding,
+                          ),
                         ),
-                        _TabletContactSection(
-                          key: _contactKey,
-                          padding: horizontalPadding,
+                        SliverToBoxAdapter(
+                          child: _TabletContactSection(
+                            key: _contactKey,
+                            padding: horizontalPadding,
+                          ),
                         ),
-                        _TabletFaqSection(padding: horizontalPadding),
-                        _TabletBottomCtaSection(padding: horizontalPadding),
-                        _TabletFooterSection(padding: horizontalPadding),
-                      ] else ...[
-                        LandingSectionSkeleton(
-                          padding: horizontalPadding,
-                          blockCount: 4,
-                          includeWideBlock: true,
+                        SliverToBoxAdapter(
+                          child: _TabletFaqSection(padding: horizontalPadding),
                         ),
-                      ],
+                        SliverToBoxAdapter(
+                          child: _TabletBottomCtaSection(
+                            padding: horizontalPadding,
+                          ),
+                        ),
+                        SliverToBoxAdapter(
+                          child: _TabletFooterSection(
+                            padding: horizontalPadding,
+                          ),
+                        ),
+                      ] else
+                        SliverToBoxAdapter(
+                          child: LandingSectionSkeleton(
+                            padding: horizontalPadding,
+                            blockCount: 4,
+                            includeWideBlock: true,
+                          ),
+                        ),
                     ],
                   ),
                 ),
@@ -349,9 +412,7 @@ class _TabletNavPill extends StatelessWidget {
         decoration: BoxDecoration(
           color: selected ? Colors.white : const Color(0x14000000),
           borderRadius: BorderRadius.circular(999),
-          border: Border.all(
-            color: selected ? const Color(0xFFFF9900) : const Color(0xFF4F46E5),
-          ),
+          border: Border.all(color: const Color(0xFF4F46E5)),
         ),
         child: Text(
           label,
@@ -933,7 +994,7 @@ class _TabletPricingCard extends StatelessWidget {
                     colors: [Color(0xFF4F46E5), Color(0xFF2C277F)],
                   ),
                   borderRadius: BorderRadius.circular(999),
-                  border: Border.all(color: const Color(0xFFFF9900)),
+                  border: Border.all(color: const Color(0xFF4F46E5)),
                 ),
                 child: Text(
                   plan.name,
@@ -1363,14 +1424,23 @@ class _TabletFooterLinks extends StatelessWidget {
       spacing: 36,
       runSpacing: 24,
       alignment: WrapAlignment.spaceBetween,
-      children: const [
-        _FooterColumn(title: 'Product', items: ['Features', 'Pricing']),
-        _FooterColumn(title: 'Company', items: ['About', 'Contact']),
+      children: [
+        _FooterColumn(
+          title: 'Product',
+          items: const ['Features', 'Pricing'],
+          linkColor: const Color(0xFF94A3B8),
+        ),
+        _FooterColumn(
+          title: 'Company',
+          items: const ['About', 'Contact'],
+          linkColor: const Color(0xFF94A3B8),
+        ),
         _FooterColumn(
           title: 'Legal',
-          items: ['Privacy Policy', 'Terms of Service'],
+          items: const ['Privacy Policy', 'Terms of Service'],
+          linkColor: const Color(0xFF94A3B8),
         ),
-        _FooterSocialColumn(),
+        const _FooterSocialColumn(),
       ],
     );
   }

@@ -1,5 +1,6 @@
 import 'dart:async' show unawaited;
 
+import 'package:flutter/foundation.dart' show ValueListenable, ValueNotifier;
 import 'package:flutter/material.dart';
 import 'package:flutter_swiper_view/flutter_swiper_view.dart';
 import 'package:flutter_svg/flutter_svg.dart';
@@ -21,8 +22,6 @@ const _landingMobileRasterWarmupPaths = <String>{
   AppIcons.recripLogo,
   'assets/images/brand-logo.png',
   'assets/images/recrip.png',
-  'assets/icons/circle-arrow-left.png',
-  'assets/icons/circle-arrow-right.png',
   'assets/images/dashboard-new.png',
   'assets/images/members-new.png',
   'assets/images/subscriptions-new.png',
@@ -49,14 +48,24 @@ class _LandingPageMobileViewState extends State<LandingPageMobileView> {
 
   final _scrollController = ScrollController();
 
-  /// No chip selected until user taps a pill or scrolls into a section.
-  _MobileNavTab? _activeNavTab;
+  /// Nav highlight isolated so scroll-spy updates don’t rebuild the whole page.
+  final ValueNotifier<_MobileNavTab?> _navHighlight =
+      ValueNotifier<_MobileNavTab?>(null);
 
   bool _renderDeferredSections = false;
   bool _lockPageScroll = false;
 
+  /// Tracks active swiper pointers ([Listener] down/up/cancel) so deferred
+  /// [setState] matches nested swipers without losing unlock order on web.
+  int _swiperActivePointers = 0;
+
+  bool _pageScrollLockMicrotaskScheduled = false;
+
   /// Avoid fighting [ScrollController] listener during [Scrollable.ensureVisible].
   bool _suppressScrollSpy = false;
+
+  /// Scroll-spy runs at most once per frame (listeners fire every drag tick).
+  bool _navSpyFramePending = false;
 
   /// Approx sticky header offset for scroll-spy anchor (below safe area chip row).
   static const double _navSpyHeaderBelowSafeArea = 118;
@@ -64,7 +73,7 @@ class _LandingPageMobileViewState extends State<LandingPageMobileView> {
   @override
   void initState() {
     super.initState();
-    _scrollController.addListener(_syncNavHighlightFromScroll);
+    _scrollController.addListener(_scheduleNavSpyIfNeeded);
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
       unawaited(_precacheLandingRasters());
@@ -77,8 +86,10 @@ class _LandingPageMobileViewState extends State<LandingPageMobileView> {
 
   @override
   void dispose() {
-    _scrollController.removeListener(_syncNavHighlightFromScroll);
+    _swiperActivePointers = 0;
+    _scrollController.removeListener(_scheduleNavSpyIfNeeded);
     _scrollController.dispose();
+    _navHighlight.dispose();
     super.dispose();
   }
 
@@ -104,28 +115,79 @@ class _LandingPageMobileViewState extends State<LandingPageMobileView> {
     );
   }
 
+  void _scheduleNavSpyIfNeeded() {
+    if (_suppressScrollSpy ||
+        !_scrollController.hasClients ||
+        _navSpyFramePending ||
+        !_renderDeferredSections) {
+      return;
+    }
+    _navSpyFramePending = true;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _navSpyFramePending = false;
+      if (!mounted || _suppressScrollSpy) return;
+      _syncNavHighlightFromScroll();
+    });
+  }
+
   Future<void> _onNavTap(_MobileNavTab tab, GlobalKey key) async {
     if (!mounted) return;
-    setState(() {
-      _suppressScrollSpy = true;
-      _activeNavTab = tab;
-    });
+    _suppressScrollSpy = true;
+    _navHighlight.value = tab;
     await _scrollTo(key);
     if (!mounted) return;
     await Future<void>.delayed(const Duration(milliseconds: 460));
     if (!mounted) return;
-    setState(() => _suppressScrollSpy = false);
+    _suppressScrollSpy = false;
     _syncNavHighlightFromScroll();
+  }
+
+  /// Swiper wrappers call this on pointer down/up/cancel.
+  ///
+  /// **Do not call [setState] synchronously** from those pointers: swapping
+  /// [ScrollPhysics] rebuilds [SingleChildScrollView] while hit-testing still
+  /// walks swiper descendants → "Cannot hit test ... NEEDS-LAYOUT" on web.
+  void _onSwiperInteractionStart() {
+    if (!mounted) return;
+    _swiperActivePointers++;
+    _schedulePageScrollLockedToSwipers();
+  }
+
+  void _onSwiperInteractionEnd() {
+    if (_swiperActivePointers > 0) {
+      _swiperActivePointers--;
+    }
+    _schedulePageScrollLockedToSwipers();
+  }
+
+  void _schedulePageScrollLockedToSwipers() {
+    if (_pageScrollLockMicrotaskScheduled) return;
+    _pageScrollLockMicrotaskScheduled = true;
+    Future.microtask(() {
+      _pageScrollLockMicrotaskScheduled = false;
+      if (!mounted) return;
+      final lock = _swiperActivePointers > 0;
+      if (lock != _lockPageScroll) setState(() => _lockPageScroll = lock);
+    });
   }
 
   void _syncNavHighlightFromScroll() {
     if (!mounted || _suppressScrollSpy || !_scrollController.hasClients) {
       return;
     }
-    final next = _activeTabFromScrollPhysics(context);
-    if (next != _activeNavTab) {
-      setState(() => _activeNavTab = next);
-    }
+    // Never call [localToGlobal] + ValueNotifier mutations synchronously off a
+    // scroll/layout path — that can rebuild the sibling header subtree and hit
+    // layout re-entry while this page's Column (scroll child) still lays out
+    // (!_debugDoingThisLayout assertion on web).
+    Future.microtask(() {
+      if (!mounted || _suppressScrollSpy || !_scrollController.hasClients) {
+        return;
+      }
+      final next = _activeTabFromScrollPhysics(context);
+      if (next != _navHighlight.value) {
+        _navHighlight.value = next;
+      }
+    });
   }
 
   /// Picks the last section (in scroll order) whose top has crossed the anchor
@@ -191,7 +253,7 @@ class _LandingPageMobileViewState extends State<LandingPageMobileView> {
         child: Column(
           children: [
             _MobileLandingHeader(
-              activeNavTab: _activeNavTab,
+              navHighlight: _navHighlight,
               onNavSelect: _onLandingNavSelect,
             ),
             Expanded(
@@ -199,25 +261,21 @@ class _LandingPageMobileViewState extends State<LandingPageMobileView> {
                 controller: _scrollController,
                 physics: _lockPageScroll
                     ? const NeverScrollableScrollPhysics()
-                    : const ClampingScrollPhysics(),
+                    : const BouncingScrollPhysics(
+                        parent: AlwaysScrollableScrollPhysics(),
+                      ),
                 child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    SizedBox(height: 32),
+                    const SizedBox(height: 32),
                     _MobileHeroSection(padding: padding),
-                    SizedBox(height: 80),
-                    RepaintBoundary(
-                      child: KeyedSubtree(
-                        key: _previewKey,
-                        child: _MobileHeroDashboardCarousel(
-                          onInteractionStart: () {
-                            if (!mounted || _lockPageScroll) return;
-                            setState(() => _lockPageScroll = true);
-                          },
-                          onInteractionEnd: () {
-                            if (!mounted || !_lockPageScroll) return;
-                            setState(() => _lockPageScroll = false);
-                          },
-                        ),
+                    const SizedBox(height: 80),
+                    KeyedSubtree(
+                      key: _previewKey,
+                      child: _MobileHeroDashboardCarousel(
+                        onInteractionStart: _onSwiperInteractionStart,
+                        onInteractionEnd: _onSwiperInteractionEnd,
                       ),
                     ),
                     if (_renderDeferredSections) ...[
@@ -229,14 +287,8 @@ class _LandingPageMobileViewState extends State<LandingPageMobileView> {
                       _MobileCtaSection(
                         key: _pricingKey,
                         padding: padding,
-                        onSwiperInteractionStart: () {
-                          if (!mounted || _lockPageScroll) return;
-                          setState(() => _lockPageScroll = true);
-                        },
-                        onSwiperInteractionEnd: () {
-                          if (!mounted || !_lockPageScroll) return;
-                          setState(() => _lockPageScroll = false);
-                        },
+                        onSwiperInteractionStart: _onSwiperInteractionStart,
+                        onSwiperInteractionEnd: _onSwiperInteractionEnd,
                       ),
                       _MobileContactSection(key: _contactKey, padding: padding),
                       _MobileFaqSection(padding: padding),
@@ -268,14 +320,14 @@ enum _MobilePreviewTab { dashboard, members, subscriptions, renewals }
 /// colors (no white bottom sheet interrupting the gradient).
 class _MobileLandingHeader extends StatelessWidget {
   const _MobileLandingHeader({
-    required this.activeNavTab,
+    required this.navHighlight,
     required this.onNavSelect,
   });
 
-  final _MobileNavTab? activeNavTab;
+  final ValueListenable<_MobileNavTab?> navHighlight;
   final ValueChanged<_MobileNavTab> onNavSelect;
 
-  static const Color _inactiveBorder = Color(0xFF4B517C);
+  static const Color _inactiveBorder = Color(0xFF4F46E5);
   static const Color _inactiveFill = Color(0x2608042A);
 
   @override
@@ -351,26 +403,33 @@ class _MobileLandingHeader extends StatelessWidget {
             SingleChildScrollView(
               scrollDirection: Axis.horizontal,
               physics: const BouncingScrollPhysics(),
-              padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
-              child: Row(
-                children: [
-                  for (var i = 0; i < chips.length; i++) ...[
-                    if (i > 0) const SizedBox(width: 8),
-                    _MobileLandingNavChip(
-                      label: chips[i].label,
-                      selected: activeNavTab == chips[i].tab,
-                      borderColorSelected: const Color(0xFFFE9A00),
-                      gradientSelected: const LinearGradient(
-                        begin: Alignment.centerLeft,
-                        end: Alignment.centerRight,
-                        colors: [Color(0xFF5C5BFF), Color(0xFF3A2F9D)],
-                      ),
-                      inactiveFill: _inactiveFill,
-                      inactiveBorder: _inactiveBorder,
-                      onTap: () => onNavSelect(chips[i].tab),
-                    ),
-                  ],
-                ],
+              padding: const EdgeInsets.fromLTRB(16, 24, 16, 12),
+              // Rebuild only the chip row — rebuilding the scroll view itself
+              // recreated the subtree every scroll-spy tick and broke hit-testing.
+              child: ValueListenableBuilder<_MobileNavTab?>(
+                valueListenable: navHighlight,
+                builder: (context, activeNavTab, _) {
+                  return Row(
+                    children: [
+                      for (var i = 0; i < chips.length; i++) ...[
+                        if (i > 0) const SizedBox(width: 8),
+                        _MobileLandingNavChip(
+                          label: chips[i].label,
+                          selected: activeNavTab == chips[i].tab,
+                          borderColorSelected: const Color(0xFF4F46E5),
+                          gradientSelected: const LinearGradient(
+                            begin: Alignment.centerLeft,
+                            end: Alignment.centerRight,
+                            colors: [Color(0xFF5C5BFF), Color(0xFF3A2F9D)],
+                          ),
+                          inactiveFill: _inactiveFill,
+                          inactiveBorder: _inactiveBorder,
+                          onTap: () => onNavSelect(chips[i].tab),
+                        ),
+                      ],
+                    ],
+                  );
+                },
               ),
             ),
           ],
@@ -563,60 +622,21 @@ class _MobileHeroDashboardCarouselState
   Widget build(BuildContext context) {
     final currentTab = _previewTabs[_activeIndex % _previewTabs.length];
 
-    return SizedBox(
-      width: MediaQuery.of(context).size.width,
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          const SizedBox(height: 8),
-          SizedBox(
-            height: _MobileSwiperBuilder.kDeckViewportHeight,
-            width: double.infinity,
-            child: _MobileSwiperBuilder(
-              controller: _swiperController,
-              onIndexChanged: (index) =>
-                  setState(() => _activeIndex = index % _previewTabs.length),
-              onInteractionStart: widget.onInteractionStart,
-              onInteractionEnd: widget.onInteractionEnd,
-            ),
-          ),
-          const SizedBox(height: 10),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              GestureDetector(
-                onTap: () => _swiperController.previous(animation: true),
-                behavior: HitTestBehavior.opaque,
-                child: Image.asset(
-                  'assets/icons/circle-arrow-left.png',
-                  width: 32,
-                  height: 32,
-                  gaplessPlayback: true,
-                  cacheWidth: _landingRasterDecodePx(context, 32),
-                  cacheHeight: _landingRasterDecodePx(context, 32),
-                  filterQuality: FilterQuality.medium,
-                ),
-              ),
-              const SizedBox(width: 14),
-              _MobilePreviewPill(tab: currentTab),
-              const SizedBox(width: 14),
-              GestureDetector(
-                onTap: () => _swiperController.next(animation: true),
-                behavior: HitTestBehavior.opaque,
-                child: Image.asset(
-                  'assets/icons/circle-arrow-right.png',
-                  width: 32,
-                  height: 32,
-                  gaplessPlayback: true,
-                  cacheWidth: _landingRasterDecodePx(context, 32),
-                  cacheHeight: _landingRasterDecodePx(context, 32),
-                  filterQuality: FilterQuality.medium,
-                ),
-              ),
-            ],
-          ),
-        ],
-      ),
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        const SizedBox(height: 8),
+        _MobileSwiperBuilder(
+          controller: _swiperController,
+          onIndexChanged: (index) =>
+              setState(() => _activeIndex = index % _previewTabs.length),
+          onInteractionStart: widget.onInteractionStart,
+          onInteractionEnd: widget.onInteractionEnd,
+        ),
+        const SizedBox(height: 10),
+        Center(child: _MobilePreviewPill(tab: currentTab)),
+      ],
     );
   }
 }
@@ -639,7 +659,7 @@ class _MobileSwiperBuilder extends StatelessWidget {
   static const double _cardRadius = 10;
 
   /// Tight viewport for vertical STACK so decks aren’t vertically centered in a
-  /// tall [Expanded], which left a huge gap above the arrows.
+  /// tall [Expanded], which left a huge gap above the pill row.
   static const double kDeckViewportHeight = _cardHeight + 40;
 
   @override
@@ -651,47 +671,55 @@ class _MobileSwiperBuilder extends StatelessWidget {
       'assets/images/renewals-new.png',
     ];
 
+    // Tight [SizedBox] avoids unbounded layout; no RepaintBoundary (web hit-test).
     return Listener(
+      // Opaque: deferToChild walks into swiper’s first-frame placeholder and
+      // STACK children that can briefly lack layout during gestures.
+      behavior: HitTestBehavior.opaque,
       onPointerDown: (_) => onInteractionStart?.call(),
       onPointerUp: (_) => onInteractionEnd?.call(),
       onPointerCancel: (_) => onInteractionEnd?.call(),
-      child: ClipRRect(
-        borderRadius: const BorderRadius.only(
-          bottomLeft: Radius.circular(25),
-          bottomRight: Radius.circular(25),
-        ),
-        child: Align(
-          alignment: Alignment.bottomCenter,
-          child: Swiper(
-            controller: controller,
-            itemWidth: _cardWidth,
-            itemHeight: _cardHeight,
-            loop: true,
-            duration: 1200,
-            scrollDirection: Axis.vertical,
-            onIndexChanged: onIndexChanged,
-            itemBuilder: (context, index) {
-              final wPx = _landingRasterDecodePx(context, _cardWidth);
-              final hPx = _landingRasterDecodePx(context, _cardHeight);
-              return Container(
-                width: _cardWidth,
-                height: _cardHeight,
-                decoration: BoxDecoration(
-                  image: DecorationImage(
-                    fit: BoxFit.cover,
-                    image: ResizeImage(
-                      AssetImage(imagePath[index]),
-                      width: wPx,
-                      height: hPx,
-                      allowUpscaling: false,
+      child: SizedBox(
+        width: double.infinity,
+        height: kDeckViewportHeight,
+        child: ClipRRect(
+          borderRadius: const BorderRadius.only(
+            bottomLeft: Radius.circular(25),
+            bottomRight: Radius.circular(25),
+          ),
+          child: Align(
+            alignment: Alignment.bottomCenter,
+            child: Swiper(
+              controller: controller,
+              itemWidth: _cardWidth,
+              itemHeight: _cardHeight,
+              loop: true,
+              duration: 1200,
+              scrollDirection: Axis.vertical,
+              onIndexChanged: onIndexChanged,
+              itemBuilder: (context, index) {
+                final wPx = _landingRasterDecodePx(context, _cardWidth);
+                final hPx = _landingRasterDecodePx(context, _cardHeight);
+                return Container(
+                  width: _cardWidth,
+                  height: _cardHeight,
+                  decoration: BoxDecoration(
+                    image: DecorationImage(
+                      fit: BoxFit.cover,
+                      image: ResizeImage(
+                        AssetImage(imagePath[index]),
+                        width: wPx,
+                        height: hPx,
+                        allowUpscaling: false,
+                      ),
                     ),
+                    borderRadius: BorderRadius.circular(_cardRadius),
                   ),
-                  borderRadius: BorderRadius.circular(_cardRadius),
-                ),
-              );
-            },
-            itemCount: imagePath.length,
-            layout: SwiperLayout.STACK,
+                );
+              },
+              itemCount: imagePath.length,
+              layout: SwiperLayout.STACK,
+            ),
           ),
         ),
       ),
@@ -722,32 +750,31 @@ class _MobilePricingStackSwiper extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Listener(
+      behavior: HitTestBehavior.opaque,
       onPointerDown: (_) => onInteractionStart(),
       onPointerUp: (_) => onInteractionEnd(),
       onPointerCancel: (_) => onInteractionEnd(),
-      child: RepaintBoundary(
-        child: SizedBox(
-          width: cardWidth,
-          height: cardHeight,
-          child: ClipRRect(
-            borderRadius: BorderRadius.circular(cardRadius),
-            clipBehavior: Clip.antiAliasWithSaveLayer,
-            child: Swiper(
-              controller: controller,
-              itemWidth: cardWidth,
-              itemHeight: cardHeight,
-              loop: false,
-              duration: 1200,
-              curve: Curves.easeOutCubic,
-              scrollDirection: Axis.horizontal,
-              axisDirection: AxisDirection.left,
-              onIndexChanged: onIndexChanged,
-              itemBuilder: (context, index) {
-                return _MobilePricingPlanCard(plan: _mobilePricingPlans[index]);
-              },
-              itemCount: _mobilePricingPlans.length,
-              layout: SwiperLayout.STACK,
-            ),
+      child: SizedBox(
+        width: cardWidth,
+        height: cardHeight,
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(cardRadius),
+          clipBehavior: Clip.antiAlias,
+          child: Swiper(
+            controller: controller,
+            itemWidth: cardWidth,
+            itemHeight: cardHeight,
+            loop: false,
+            duration: 1200,
+            curve: Curves.easeOutCubic,
+            scrollDirection: Axis.horizontal,
+            axisDirection: AxisDirection.left,
+            onIndexChanged: onIndexChanged,
+            itemBuilder: (context, index) {
+              return _MobilePricingPlanCard(plan: _mobilePricingPlans[index]);
+            },
+            itemCount: _mobilePricingPlans.length,
+            layout: SwiperLayout.STACK,
           ),
         ),
       ),
@@ -769,30 +796,28 @@ class _PreviewImageCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return RepaintBoundary(
-      child: DecoratedBox(
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(radius),
-          border: Border.all(color: borderColor),
-          boxShadow: const [
-            BoxShadow(
-              color: Color(0x240F172A),
-              blurRadius: 16,
-              offset: Offset(0, 8),
-              spreadRadius: -4,
-            ),
-          ],
-        ),
-        child: ClipRRect(
-          borderRadius: BorderRadius.circular(radius),
-          child: Image.asset(
-            imagePath,
-            fit: BoxFit.cover,
-            alignment: Alignment.topCenter,
-            gaplessPlayback: true,
-            cacheWidth: _landingRasterDecodePx(context, 360),
-            filterQuality: FilterQuality.medium,
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(radius),
+        border: Border.all(color: borderColor),
+        boxShadow: const [
+          BoxShadow(
+            color: Color(0x240F172A),
+            blurRadius: 16,
+            offset: Offset(0, 8),
+            spreadRadius: -4,
           ),
+        ],
+      ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(radius),
+        child: Image.asset(
+          imagePath,
+          fit: BoxFit.cover,
+          alignment: Alignment.topCenter,
+          gaplessPlayback: true,
+          cacheWidth: _landingRasterDecodePx(context, 360),
+          filterQuality: FilterQuality.medium,
         ),
       ),
     );
@@ -826,8 +851,8 @@ class _MobilePreviewPill extends StatelessWidget {
         children: [
           SvgPicture.asset(
             _mobilePreviewIcon(tab),
-            width: 20,
-            height: 20,
+            width: 24,
+            height: 24,
             colorFilter: const ColorFilter.mode(
               Color(0xFF4F46E5),
               BlendMode.srcIn,
@@ -836,9 +861,9 @@ class _MobilePreviewPill extends StatelessWidget {
           const SizedBox(width: 10),
           Text(
             _mobilePreviewLabel(tab),
-            style: Theme.of(context).textTheme.titleSmall?.copyWith(
+            style: Theme.of(context).textTheme.bodySmall?.copyWith(
               color: const Color(0xFF4F46E5),
-              fontWeight: FontWeight.w800,
+              fontWeight: FontWeight.w600,
             ),
           ),
         ],
@@ -1061,7 +1086,12 @@ class _MobileStepSection extends StatelessWidget {
   const _MobileStepSection({super.key, required this.padding});
 
   final double padding;
-  static const double _stepTextGap = 48;
+
+  /// Reused for stroked subtitle (avoids new [Paint] per frame).
+  static final Paint _subtitleStrokePaint = Paint()
+    ..style = PaintingStyle.stroke
+    ..strokeWidth = 1
+    ..color = const Color(0x33FFFFFF);
 
   @override
   Widget build(BuildContext context) {
@@ -1092,21 +1122,23 @@ class _MobileStepSection extends StatelessWidget {
             textAlign: TextAlign.center,
           ),
           const SizedBox(height: 12),
-          FittedBox(
-            fit: BoxFit.scaleDown,
-            child: Text(
-              'Identify, Support & Retain',
-              maxLines: 1,
-              textAlign: TextAlign.center,
-              style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                fontSize: 28,
-                fontWeight: FontWeight.w900,
-                foreground: Paint()
-                  ..style = PaintingStyle.stroke
-                  ..strokeWidth = 1
-                  ..color = const Color(0x33FFFFFF),
-              ),
-            ),
+          LayoutBuilder(
+            builder: (context, c) {
+              final fz = (((c.maxWidth.clamp(0, 600)) / 380) * 28).clamp(
+                17.5,
+                28.0,
+              );
+              return Text(
+                'Identify, Support & Retain',
+                maxLines: 1,
+                textAlign: TextAlign.center,
+                style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                  fontSize: fz,
+                  fontWeight: FontWeight.w900,
+                  foreground: _subtitleStrokePaint,
+                ),
+              );
+            },
           ),
           const SizedBox(height: 49),
           for (var i = 0; i < _mobileSteps.length; i++) ...[
@@ -1133,79 +1165,83 @@ class _MobileStepCard extends StatelessWidget {
   final _MobileStep step;
   final bool isLast;
   static const double _itemBottomGap = 48;
+  static const double _connectorGap = 10;
+  static const double _connectorTailHeight = 88;
 
   @override
   Widget build(BuildContext context) {
-    return IntrinsicHeight(
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          SizedBox(
-            width: 72,
-            child: Column(
-              children: [
-                Container(
-                  width: 58,
-                  height: 58,
-                  decoration: BoxDecoration(
-                    color: const Color(0xFF4F46E5),
-                    borderRadius: BorderRadius.circular(16),
-                    boxShadow: const [
-                      BoxShadow(
-                        color: Color(0x664F46E5),
-                        blurRadius: 22,
-                        spreadRadius: -4,
-                        offset: Offset(0, 8),
-                      ),
-                    ],
-                  ),
-                  alignment: Alignment.center,
-                  child: SvgPicture.asset(
-                    step.iconAsset,
-                    width: 36,
-                    height: 36,
-                    colorFilter: const ColorFilter.mode(
-                      Colors.white,
-                      BlendMode.srcIn,
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        SizedBox(
+          width: 72,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 58,
+                height: 58,
+                decoration: BoxDecoration(
+                  color: const Color(0xFF4F46E5),
+                  borderRadius: BorderRadius.circular(16),
+                  boxShadow: const [
+                    BoxShadow(
+                      color: Color(0x664F46E5),
+                      blurRadius: 22,
+                      spreadRadius: -4,
+                      offset: Offset(0, 8),
                     ),
+                  ],
+                ),
+                alignment: Alignment.center,
+                child: SvgPicture.asset(
+                  step.iconAsset,
+                  width: 36,
+                  height: 36,
+                  colorFilter: const ColorFilter.mode(
+                    Colors.white,
+                    BlendMode.srcIn,
                   ),
                 ),
-                if (!isLast)
-                  Expanded(
-                    child: Container(width: 1, color: const Color(0x80E2E8F0)),
+              ),
+              if (!isLast) const SizedBox(height: _connectorGap),
+              if (!isLast)
+                Container(
+                  width: 1,
+                  height: _connectorTailHeight,
+                  color: const Color(0x80E2E8F0),
+                ),
+            ],
+          ),
+        ),
+        const SizedBox(width: 12),
+        Expanded(
+          child: Padding(
+            padding: const EdgeInsets.only(top: 2, bottom: _itemBottomGap),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  step.title,
+                  style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                    color: Colors.white,
+                    fontWeight: FontWeight.w600,
+                    fontSize: 20,
                   ),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  step.description,
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    color: const Color(0xFF9AA0B8),
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
               ],
             ),
           ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Padding(
-              padding: const EdgeInsets.only(top: 2, bottom: _itemBottomGap),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    step.title,
-                    style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                      color: Colors.white,
-                      fontWeight: FontWeight.w600,
-                      fontSize: 20,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    step.description,
-                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: const Color(0xFF9AA0B8),
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 }
@@ -1295,45 +1331,53 @@ class _MobileCtaSectionState extends State<_MobileCtaSection> {
             ],
           ),
           const SizedBox(height: 24),
-          Stack(
+          // Fixed bounds so the Stack / Swiper subtree always has tight geometry.
+          Align(
             alignment: Alignment.center,
-            clipBehavior: Clip.none,
-            children: [
-              Positioned(
-                top: 10,
-                right: -8,
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(_planCardRadius),
-                  clipBehavior: Clip.antiAlias,
-                  child: Container(
-                    width: _planCardWidth,
-                    height: _planCardHeight,
-                    decoration: BoxDecoration(
-                      color: const Color(0xFF1A1F60),
+            child: SizedBox(
+              width: _planCardWidth + 16,
+              height: _planCardHeight + 12,
+              child: Stack(
+                alignment: Alignment.center,
+                clipBehavior: Clip.none,
+                children: [
+                  Positioned(
+                    top: 10,
+                    right: -8,
+                    child: ClipRRect(
                       borderRadius: BorderRadius.circular(_planCardRadius),
-                      border: Border.all(
-                        color: const Color(0xFF2F33A8),
-                        width: 0.8,
+                      clipBehavior: Clip.antiAlias,
+                      child: Container(
+                        width: _planCardWidth,
+                        height: _planCardHeight,
+                        decoration: BoxDecoration(
+                          color: const Color(0xFF1A1F60),
+                          borderRadius: BorderRadius.circular(_planCardRadius),
+                          border: Border.all(
+                            color: const Color(0xFF2F33A8),
+                            width: 0.8,
+                          ),
+                        ),
                       ),
                     ),
                   ),
-                ),
+                  _MobilePricingStackSwiper(
+                    controller: _planSwiperController,
+                    cardWidth: _planCardWidth,
+                    cardHeight: _planCardHeight,
+                    cardRadius: _planCardRadius,
+                    onInteractionStart: widget.onSwiperInteractionStart,
+                    onInteractionEnd: widget.onSwiperInteractionEnd,
+                    onIndexChanged: (index) {
+                      if (!mounted) return;
+                      setState(() {
+                        _selectedPlanIndex = index % _mobilePricingPlans.length;
+                      });
+                    },
+                  ),
+                ],
               ),
-              _MobilePricingStackSwiper(
-                controller: _planSwiperController,
-                cardWidth: _planCardWidth,
-                cardHeight: _planCardHeight,
-                cardRadius: _planCardRadius,
-                onInteractionStart: widget.onSwiperInteractionStart,
-                onInteractionEnd: widget.onSwiperInteractionEnd,
-                onIndexChanged: (index) {
-                  if (!mounted) return;
-                  setState(() {
-                    _selectedPlanIndex = index % _mobilePricingPlans.length;
-                  });
-                },
-              ),
-            ],
+            ),
           ),
         ],
       ),
@@ -1463,7 +1507,7 @@ class _MobilePlanPill extends StatelessWidget {
         height: 44,
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(999),
-          border: Border.all(color: const Color(0xFFFE9A00)),
+          border: Border.all(color: const Color(0xFF4F46E5)),
           gradient: selected
               ? const LinearGradient(
                   begin: Alignment.centerLeft,
@@ -1686,8 +1730,8 @@ class _MobileEnquiryButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return SizedBox(
-      width: double.infinity,
-      height: 58,
+      width: 280,
+      height: 44,
       child: FilledButton(
         onPressed: () {},
         style: FilledButton.styleFrom(
@@ -1792,22 +1836,24 @@ class _MobileQuestionCard extends StatelessWidget {
             expands: true,
           ),
           const SizedBox(height: 18),
-          SizedBox(
-            width: double.infinity,
-            height: 58,
-            child: FilledButton(
-              onPressed: () {},
-              style: FilledButton.styleFrom(
-                backgroundColor: const Color(0xFF3A2F9D),
-                foregroundColor: const Color(0xFF8C8FAE),
-                minimumSize: const Size.fromHeight(58),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(999),
+          Center(
+            child: SizedBox(
+              width: double.infinity,
+              height: 44,
+              child: FilledButton(
+                onPressed: () {},
+                style: FilledButton.styleFrom(
+                  backgroundColor: const Color(0xFF3A2F9D),
+                  foregroundColor: const Color(0xFF8C8FAE),
+                  minimumSize: const Size.fromHeight(58),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(999),
+                  ),
                 ),
-              ),
-              child: const Text(
-                'Send',
-                style: TextStyle(fontWeight: FontWeight.w700, fontSize: 19),
+                child: const Text(
+                  'Send',
+                  style: TextStyle(fontWeight: FontWeight.w700, fontSize: 19),
+                ),
               ),
             ),
           ),
@@ -1994,61 +2040,81 @@ class _MobileBottomCtaSection extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 24),
-          SizedBox(
-            width: 168,
-            height: 48,
-            child: DecoratedBox(
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(30),
-                gradient: const LinearGradient(
-                  begin: Alignment.bottomCenter,
-                  end: Alignment.topCenter,
-                  colors: [Color(0xFF4F46E5), Color(0xFF2C277F)],
-                ),
-              ),
-              child: FilledButton(
-                onPressed: () => appNav.changePage(AppRoutes.login),
-                style: FilledButton.styleFrom(
-                  backgroundColor: Colors.transparent,
-                  foregroundColor: Colors.white,
-                  shadowColor: Colors.transparent,
-                  padding: const EdgeInsets.fromLTRB(24, 10, 24, 10),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(30),
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              Expanded(
+                child: SizedBox(
+                  height: 48,
+                  child: DecoratedBox(
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(30),
+                      gradient: const LinearGradient(
+                        begin: Alignment.bottomCenter,
+                        end: Alignment.topCenter,
+                        colors: [Color(0xFF4F46E5), Color(0xFF2C277F)],
+                      ),
+                    ),
+                    child: FilledButton(
+                      onPressed: () => appNav.changePage(AppRoutes.login),
+                      style: FilledButton.styleFrom(
+                        backgroundColor: Colors.transparent,
+                        foregroundColor: Colors.white,
+                        shadowColor: Colors.transparent,
+                        padding: const EdgeInsets.fromLTRB(16, 10, 16, 10),
+                        minimumSize: Size.zero,
+                        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(30),
+                        ),
+                      ),
+                      child: Text(
+                        'Book a Free Trial',
+                        textAlign: TextAlign.center,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        style: Get.theme.textTheme.bodySmall?.copyWith(
+                          color: Colors.white,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                    ),
                   ),
                 ),
-                child: Text(
-                  'Book a Free Trial',
-                  style: Get.theme.textTheme.bodySmall?.copyWith(
-                    color: Colors.white,
-                    fontWeight: FontWeight.w700,
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: SizedBox(
+                  height: 48,
+                  child: OutlinedButton(
+                    onPressed: () {},
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: Colors.white,
+                      side: const BorderSide(
+                        color: Color(0xFF4F46E5),
+                        width: 1,
+                      ),
+                      padding: const EdgeInsets.fromLTRB(16, 10, 16, 10),
+                      minimumSize: Size.zero,
+                      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(30),
+                      ),
+                    ),
+                    child: Text(
+                      'Schedule a Demo',
+                      textAlign: TextAlign.center,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: Get.theme.textTheme.bodySmall?.copyWith(
+                        color: Colors.white,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
                   ),
                 ),
               ),
-            ),
-          ),
-          const SizedBox(height: 12),
-          SizedBox(
-            width: 174,
-            height: 48,
-            child: OutlinedButton(
-              onPressed: () {},
-              style: OutlinedButton.styleFrom(
-                foregroundColor: Colors.white,
-                side: const BorderSide(color: Color(0xFF4F46E5), width: 1),
-                padding: const EdgeInsets.fromLTRB(24, 10, 24, 10),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(30),
-                ),
-              ),
-              child: Text(
-                'Schedule a Demo',
-                style: Get.theme.textTheme.bodySmall?.copyWith(
-                  color: Colors.white,
-                  fontWeight: FontWeight.w700,
-                ),
-              ),
-            ),
+            ],
           ),
           const SizedBox(height: 18),
           Text(

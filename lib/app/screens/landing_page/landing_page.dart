@@ -1,5 +1,4 @@
-import 'dart:math' as math;
-import 'dart:ui' show lerpDouble;
+import 'dart:ui' show lerpDouble, PointerDeviceKind;
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
@@ -21,6 +20,14 @@ part 'landing_page_tablet_view.dart';
 /// (18 top + 48 nav shell + 12 bottom).
 const double _kLandingNavSpyAnchorBelowSafeTop = 78;
 
+/// Mouse, trackpad, touch, and stylus all scroll — avoids janky wheel handling on web/desktop.
+class _LandingScrollBehavior extends MaterialScrollBehavior {
+  const _LandingScrollBehavior();
+
+  @override
+  Set<PointerDeviceKind> get dragDevices => PointerDeviceKind.values.toSet();
+}
+
 class LandingPage extends StatefulWidget {
   const LandingPage({super.key});
 
@@ -31,12 +38,7 @@ class LandingPage extends StatefulWidget {
   State<LandingPage> createState() => _LandingPageState();
 }
 
-class _LandingPageState extends State<LandingPage>
-    with SingleTickerProviderStateMixin {
-  static const double _heroTransitionScrollExtent = 760;
-  static const double _stageCardTarget = 280;
-  static const double _stageMenuTarget = 540;
-  static const double _stageUnlockTarget = _heroTransitionScrollExtent;
+class _LandingPageState extends State<LandingPage> {
   static const double _fullScrollUnlockTarget = 1080;
   final _featuresKey = GlobalKey();
   final _stepsKey = GlobalKey();
@@ -44,27 +46,25 @@ class _LandingPageState extends State<LandingPage>
   final _contactKey = GlobalKey();
   final _scrollController = ScrollController();
 
-  _TopNavTab? _activeNavTab;
-  _PreviewTab _selectedPreviewTab = _PreviewTab.dashboard;
+  /// Isolated from scroll body so spy updates don’t rebuild the whole page.
+  final ValueNotifier<_TopNavTab?> _navTabHighlight = ValueNotifier(null);
+
+  /// Hero preview only — avoids rebuilding FAQ/features/grid on tab change.
+  final ValueNotifier<_PreviewTab> _previewTabHighlight = ValueNotifier(
+    _PreviewTab.dashboard,
+  );
+
   bool _renderDeferredSections = false;
-  bool _isSnappingHeroTransition = false;
   bool _suppressScrollSpy = false;
-  late final AnimationController _dashboardTapController;
-  late final Animation<double> _dashboardTapAnimation;
+
+  /// Scroll-spy runs at most once per frame (listener may fire many times/frame).
+  bool _navSpyFramePending = false;
 
   @override
   void initState() {
     super.initState();
-    _dashboardTapController = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 480),
-    );
-    _dashboardTapAnimation = CurvedAnimation(
-      parent: _dashboardTapController,
-      curve: Curves.easeOutCubic,
-    );
     LoginController.registerHeroIfNeeded();
-    _scrollController.addListener(_syncNavHighlightFromScroll);
+    _scrollController.addListener(_scheduleNavSpyIfNeeded);
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
       setState(() => _renderDeferredSections = true);
@@ -73,6 +73,7 @@ class _LandingPageState extends State<LandingPage>
         'assets/images/Dashboard.webp',
         'assets/images/Members.webp',
         'assets/images/Renewals.webp',
+        'assets/images/subscriptions.webp',
       ]) {
         precacheImage(AssetImage(path), context);
       }
@@ -84,77 +85,27 @@ class _LandingPageState extends State<LandingPage>
 
   @override
   void dispose() {
-    _scrollController.removeListener(_syncNavHighlightFromScroll);
-    _dashboardTapController.dispose();
+    _scrollController.removeListener(_scheduleNavSpyIfNeeded);
     _scrollController.dispose();
+    _navTabHighlight.dispose();
+    _previewTabHighlight.dispose();
     LoginController.deleteHeroIfRegistered();
     super.dispose();
   }
 
-  ScrollPhysics get _scrollPhysics => const ClampingScrollPhysics();
-
-  double _nextSnapTarget({required bool forward, required double offset}) {
-    const points = <double>[
-      0,
-      _stageCardTarget,
-      _stageMenuTarget,
-      _stageUnlockTarget,
-      _fullScrollUnlockTarget,
-    ];
-    if (forward) {
-      for (final p in points) {
-        if (p > offset + 1) return p;
-      }
-      return _fullScrollUnlockTarget;
+  void _scheduleNavSpyIfNeeded() {
+    if (_suppressScrollSpy ||
+        !_scrollController.hasClients ||
+        _navSpyFramePending ||
+        !_renderDeferredSections) {
+      return;
     }
-    for (final p in points.reversed) {
-      if (p < offset - 1) return p;
-    }
-    return 0;
-  }
-
-  Future<void> _snapHeroTransition({required bool forward}) async {
-    if (!_scrollController.hasClients || _isSnappingHeroTransition) return;
-    final target = _nextSnapTarget(
-      forward: forward,
-      offset: _scrollController.offset,
-    );
-    final current = _scrollController.offset;
-    if ((current - target).abs() < 1) return;
-
-    setState(() => _isSnappingHeroTransition = true);
-    try {
-      final distance = (target - current).abs();
-      final durationMs = lerpDouble(
-        240,
-        760,
-        (distance / 540).clamp(0.0, 1.0),
-      )!.round();
-      await _scrollController.animateTo(
-        target,
-        duration: Duration(milliseconds: durationMs),
-        curve: Curves.easeInOutCubic,
-      );
-    } finally {
-      if (mounted) {
-        setState(() => _isSnappingHeroTransition = false);
-      }
-    }
-  }
-
-  bool _shouldSnapForDirection({
-    required bool goingDown,
-    required double offset,
-  }) {
-    if (goingDown) {
-      return offset < _fullScrollUnlockTarget - 0.5;
-    }
-    return offset > 0.5 && offset <= _fullScrollUnlockTarget + 0.5;
-  }
-
-  bool _handleScrollNotification(ScrollNotification notification) {
-    // Disable scroll-snapping interception to keep native scrolling buttery.
-    return false;
+    _navSpyFramePending = true;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _navSpyFramePending = false;
+      if (!mounted || _suppressScrollSpy) return;
+      _syncNavHighlightFromScroll();
+    });
   }
 
   Future<void> _scrollTo(GlobalKey key, {double alignment = 0.05}) async {
@@ -172,10 +123,15 @@ class _LandingPageState extends State<LandingPage>
     if (!mounted || _suppressScrollSpy || !_scrollController.hasClients) {
       return;
     }
-    final next = _activeTabFromScrollPhysics(context);
-    if (next != _activeNavTab) {
-      setState(() => _activeNavTab = next);
-    }
+    Future.microtask(() {
+      if (!mounted || _suppressScrollSpy || !_scrollController.hasClients) {
+        return;
+      }
+      final next = _activeTabFromScrollPhysics(context);
+      if (next != _navTabHighlight.value) {
+        _navTabHighlight.value = next;
+      }
+    });
   }
 
   /// Last section (in order) whose top has crossed the anchor — above features
@@ -207,15 +163,13 @@ class _LandingPageState extends State<LandingPage>
 
   Future<void> _onNavTap(_TopNavTab tab, GlobalKey key) async {
     if (!mounted) return;
-    setState(() {
-      _suppressScrollSpy = true;
-      _activeNavTab = tab;
-    });
+    _suppressScrollSpy = true;
+    _navTabHighlight.value = tab;
     await _scrollTo(key, alignment: 0.04);
     if (!mounted) return;
     await Future<void>.delayed(const Duration(milliseconds: 460));
     if (!mounted) return;
-    setState(() => _suppressScrollSpy = false);
+    _suppressScrollSpy = false;
     _syncNavHighlightFromScroll();
   }
 
@@ -231,20 +185,18 @@ class _LandingPageState extends State<LandingPage>
       if (renderObject is RenderBox) {
         final viewport = RenderAbstractViewport.of(renderObject);
         final revealOffset = viewport
-            ?.getOffsetToReveal(renderObject, 0.05)
+            .getOffsetToReveal(renderObject, 0.05)
             .offset;
-        if (revealOffset != null) {
-          final target = revealOffset.clamp(
-            0.0,
-            _scrollController.position.maxScrollExtent,
-          );
-          await _scrollController.animateTo(
-            target,
-            duration: const Duration(milliseconds: 520),
-            curve: Curves.easeOutCubic,
-          );
-          return;
-        }
+        final target = revealOffset.clamp(
+          0.0,
+          _scrollController.position.maxScrollExtent,
+        );
+        await _scrollController.animateTo(
+          target,
+          duration: const Duration(milliseconds: 520),
+          curve: Curves.easeOutCubic,
+        );
+        return;
       }
     }
 
@@ -261,46 +213,9 @@ class _LandingPageState extends State<LandingPage>
     }
   }
 
-  Future<void> _onDashboardCardTap() async {
-    if (_isSnappingHeroTransition) return;
-    if (!_scrollController.hasClients) return;
-
-    // Give the dashboard card a small tactile pulse on tap.
-    if (!_dashboardTapController.isAnimating) {
-      _dashboardTapController.forward(from: 0);
-    }
-
-    final offset = _scrollController.offset;
-    if (offset < _stageMenuTarget - 0.5) {
-      final remaining = (_stageMenuTarget - offset).clamp(
-        0.0,
-        _stageMenuTarget,
-      );
-
-      setState(() => _isSnappingHeroTransition = true);
-      try {
-        final durationMs = lerpDouble(
-          220,
-          460,
-          (remaining / _stageMenuTarget).clamp(0.0, 1.0),
-        )!.round();
-        await _scrollController.animateTo(
-          _stageMenuTarget,
-          duration: Duration(milliseconds: durationMs),
-          curve: Curves.easeOutCubic,
-        );
-      } finally {
-        if (mounted) {
-          setState(() => _isSnappingHeroTransition = false);
-        }
-      }
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     final width = MediaQuery.sizeOf(context).width;
-    final height = MediaQuery.sizeOf(context).height;
 
     if (width < LandingPage.mobileBreakpoint) {
       return const LandingPageMobileView();
@@ -310,9 +225,7 @@ class _LandingPageState extends State<LandingPage>
       return const LandingPageTabletView();
     }
 
-    // One horizontal rhythm for nav + sections; scales on 13" / narrow windows.
-    final horizontalPadding = (width * 0.055).clamp(40.0, 96.0);
-    final desktopScale = math.min(width / 1440, height / 900).clamp(0.72, 1.0);
+    final horizontalPadding = (width * 0.055).clamp(32.0, 144.0);
 
     return Scaffold(
       backgroundColor: const Color(0xFF090611),
@@ -330,173 +243,126 @@ class _LandingPageState extends State<LandingPage>
             stops: [0.0, 0.3, 0.72, 1.0],
           ),
         ),
-        child: Align(
-          alignment: Alignment.topCenter,
-          child: Transform.scale(
-            scale: desktopScale,
-            alignment: Alignment.topCenter,
-            child: SizedBox(
-              width: width / desktopScale,
-              // Match logical size to viewport so scaling fills height; avoids
-              // letterboxing gaps on some Windows / Web viewports.
-              height: height / desktopScale,
-              child: Column(
-                children: [
-                  SafeArea(
-                    bottom: false,
-                    child: Padding(
-                      padding: EdgeInsets.fromLTRB(
-                        horizontalPadding,
-                        18,
-                        horizontalPadding,
-                        12,
-                      ),
-                      child: _TopNav(
-                        selectedTab: _activeNavTab,
-                        onFeatures: () =>
-                            _onNavTap(_TopNavTab.features, _featuresKey),
-                        onSteps: () =>
-                            _onNavTap(_TopNavTab.howItWorks, _stepsKey),
-                        onPricing: () =>
-                            _onNavTap(_TopNavTab.pricing, _pricingKey),
-                        onContact: () =>
-                            _onNavTap(_TopNavTab.contact, _contactKey),
-                      ),
-                    ),
-                  ),
-                  Expanded(
-                    child: NotificationListener<ScrollNotification>(
-                      onNotification: _handleScrollNotification,
-                      child: SingleChildScrollView(
-                        controller: _scrollController,
-                        physics: _scrollPhysics,
-                        child: Column(
-                          children: [
-                            AnimatedBuilder(
-                              animation: _scrollController,
-                              builder: (context, child) {
-                                final currentOffset =
-                                    _scrollController.hasClients
-                                    ? _scrollController.offset
-                                    : 0.0;
-                                final fullUnlockProgress =
-                                    (currentOffset / _fullScrollUnlockTarget)
-                                        .clamp(0.0, 1.0);
-                                final releaseProgress = Curves.easeInOutCubic
-                                    .transform(
-                                      ((fullUnlockProgress - 0.58) / 0.42)
-                                          .clamp(0.0, 1.0),
-                                    );
-                                final heroCompensation =
-                                    currentOffset * (1 - releaseProgress);
-                                final featureRevealProgress = Curves
-                                    .easeOutCubic
-                                    .transform(
-                                      ((fullUnlockProgress - 0.72) / 0.28)
-                                          .clamp(0.0, 1.0),
-                                    );
-                                final heroCardShiftProgress =
-                                    (currentOffset /
-                                            _heroTransitionScrollExtent)
-                                        .clamp(0.0, 1.0);
-
-                                return Transform.translate(
-                                  // Keep staged hero transition visually locked so
-                                  // finished content and incoming content stay aligned.
-                                  offset: Offset(0, heroCompensation),
-                                  child: Column(
-                                    children: [
-                                      RepaintBoundary(
-                                        child: _HeroSection(
-                                          padding: horizontalPadding,
-                                          scrollProgress: heroCardShiftProgress,
-                                          dashboardTapAnimation:
-                                              _dashboardTapAnimation,
-                                          selectedTab: _selectedPreviewTab,
-                                          onTabSelected: (tab) => setState(
-                                            () => _selectedPreviewTab = tab,
-                                          ),
-                                          onPrimaryTap: () => appNav.changePage(
-                                            AppRoutes.login,
-                                          ),
-                                          onSecondaryTap: () => _onNavTap(
-                                            _TopNavTab.contact,
-                                            _contactKey,
-                                          ),
-                                          onDashboardTap: _onDashboardCardTap,
-                                          onArrowTap:
-                                              _scrollToFeaturesFromArrow,
-                                        ),
-                                      ),
-                                      if (_renderDeferredSections)
-                                        SizedBox(
-                                          // Keep next section parked below until the full
-                                          // staged transition is released progressively.
-                                          height: lerpDouble(
-                                            620,
-                                            90,
-                                            featureRevealProgress,
-                                          )!,
-                                        ),
-                                    ],
-                                  ),
-                                );
-                              },
-                            ),
-                            if (_renderDeferredSections) ...[
-                              RepaintBoundary(
-                                child: _FeatureSection(
-                                  key: _featuresKey,
-                                  padding: horizontalPadding,
-                                ),
-                              ),
-                              RepaintBoundary(
-                                child: _StepSection(
-                                  key: _stepsKey,
-                                  padding: horizontalPadding,
-                                ),
-                              ),
-                              RepaintBoundary(
-                                child: _PricingSection(
-                                  key: _pricingKey,
-                                  padding: horizontalPadding,
-                                ),
-                              ),
-                              RepaintBoundary(
-                                child: _ContactSection(
-                                  key: _contactKey,
-                                  padding: horizontalPadding,
-                                ),
-                              ),
-                              RepaintBoundary(
-                                child: _FaqSection(padding: horizontalPadding),
-                              ),
-                              RepaintBoundary(
-                                child: _BottomCtaSection(
-                                  padding: horizontalPadding,
-                                ),
-                              ),
-                              RepaintBoundary(
-                                child: _FooterSection(
-                                  padding: horizontalPadding,
-                                ),
-                              ),
-                            ] else ...[
-                              LandingSectionSkeleton(
-                                padding: horizontalPadding,
-                                blockCount: 5,
-                                includeWideBlock: true,
-                              ),
-                            ],
-                          ],
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
+        child: Column(
+          children: [
+            SafeArea(
+              bottom: false,
+              child: Padding(
+                padding: EdgeInsets.fromLTRB(
+                  horizontalPadding,
+                  18,
+                  horizontalPadding,
+                  12,
+                ),
+                child: ValueListenableBuilder<_TopNavTab?>(
+                  valueListenable: _navTabHighlight,
+                  builder: (context, activeNavTab, _) {
+                    return _TopNav(
+                      selectedTab: activeNavTab,
+                      onFeatures: () =>
+                          _onNavTap(_TopNavTab.features, _featuresKey),
+                      onSteps: () =>
+                          _onNavTap(_TopNavTab.howItWorks, _stepsKey),
+                      onPricing: () =>
+                          _onNavTap(_TopNavTab.pricing, _pricingKey),
+                      onContact: () =>
+                          _onNavTap(_TopNavTab.contact, _contactKey),
+                    );
+                  },
+                ),
               ),
             ),
-          ),
+            Expanded(
+              child: ScrollConfiguration(
+                behavior: const _LandingScrollBehavior(),
+                child: CustomScrollView(
+                  controller: _scrollController,
+                  physics: const AlwaysScrollableScrollPhysics(
+                    parent: ClampingScrollPhysics(),
+                  ),
+                  cacheExtent: 1200,
+                  slivers: [
+                    SliverToBoxAdapter(
+                      child: ValueListenableBuilder<_PreviewTab>(
+                        valueListenable: _previewTabHighlight,
+                        builder: (context, selectedPreviewTab, _) {
+                          return RepaintBoundary(
+                            child: _HeroSection(
+                              padding: horizontalPadding,
+                              selectedTab: selectedPreviewTab,
+                              onTabSelected: (tab) =>
+                                  _previewTabHighlight.value = tab,
+                              onPrimaryTap: () =>
+                                  appNav.changePage(AppRoutes.login),
+                              onSecondaryTap: () =>
+                                  _onNavTap(_TopNavTab.contact, _contactKey),
+                              onArrowTap: _scrollToFeaturesFromArrow,
+                            ),
+                          );
+                        },
+                      ),
+                    ),
+                    if (_renderDeferredSections) ...[
+                      SliverToBoxAdapter(
+                        child: RepaintBoundary(
+                          child: _FeatureSection(
+                            key: _featuresKey,
+                            padding: horizontalPadding,
+                          ),
+                        ),
+                      ),
+                      SliverToBoxAdapter(
+                        child: RepaintBoundary(
+                          child: _StepSection(
+                            key: _stepsKey,
+                            padding: horizontalPadding,
+                          ),
+                        ),
+                      ),
+                      SliverToBoxAdapter(
+                        child: RepaintBoundary(
+                          child: _PricingSection(
+                            key: _pricingKey,
+                            padding: horizontalPadding,
+                          ),
+                        ),
+                      ),
+                      SliverToBoxAdapter(
+                        child: RepaintBoundary(
+                          child: _ContactSection(
+                            key: _contactKey,
+                            padding: horizontalPadding,
+                          ),
+                        ),
+                      ),
+                      SliverToBoxAdapter(
+                        child: RepaintBoundary(
+                          child: _FaqSection(padding: horizontalPadding),
+                        ),
+                      ),
+                      SliverToBoxAdapter(
+                        child: RepaintBoundary(
+                          child: _BottomCtaSection(padding: horizontalPadding),
+                        ),
+                      ),
+                      SliverToBoxAdapter(
+                        child: RepaintBoundary(
+                          child: _FooterSection(padding: horizontalPadding),
+                        ),
+                      ),
+                    ] else
+                      SliverToBoxAdapter(
+                        child: LandingSectionSkeleton(
+                          padding: horizontalPadding,
+                          blockCount: 5,
+                          includeWideBlock: true,
+                        ),
+                      ),
+                  ],
+                ),
+              ),
+            ),
+          ],
         ),
       ),
     );
@@ -699,328 +565,163 @@ class _TopNav extends StatelessWidget {
 class _HeroSection extends StatelessWidget {
   const _HeroSection({
     required this.padding,
-    required this.scrollProgress,
-    required this.dashboardTapAnimation,
     required this.selectedTab,
     required this.onTabSelected,
     required this.onPrimaryTap,
     required this.onSecondaryTap,
-    required this.onDashboardTap,
     required this.onArrowTap,
   });
 
   final double padding;
-  final double scrollProgress;
-  final Animation<double> dashboardTapAnimation;
   final _PreviewTab selectedTab;
   final ValueChanged<_PreviewTab> onTabSelected;
   final VoidCallback onPrimaryTap;
   final VoidCallback onSecondaryTap;
-  final VoidCallback onDashboardTap;
   final VoidCallback onArrowTap;
 
   @override
   Widget build(BuildContext context) {
-    // Section padding matches top nav; no legacy 120px offset needed.
-    const heroContentLeftInset = 0.0;
     final viewportWidth = MediaQuery.sizeOf(context).width;
     final viewportHeight = MediaQuery.sizeOf(context).height;
     final widthAdaptiveScale = (viewportWidth / 1512).clamp(0.76, 1.0);
     final heightAdaptiveScale = (viewportHeight / 900).clamp(0.76, 1.0);
-    final dashboardDesktopScale = (widthAdaptiveScale * heightAdaptiveScale)
-        .clamp(0.72, 1.0);
-    final endScaleByWidth = lerpDouble(
+    final dashboardScale = (widthAdaptiveScale * heightAdaptiveScale).clamp(
+      0.72,
       1.0,
-      1.06,
-      ((viewportWidth - 1280) / 320).clamp(0.0, 1.0),
-    )!;
-    final endScaleByHeight = lerpDouble(
-      0.96,
-      1.0,
-      ((viewportHeight - 820) / 180).clamp(0.0, 1.0),
-    )!;
-    final dashboardEndVisualScale = endScaleByWidth * endScaleByHeight;
-    // Match reference: copy fades out earlier while card enters.
-    final textFadeProgress = ((scrollProgress - 0.10) / 0.38).clamp(0.0, 1.0);
-    final textOpacity = 1 - Curves.easeInOut.transform(textFadeProgress);
-    final cardMoveProgress = Curves.easeOutCubic.transform(
-      (scrollProgress / 0.45).clamp(0.0, 1.0),
     );
-    final dashboardInitialOpacity = lerpDouble(0.42, 1.0, cardMoveProgress)!;
-    final dashboardDullOverlayOpacity = lerpDouble(
-      0.42,
-      0.0,
-      cardMoveProgress,
-    )!;
-    final cardVisualHeight = lerpDouble(470, 540, cardMoveProgress)!;
-    // Keep transformed visuals within Stack bounds so hit-testing aligns with
-    // what the user sees.
-    const rightPanelTopInset = 240.0;
 
     return Padding(
       padding: EdgeInsets.fromLTRB(padding, 56, padding, 54),
-      child: Stack(
-        clipBehavior: Clip.none,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Expanded(
-                flex: 6,
-                child: Padding(
-                  padding: EdgeInsets.only(left: heroContentLeftInset),
-                  child: Opacity(
-                    opacity: textOpacity,
-                    child: ConstrainedBox(
-                      constraints: const BoxConstraints(maxWidth: 760),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          const SizedBox(height: 28),
-                          RichText(
-                            text: TextSpan(
-                              style: Theme.of(context).textTheme.displayLarge
-                                  ?.copyWith(
-                                    color: Colors.white,
-                                    fontWeight: FontWeight.w400,
-                                    height: 1.12,
-                                    fontSize: 60,
-                                  ),
-                              children: const [
-                                TextSpan(text: 'Never Lose Revenue\nfrom '),
-                                TextSpan(
-                                  text: 'Expired Subscriptions',
-                                  style: TextStyle(
-                                    color: Color(0xFF5F57F8),
-                                    fontWeight: FontWeight.w900,
-                                    height: 1.0,
-                                  ),
-                                ),
-                              ],
+          ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 900),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const SizedBox(height: 28),
+                RichText(
+                  text: TextSpan(
+                    style: Theme.of(context).textTheme.displayLarge?.copyWith(
+                      color: Colors.white,
+                      fontWeight: FontWeight.w400,
+                      height: 1.12,
+                      fontSize: 60,
+                    ),
+                    children: const [
+                      TextSpan(text: 'Never Lose Revenue\nfrom '),
+                      TextSpan(
+                        text: 'Expired Subscriptions',
+                        style: TextStyle(
+                          color: Color(0xFF5F57F8),
+                          fontWeight: FontWeight.w900,
+                          height: 1.0,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 30),
+                ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: 800),
+                  child: Text(
+                    'Recrip helps businesses automate renewals, track customers, and recover missed payments — all from one powerful dashboard.',
+                    style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                      color: const Color(0xFFE2DDF7),
+                      height: 1.55,
+                      fontWeight: FontWeight.w400,
+                      fontSize: 24,
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 38),
+                Row(
+                  children: [
+                    _HeroButton(
+                      label: 'Book a Free Trial',
+                      filled: true,
+                      onTap: onPrimaryTap,
+                    ),
+                    const SizedBox(width: 18),
+                    _HeroButton(
+                      label: 'Schedule a Demo',
+                      filled: false,
+                      onTap: onSecondaryTap,
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 24),
+                Text(
+                  'No credit card required • 14-day free trial • Cancel anytime',
+                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                    color: const Color(0xFF475569),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 90),
+          Center(
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                FittedBox(
+                  fit: BoxFit.scaleDown,
+                  alignment: Alignment.centerLeft,
+                  child: _HeroDashboardCard(
+                    imagePath: _previewImageFor(selectedTab),
+                    sizeScale: dashboardScale,
+                  ),
+                ),
+                const SizedBox(width: 60),
+                Column(
+                  mainAxisSize: MainAxisSize.min,
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    RichText(
+                      text: TextSpan(
+                        style: Theme.of(context).textTheme.headlineMedium
+                            ?.copyWith(
+                              fontSize: 30,
+                              fontWeight: FontWeight.w900,
+                              color: Colors.white,
                             ),
+                        children: const [
+                          TextSpan(text: 'Built for '),
+                          TextSpan(
+                            text: 'Modern',
+                            style: TextStyle(color: Color(0xFF4F46E5)),
                           ),
-                          const SizedBox(height: 30),
-                          ConstrainedBox(
-                            constraints: const BoxConstraints(maxWidth: 800),
-                            child: Text(
-                              'Recrip helps businesses automate renewals, track customers, and recover missed payments — all from one powerful dashboard.',
-                              style: Theme.of(context).textTheme.bodyLarge
-                                  ?.copyWith(
-                                    color: const Color(0xFFE2DDF7),
-                                    height: 1.55,
-                                    fontWeight: FontWeight.w400,
-                                    fontSize: 24,
-                                  ),
-                            ),
-                          ),
-                          const SizedBox(height: 38),
-                          Row(
-                            children: [
-                              _HeroButton(
-                                label: 'Book a Free Trial',
-                                filled: true,
-                                onTap: onPrimaryTap,
-                              ),
-                              const SizedBox(width: 18),
-                              _HeroButton(
-                                label: 'Schedule a Demo',
-                                filled: false,
-                                onTap: onSecondaryTap,
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: 24),
-                          Text(
-                            'No credit card required • 14-day free trial • Cancel anytime',
-                            style: Theme.of(context).textTheme.bodyMedium
-                                ?.copyWith(color: const Color(0xFF475569)),
+                          TextSpan(text: '\n'),
+                          TextSpan(
+                            text: 'Teams',
+                            style: TextStyle(color: Color(0xFF4F46E5)),
                           ),
                         ],
                       ),
                     ),
-                  ),
+                    const SizedBox(height: 40),
+                    ..._PreviewTab.values.map((tab) {
+                      return Padding(
+                        padding: const EdgeInsets.only(bottom: 16),
+                        child: _PreviewNavItem(
+                          label: _previewLabel(tab),
+                          iconAsset: _previewIcon(tab),
+                          selected: tab == selectedTab,
+                          onTap: () => onTabSelected(tab),
+                        ),
+                      );
+                    }),
+                  ],
                 ),
-              ),
-              const SizedBox(width: 30),
-              Expanded(
-                flex: 5,
-                child: LayoutBuilder(
-                  builder: (context, constraints) {
-                    final laneWidth = constraints.maxWidth;
-                    final dashboardStartX = (laneWidth * 0.26).clamp(
-                      120.0,
-                      180.0,
-                    );
-                    final dashboardEndXBase = -(laneWidth * 1.05).clamp(
-                      520.0,
-                      680.0,
-                    );
-                    final panelStartX = (laneWidth * 1.30).clamp(560.0, 820.0);
-                    final panelRightInsetBase = (laneWidth * 0.36).clamp(
-                      150.0,
-                      230.0,
-                    );
-                    final rowWidth = (laneWidth * 11 / 5) + 30;
-                    final laneStartX = (laneWidth * 6 / 5) + 30;
-                    final dashboardLeftBase = laneStartX + dashboardEndXBase;
-                    final panelLeftBase =
-                        laneStartX + (laneWidth - panelRightInsetBase - 340);
-                    final groupLeftBase = dashboardLeftBase < panelLeftBase
-                        ? dashboardLeftBase
-                        : panelLeftBase;
-                    final dashboardRightBase = dashboardLeftBase + 725;
-                    final panelRightBase = panelLeftBase + 340;
-                    final groupRightBase = dashboardRightBase > panelRightBase
-                        ? dashboardRightBase
-                        : panelRightBase;
-                    const additionalRightShift = 72.0;
-                    final centerShift =
-                        (rowWidth / 2) - ((groupLeftBase + groupRightBase) / 2);
-                    final totalShift = centerShift + additionalRightShift;
-                    final dashboardEndX = dashboardEndXBase + totalShift;
-                    final panelRightInset = (panelRightInsetBase - totalShift)
-                        .clamp(40.0, 280.0);
-
-                    return AnimatedBuilder(
-                      animation: dashboardTapAnimation,
-                      builder: (context, child) {
-                        final dashboardTapLift = lerpDouble(
-                          0,
-                          -22,
-                          dashboardTapAnimation.value,
-                        )!;
-                        final dashboardTapScale = lerpDouble(
-                          1,
-                          1.02,
-                          dashboardTapAnimation.value,
-                        )!;
-
-                        return Padding(
-                          padding: const EdgeInsets.only(top: 80),
-                          child: Stack(
-                            clipBehavior: Clip.none,
-                            children: [
-                              Padding(
-                                padding: const EdgeInsets.only(
-                                  top: rightPanelTopInset,
-                                ),
-                                child: Transform.translate(
-                                  offset: Offset(
-                                    // Keep same motion feel, but tie travel
-                                    // distance to available lane width.
-                                    lerpDouble(
-                                      dashboardStartX,
-                                      dashboardEndX,
-                                      cardMoveProgress,
-                                    )!,
-                                    lerpDouble(20, -220, cardMoveProgress)! +
-                                        dashboardTapLift,
-                                  ),
-                                  child: Transform.scale(
-                                    scale:
-                                        lerpDouble(
-                                          0.96,
-                                          dashboardEndVisualScale,
-                                          cardMoveProgress,
-                                        )! *
-                                        dashboardTapScale,
-                                    alignment: Alignment.topRight,
-                                    child: GestureDetector(
-                                      onTap: onDashboardTap,
-                                      child: Opacity(
-                                        opacity: dashboardInitialOpacity,
-                                        child: _HeroDashboardCard(
-                                          imagePath: _previewImageFor(
-                                            selectedTab,
-                                          ),
-                                          dullOverlayOpacity:
-                                              dashboardDullOverlayOpacity,
-                                          sizeScale: dashboardDesktopScale,
-                                        ),
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                              ),
-                              Positioned(
-                                right: panelRightInset,
-                                top: rightPanelTopInset,
-                                child: Transform.translate(
-                                  offset: Offset(
-                                    lerpDouble(
-                                      panelStartX,
-                                      0,
-                                      cardMoveProgress,
-                                    )!,
-                                    // Start fully off-screen and enter with hero motion.
-                                    lerpDouble(0, -220, cardMoveProgress)!,
-                                  ),
-                                  child: SizedBox(
-                                    width: 340,
-                                    height: cardVisualHeight,
-                                    child: Column(
-                                      mainAxisAlignment:
-                                          MainAxisAlignment.center,
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
-                                      children: [
-                                        RichText(
-                                          text: TextSpan(
-                                            style: Theme.of(context)
-                                                .textTheme
-                                                .headlineMedium
-                                                ?.copyWith(
-                                                  fontSize: 46,
-                                                  fontWeight: FontWeight.w900,
-                                                  height: 0.93,
-                                                  color: Colors.white,
-                                                ),
-                                            children: const [
-                                              TextSpan(
-                                                text: 'Built for Modern',
-                                              ),
-                                              TextSpan(
-                                                text: '\nTeams',
-                                                style: TextStyle(
-                                                  color: Color(0xFF5F57F8),
-                                                ),
-                                              ),
-                                            ],
-                                          ),
-                                        ),
-                                        const SizedBox(height: 48),
-                                        ..._PreviewTab.values.map((tab) {
-                                          return Padding(
-                                            padding: const EdgeInsets.only(
-                                              bottom: 16,
-                                            ),
-                                            child: _PreviewNavItem(
-                                              label: _previewLabel(tab),
-                                              iconAsset: _previewIcon(tab),
-                                              selected: tab == selectedTab,
-                                              onTap: () => onTabSelected(tab),
-                                            ),
-                                          );
-                                        }),
-                                      ],
-                                    ),
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                        );
-                      },
-                    );
-                  },
-                ),
-              ),
-            ],
+              ],
+            ),
           ),
-          Positioned(
-            left: 0,
-            right: 0,
-            bottom: -140,
+          const SizedBox(height: 40),
+          Center(
             child: GestureDetector(
               behavior: HitTestBehavior.opaque,
               onTap: onArrowTap,
@@ -1028,19 +729,13 @@ class _HeroSection extends StatelessWidget {
                 width: 72,
                 height: 72,
                 child: Center(
-                  child: Transform.translate(
-                    offset: Offset(0, lerpDouble(0, -220, cardMoveProgress)!),
-                    child: Opacity(
-                      opacity: lerpDouble(0.92, 0.82, cardMoveProgress)!,
-                      child: SvgPicture.asset(
-                        'assets/icons/arrow-down.svg',
-                        width: 36,
-                        height: 36,
-                        colorFilter: const ColorFilter.mode(
-                          Colors.white,
-                          BlendMode.srcIn,
-                        ),
-                      ),
+                  child: SvgPicture.asset(
+                    'assets/icons/arrow-down.svg',
+                    width: 36,
+                    height: 36,
+                    colorFilter: const ColorFilter.mode(
+                      Colors.white,
+                      BlendMode.srcIn,
                     ),
                   ),
                 ),
@@ -1152,18 +847,17 @@ class _GradientStrokePainter extends CustomPainter {
 }
 
 class _HeroDashboardCard extends StatelessWidget {
-  const _HeroDashboardCard({
-    required this.imagePath,
-    this.dullOverlayOpacity = 0,
-    this.sizeScale = 1,
-  });
+  const _HeroDashboardCard({required this.imagePath, this.sizeScale = 1});
 
   final String imagePath;
-  final double dullOverlayOpacity;
   final double sizeScale;
 
   @override
   Widget build(BuildContext context) {
+    final dpr = MediaQuery.devicePixelRatioOf(context);
+    final cacheW = (725 * sizeScale * dpr).round().clamp(1, 4096);
+    final cacheH = (453 * sizeScale * dpr).round().clamp(1, 4096);
+
     return SizedBox(
       width: 725 * sizeScale,
       height: 453 * sizeScale,
@@ -1181,20 +875,15 @@ class _HeroDashboardCard extends StatelessWidget {
             ),
           ],
         ),
-        child: Stack(
-          fit: StackFit.expand,
-          children: [
-            Image.asset(
-              imagePath,
-              fit: BoxFit.contain,
-              alignment: Alignment.center,
-              filterQuality: FilterQuality.low,
-            ),
-            if (dullOverlayOpacity > 0)
-              ColoredBox(
-                color: const Color(0xFF2A1E63).withOpacity(dullOverlayOpacity),
-              ),
-          ],
+        child: RepaintBoundary(
+          child: Image.asset(
+            imagePath,
+            fit: BoxFit.contain,
+            alignment: Alignment.center,
+            filterQuality: FilterQuality.low,
+            cacheWidth: cacheW,
+            cacheHeight: cacheH,
+          ),
         ),
       ),
     );
@@ -1221,8 +910,7 @@ class _PreviewNavItem extends StatelessWidget {
     return InkWell(
       onTap: onTap,
       borderRadius: BorderRadius.circular(30),
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 180),
+      child: Container(
         width: 255,
         height: 56,
         padding: const EdgeInsets.only(left: 24, right: 96),
@@ -1294,6 +982,16 @@ class _FeatureSection extends StatelessWidget {
             builder: (context, constraints) {
               const columns = 3;
               final totalRows = (features.length / columns).ceil();
+              final cardHorizontalPadding = lerpDouble(
+                28,
+                87,
+                ((constraints.maxWidth - 1100) / 340).clamp(0.0, 1.0),
+              )!;
+              final childAspectRatio = lerpDouble(
+                1.28,
+                1.95,
+                ((constraints.maxWidth - 1100) / 340).clamp(0.0, 1.0),
+              )!;
               return Container(
                 decoration: BoxDecoration(
                   border: Border.all(color: const Color(0xFF3B2F84)),
@@ -1302,9 +1000,9 @@ class _FeatureSection extends StatelessWidget {
                   shrinkWrap: true,
                   physics: const NeverScrollableScrollPhysics(),
                   itemCount: features.length,
-                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                  gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
                     crossAxisCount: columns,
-                    childAspectRatio: 1.95,
+                    childAspectRatio: childAspectRatio,
                   ),
                   itemBuilder: (context, index) {
                     final column = index % columns;
@@ -1315,6 +1013,7 @@ class _FeatureSection extends StatelessWidget {
                       feature: features[index],
                       showRightBorder: showRightBorder,
                       showBottomBorder: showBottomBorder,
+                      horizontalPadding: cardHorizontalPadding,
                     );
                   },
                 ),
@@ -1332,18 +1031,21 @@ class _FeatureCard extends StatelessWidget {
     required this.feature,
     required this.showRightBorder,
     required this.showBottomBorder,
+    required this.horizontalPadding,
   });
 
   final _Feature feature;
   final bool showRightBorder;
   final bool showBottomBorder;
+  final double horizontalPadding;
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      //height: 192,
-      //  padding: const EdgeInsets.fromLTRB(26, 24, 26, 20),
-      padding: EdgeInsets.symmetric(vertical: 27, horizontal: 87),
+      padding: EdgeInsets.symmetric(
+        vertical: 27,
+        horizontal: horizontalPadding,
+      ),
       alignment: Alignment.center,
       decoration: BoxDecoration(
         border: Border(
@@ -1397,8 +1099,9 @@ class _FeatureCard extends StatelessWidget {
           Text(
             feature.description,
             textAlign: TextAlign.start,
-            style: Get.theme.textTheme.bodyMedium!.copyWith(
+            style: Get.theme.textTheme.bodySmall!.copyWith(
               color: const Color(0xFFD7D7D7),
+              height: 1.4,
             ),
           ),
         ],
@@ -1414,6 +1117,17 @@ class _StepSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final width = MediaQuery.sizeOf(context).width;
+    final outlineFontSize = lerpDouble(
+      58,
+      85,
+      ((width - 1100) / 340).clamp(0.0, 1.0),
+    )!;
+    final connectorInset = lerpDouble(
+      72,
+      225,
+      ((width - 1100) / 340).clamp(0.0, 1.0),
+    )!;
     return Padding(
       padding: EdgeInsets.fromLTRB(padding, 10, padding, 120),
       child: Column(
@@ -1431,7 +1145,7 @@ class _StepSection extends StatelessWidget {
             textAlign: TextAlign.center,
             style: Get.theme.textTheme.headlineMedium?.copyWith(
               fontWeight: FontWeight.w900,
-              fontSize: 85,
+              fontSize: outlineFontSize,
               foreground: Paint()
                 ..style = PaintingStyle.stroke
                 ..strokeWidth = 1
@@ -1442,8 +1156,8 @@ class _StepSection extends StatelessWidget {
           Stack(
             children: [
               Positioned(
-                left: 225,
-                right: 225,
+                left: connectorInset,
+                right: connectorInset,
                 top: 27,
                 child: Container(height: 1, color: const Color(0xFF6A5AB5)),
               ),
@@ -1475,6 +1189,13 @@ class _StepCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final width = MediaQuery.sizeOf(context).width;
+    final descriptionFontSize = lerpDouble(
+      18,
+      24,
+      ((width - 1100) / 340).clamp(0.0, 1.0),
+    )!;
+
     return Column(
       children: [
         Container(
@@ -1516,7 +1237,7 @@ class _StepCard extends StatelessWidget {
                 step.description,
                 textAlign: TextAlign.center,
                 style: Get.theme.textTheme.bodySmall?.copyWith(
-                  fontSize: 24,
+                  fontSize: descriptionFontSize,
                   color: const Color(0xFF969696),
                 ),
               ),
@@ -1546,68 +1267,53 @@ class _PricingSection extends StatelessWidget {
             accentOnNewLine: false,
           ),
           const SizedBox(height: 114),
-          Center(
-            child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 1018),
-              child: SizedBox(
-                height: 700,
-                child: Stack(
-                  clipBehavior: Clip.none,
-                  children: [
-                    Positioned.fill(
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Padding(
-                            padding: const EdgeInsets.only(right: 24),
-                            child: SizedBox(
-                              width: 484,
-                              child: _PricingCard(plan: pricingPlans[0]),
-                            ),
-                          ),
-                          Padding(
-                            padding: const EdgeInsets.only(left: 24),
-                            child: SizedBox(
-                              width: 484,
-                              child: _PricingCard(plan: pricingPlans[1]),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    Positioned(
-                      left: 0,
-                      right: 0,
-                      bottom: 34,
-                      child: Center(
-                        child: OutlinedButton(
-                          onPressed: () => appNav.changePage(AppRoutes.login),
-                          style: OutlinedButton.styleFrom(
-                            foregroundColor: Colors.white,
-                            fixedSize: const Size(317, 64),
-                            backgroundColor: const Color(0xFF08042A),
-                            padding: const EdgeInsets.fromLTRB(24, 10, 24, 10),
-                            side: const BorderSide(
-                              color: Color(0xFF4F46E5),
-                              width: 1,
-                            ),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(30),
-                            ),
-                          ),
-                          child: const Text(
-                            'Contact sales for more information',
-                          ),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
+          LayoutBuilder(
+            builder: (context, constraints) {
+              final gap = lerpDouble(
+                24,
+                40,
+                ((constraints.maxWidth - 1080) / 520).clamp(0.0, 1.0),
+              )!;
+
+              return Column(
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      _PricingCard(plan: pricingPlans[0]),
+                      SizedBox(width: gap),
+                      _PricingCard(plan: pricingPlans[1]),
+                    ],
+                  ),
+                  const SizedBox(height: 34),
+                  // const Center(child: _ContactSalesButton()),
+                ],
+              );
+            },
           ),
         ],
       ),
+    );
+  }
+}
+
+class _ContactSalesButton extends StatelessWidget {
+  const _ContactSalesButton();
+
+  @override
+  Widget build(BuildContext context) {
+    return OutlinedButton(
+      onPressed: () => appNav.changePage(AppRoutes.login),
+      style: OutlinedButton.styleFrom(
+        foregroundColor: Colors.white,
+        fixedSize: const Size(317, 64),
+        backgroundColor: const Color(0xFF08042A),
+        padding: const EdgeInsets.fromLTRB(24, 10, 24, 10),
+        side: const BorderSide(color: Color(0xFF4F46E5), width: 1),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
+      ),
+      child: const Text('Contact sales for more information'),
     );
   }
 }
@@ -1617,82 +1323,95 @@ class _PricingCard extends StatelessWidget {
 
   final _PricingPlan plan;
 
+  /// Matches design spec: 484×569, 1px border, 30px radius.
+  static const double _kWidth = 484;
+  static const double _kHeight = 569;
+
   @override
   Widget build(BuildContext context) {
-    return Container(
-      width: 484,
-      height: 674,
-      padding: const EdgeInsets.fromLTRB(58, 0, 54, 56),
-      decoration: BoxDecoration(
-        color: const Color(0xFF08042A),
-        borderRadius: BorderRadius.circular(30),
-        border: Border.all(color: const Color(0xFF4F46E5), width: 1),
-        boxShadow: const [
-          BoxShadow(
-            color: Color(0x443C2DD8),
-            blurRadius: 32,
-            offset: Offset(0, 12),
-          ),
-        ],
-      ),
-      child: Stack(
-        clipBehavior: Clip.none,
-        children: [
-          Positioned(
-            top: -32,
-            left: 0,
-            right: 0,
-            child: _PricingPlanBadge(label: plan.name),
-          ),
-          Padding(
-            padding: const EdgeInsets.only(top: 74),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Align(
-                  alignment: Alignment.center,
-                  child: RichText(
-                    text: TextSpan(
-                      children: [
-                        TextSpan(
-                          text: plan.price,
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontWeight: FontWeight.w800,
-                            fontSize: 32,
+    const horizontalPadding = 40.0;
+
+    return SizedBox(
+      width: _kWidth,
+      height: _kHeight,
+      child: Container(
+        padding: const EdgeInsets.fromLTRB(
+          horizontalPadding,
+          0,
+          horizontalPadding,
+          32,
+        ),
+        decoration: BoxDecoration(
+          color: const Color(0xFF08042A),
+          borderRadius: BorderRadius.circular(30),
+          border: Border.all(color: const Color(0xFF4F46E5), width: 1),
+          boxShadow: const [
+            BoxShadow(
+              color: Color(0x443C2DD8),
+              blurRadius: 32,
+              offset: Offset(0, 12),
+            ),
+          ],
+        ),
+        child: Stack(
+          clipBehavior: Clip.none,
+          children: [
+            Positioned(
+              top: -32,
+              left: 0,
+              right: 0,
+              child: _PricingPlanBadge(label: plan.name),
+            ),
+            Padding(
+              padding: const EdgeInsets.only(top: 74),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Align(
+                    alignment: Alignment.center,
+                    child: RichText(
+                      text: TextSpan(
+                        children: [
+                          TextSpan(
+                            text: plan.price,
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontWeight: FontWeight.w800,
+                              fontSize: 32,
+                            ),
                           ),
-                        ),
-                        const TextSpan(
-                          text: '/month',
-                          style: TextStyle(
-                            color: Color(0xFF5F688E),
-                            fontSize: 18,
-                            fontWeight: FontWeight.w600,
+                          const TextSpan(
+                            text: '/month',
+                            style: TextStyle(
+                              color: Color(0xFF5F688E),
+                              fontSize: 18,
+                              fontWeight: FontWeight.w600,
+                            ),
                           ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 48),
-                ...plan.items.map(
-                  (item) => Padding(
-                    padding: const EdgeInsets.only(bottom: 22),
-                    child: Text(
-                      item,
-                      style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                        color: const Color(0xFF8B8DA7),
-                        fontWeight: FontWeight.w700,
-                        height: 1.4,
-                        fontSize: 18,
+                        ],
                       ),
                     ),
                   ),
-                ),
-              ],
+                  const SizedBox(height: 32),
+                  ...plan.items.map(
+                    (item) => Padding(
+                      padding: const EdgeInsets.only(bottom: 14),
+                      child: Text(
+                        item,
+                        style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                          color: const Color(0xFF8B8DA7),
+                          fontWeight: FontWeight.w700,
+                          height: 1.35,
+                          fontSize: 18,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -1717,7 +1436,7 @@ class _PricingPlanBadge extends StatelessWidget {
             colors: [Color(0xFF4F46E5), Color(0xFF2C277F)],
           ),
           borderRadius: BorderRadius.circular(999),
-          border: Border.all(color: const Color(0xFFFF9900)),
+          border: Border.all(color: const Color(0xFF4F46E5)),
         ),
         child: Text(
           label,
@@ -1742,88 +1461,97 @@ class _ContactSection extends StatelessWidget {
   Widget build(BuildContext context) {
     return Padding(
       padding: EdgeInsets.fromLTRB(padding, 6, padding, 120),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Expanded(
-            flex: 5,
-            child: Padding(
-              padding: const EdgeInsets.only(right: 28),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  RichText(
-                    text: TextSpan(
-                      style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                        fontSize: 40,
-                        fontWeight: FontWeight.w900,
-                        height: 1.15,
-                        color: Colors.white,
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          final gap = lerpDouble(
+            18,
+            28,
+            ((constraints.maxWidth - 980) / 220).clamp(0.0, 1.0),
+          )!;
+          return Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(
+                flex: 44,
+                child: Padding(
+                  padding: EdgeInsets.only(right: gap),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      RichText(
+                        text: TextSpan(
+                          style: Theme.of(context).textTheme.bodyLarge
+                              ?.copyWith(
+                                fontSize: 40,
+                                fontWeight: FontWeight.w900,
+                                height: 1.15,
+                                color: Colors.white,
+                              ),
+                          children: [
+                            const TextSpan(text: 'Start Automating\nYour '),
+                            TextSpan(
+                              text: 'Renewals Today',
+                              style: Get.theme.textTheme.bodyLarge?.copyWith(
+                                fontSize: 40,
+                                fontWeight: FontWeight.w900,
+                                color: const Color(0xFF4F46E5),
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
-                      children: [
-                        TextSpan(text: 'Start Automating\nYour '),
-                        TextSpan(
-                          text: 'Renewals Today',
-                          style: Get.theme.textTheme.bodyLarge?.copyWith(
-                            fontSize: 40,
-                            fontWeight: FontWeight.w900,
-                            color: Color(0xFF4F46E5),
+                      const SizedBox(height: 16),
+                      Text(
+                        'Join hundreds of businesses that are recovering lost revenue every single day. No credit card required to start.',
+                        style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                          color: const Color(0xFF475569),
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                      const SizedBox(height: 22),
+                      ...contactHighlights.map(
+                        (item) => Padding(
+                          padding: const EdgeInsets.only(bottom: 14),
+                          child: Row(
+                            children: [
+                              Container(
+                                width: 32,
+                                height: 32,
+                                decoration: const BoxDecoration(
+                                  color: Color(0xFF4F46E5),
+                                  shape: BoxShape.circle,
+                                ),
+                                alignment: Alignment.center,
+                                child: SvgPicture.asset(
+                                  'assets/icons/circle-check.svg',
+                                  width: 20,
+                                  height: 20,
+                                ),
+                              ),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: Text(
+                                  item,
+                                  style: Theme.of(context).textTheme.bodyLarge
+                                      ?.copyWith(
+                                        color: const Color(0xFF475569),
+                                        fontWeight: FontWeight.w600,
+                                      ),
+                                ),
+                              ),
+                            ],
                           ),
                         ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                  Text(
-                    'Join hundreds of businesses that are recovering lost revenue every single day. No credit card required to start.',
-                    style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                      color: const Color(0xFF475569),
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-                  const SizedBox(height: 22),
-                  ...contactHighlights.map(
-                    (item) => Padding(
-                      padding: const EdgeInsets.only(bottom: 14),
-                      child: Row(
-                        children: [
-                          Container(
-                            width: 32,
-                            height: 32,
-                            decoration: BoxDecoration(
-                              color: Color(0xFF4F46E5),
-                              shape: BoxShape.circle,
-                              // border: Border.all(
-                              //   color: const Color(0xFF7167FF),
-                              //   width: 1.5,
-                              // ),
-                            ),
-                            alignment: Alignment.center,
-                            child: SvgPicture.asset(
-                              'assets/icons/circle-check.svg',
-                              width: 20,
-                              height: 20,
-                            ),
-                          ),
-                          const SizedBox(width: 12),
-                          Text(
-                            item,
-                            style: Theme.of(context).textTheme.bodyLarge
-                                ?.copyWith(
-                                  color: const Color(0xFF475569),
-                                  fontWeight: FontWeight.w600,
-                                ),
-                          ),
-                        ],
                       ),
-                    ),
+                    ],
                   ),
-                ],
+                ),
               ),
-            ),
-          ),
-          const Expanded(flex: 6, child: _LeadCard()),
-        ],
+              SizedBox(width: gap),
+              const Expanded(flex: 56, child: _LeadCard()),
+            ],
+          );
+        },
       ),
     );
   }
@@ -1922,128 +1650,148 @@ class _LeadCardState extends State<_LeadCard> {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      width: 689,
-      padding: const EdgeInsets.only(top: 32, left: 48, right: 48, bottom: 51),
-      decoration: BoxDecoration(
-        color: const Color(0xFF08042A),
-        borderRadius: BorderRadius.circular(50),
-        border: Border.all(color: const Color(0xFFCBD5E1), width: 1),
-      ),
-      child: Form(
-        key: _formKey,
-        child: Column(
-          children: [
-            Row(
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final horizontalPadding = lerpDouble(
+          28,
+          48,
+          ((constraints.maxWidth - 520) / 260).clamp(0.0, 1.0),
+        )!;
+
+        return Container(
+          width: double.infinity,
+          padding: EdgeInsets.only(
+            top: 32,
+            left: horizontalPadding,
+            right: horizontalPadding,
+            bottom: 51,
+          ),
+          decoration: BoxDecoration(
+            color: const Color(0xFF08042A),
+            borderRadius: BorderRadius.circular(50),
+            border: Border.all(color: const Color(0xFFCBD5E1), width: 1),
+          ),
+          child: Form(
+            key: _formKey,
+            child: Column(
               children: [
-                Expanded(
-                  child: _DarkField(
-                    label: 'Full Name',
-                    hint: 'Enter Full Name',
-                    controller: _fullNameController,
-                    validator: (value) {
-                      if (value == null || value.trim().isEmpty) {
-                        return 'Full name is required';
-                      }
-                      return null;
-                    },
-                  ),
-                ),
-                const SizedBox(width: 32),
-                Expanded(
-                  child: _DarkField(
-                    label: 'Business Name',
-                    hint: 'Enter Business Name',
-                    controller: _businessNameController,
-                    validator: (value) {
-                      if (value == null || value.trim().isEmpty) {
-                        return 'Business name is required';
-                      }
-                      return null;
-                    },
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 32),
-            Row(
-              children: [
-                Expanded(
-                  child: _DarkField(
-                    label: 'Email Address',
-                    hint: 'Enter Email Address',
-                    controller: _emailController,
-                    keyboardType: TextInputType.emailAddress,
-                    validator: (value) {
-                      final v = value?.trim() ?? '';
-                      if (v.isEmpty) return 'Email is required';
-                      if (!_emailRegex.hasMatch(v)) return 'Enter valid email';
-                      return null;
-                    },
-                  ),
-                ),
-                const SizedBox(width: 32),
-                Expanded(
-                  child: _DarkField(
-                    label: 'Phone Number',
-                    hint: 'Enter Phone Number',
-                    controller: _phoneController,
-                    keyboardType: TextInputType.phone,
-                    validator: (value) {
-                      final v = value?.trim() ?? '';
-                      if (v.isEmpty) return 'Phone number is required';
-                      if (!_phoneRegex.hasMatch(v)) return 'Enter valid phone';
-                      return null;
-                    },
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 32),
-            SizedBox(
-              width: double.infinity,
-              height: 44,
-              child: FilledButton(
-                onPressed: _isSending ? null : _submit,
-                style: FilledButton.styleFrom(
-                  backgroundColor: const Color(0xFF5C5BFF),
-                  disabledBackgroundColor: const Color(0xFF5C5BFF),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(14),
-                  ),
-                  padding: const EdgeInsets.symmetric(vertical: 15),
-                ),
-                child: _isSending
-                    ? const SizedBox(
-                        width: 18,
-                        height: 18,
-                        child: CircularProgressIndicator(
-                          strokeWidth: 2.2,
-                          color: Colors.white,
-                        ),
-                      )
-                    : Text(
-                        'Request Enquiry',
-                        textAlign: TextAlign.center,
-                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                          color: Colors.white,
-                          fontWeight: FontWeight.w600,
-                        ),
+                Row(
+                  children: [
+                    Expanded(
+                      child: _DarkField(
+                        label: 'Full Name',
+                        hint: 'Enter Full Name',
+                        controller: _fullNameController,
+                        validator: (value) {
+                          if (value == null || value.trim().isEmpty) {
+                            return 'Full name is required';
+                          }
+                          return null;
+                        },
                       ),
-              ),
+                    ),
+                    const SizedBox(width: 32),
+                    Expanded(
+                      child: _DarkField(
+                        label: 'Business Name',
+                        hint: 'Enter Business Name',
+                        controller: _businessNameController,
+                        validator: (value) {
+                          if (value == null || value.trim().isEmpty) {
+                            return 'Business name is required';
+                          }
+                          return null;
+                        },
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 32),
+                Row(
+                  children: [
+                    Expanded(
+                      child: _DarkField(
+                        label: 'Email Address',
+                        hint: 'Enter Email Address',
+                        controller: _emailController,
+                        keyboardType: TextInputType.emailAddress,
+                        validator: (value) {
+                          final v = value?.trim() ?? '';
+                          if (v.isEmpty) return 'Email is required';
+                          if (!_emailRegex.hasMatch(v)) {
+                            return 'Enter valid email';
+                          }
+                          return null;
+                        },
+                      ),
+                    ),
+                    const SizedBox(width: 32),
+                    Expanded(
+                      child: _DarkField(
+                        label: 'Phone Number',
+                        hint: 'Enter Phone Number',
+                        controller: _phoneController,
+                        keyboardType: TextInputType.phone,
+                        validator: (value) {
+                          final v = value?.trim() ?? '';
+                          if (v.isEmpty) return 'Phone number is required';
+                          if (!_phoneRegex.hasMatch(v)) {
+                            return 'Enter valid phone';
+                          }
+                          return null;
+                        },
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 32),
+                SizedBox(
+                  width: double.infinity,
+                  height: 44,
+                  child: FilledButton(
+                    onPressed: _isSending ? null : _submit,
+                    style: FilledButton.styleFrom(
+                      backgroundColor: const Color(0xFF5C5BFF),
+                      disabledBackgroundColor: const Color(0xFF5C5BFF),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(14),
+                      ),
+                      padding: const EdgeInsets.symmetric(vertical: 15),
+                    ),
+                    child: _isSending
+                        ? const SizedBox(
+                            width: 18,
+                            height: 18,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2.2,
+                              color: Colors.white,
+                            ),
+                          )
+                        : Text(
+                            'Request Enquiry',
+                            textAlign: TextAlign.center,
+                            style: Theme.of(context).textTheme.bodyMedium
+                                ?.copyWith(
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                          ),
+                  ),
+                ),
+                const SizedBox(height: 32),
+                Text(
+                  'Request enquiry and we will get back to you.\nThank you!',
+                  textAlign: TextAlign.center,
+                  style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                    color: const Color(0xFF475569),
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ],
             ),
-            const SizedBox(height: 32),
-            Text(
-              'Request enquiry and we will get back to you.\nThank you!',
-              textAlign: TextAlign.center,
-              style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                color: const Color(0xFF475569),
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-          ],
-        ),
-      ),
+          ),
+        );
+      },
     );
   }
 }
@@ -2151,26 +1899,35 @@ class _FaqSection extends StatelessWidget {
             fontSize: 40,
           ),
           const SizedBox(height: 48),
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Expanded(
-                flex: 6,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: faqs
-                      .map(
-                        (faq) => Padding(
-                          padding: const EdgeInsets.only(bottom: 24),
-                          child: _FaqCard(faq: faq),
-                        ),
-                      )
-                      .toList(),
-                ),
-              ),
-              const SizedBox(width: 35),
-              const Expanded(flex: 6, child: _QuestionCard()),
-            ],
+          LayoutBuilder(
+            builder: (context, constraints) {
+              final gap = lerpDouble(
+                20,
+                35,
+                ((constraints.maxWidth - 980) / 220).clamp(0.0, 1.0),
+              )!;
+              return Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Expanded(
+                    flex: 46,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: faqs
+                          .map(
+                            (faq) => Padding(
+                              padding: const EdgeInsets.only(bottom: 24),
+                              child: _FaqCard(faq: faq),
+                            ),
+                          )
+                          .toList(),
+                    ),
+                  ),
+                  SizedBox(width: gap),
+                  const Expanded(flex: 54, child: _QuestionCard()),
+                ],
+              );
+            },
           ),
         ],
       ),
@@ -2226,7 +1983,6 @@ class _QuestionCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      width: 652,
       height: 413,
       padding: const EdgeInsets.only(left: 24, right: 24, top: 24, bottom: 32),
       decoration: BoxDecoration(
@@ -2403,76 +2159,73 @@ class _BottomCtaSection extends StatelessWidget {
   }
 }
 
+/// Desktop / laptop landing footer: five columns (brand, Product, Company, Legal, Social).
 class _FooterSection extends StatelessWidget {
   const _FooterSection({required this.padding});
 
   final double padding;
 
+  static const Color _kBackground = Color(0xFF0B0B2A);
+  static const Color _kMutedText = Color(0xFF94A3B8);
+
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
     return Container(
       width: double.infinity,
-      padding: EdgeInsets.fromLTRB(padding, 56, padding, 54),
-      decoration: const BoxDecoration(color: Color(0xFF0D0820)),
+      padding: EdgeInsets.fromLTRB(padding, 64, padding, 40),
+      decoration: const BoxDecoration(color: _kBackground),
       child: Column(
         children: [
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              const Expanded(flex: 32, child: _FooterBrandColumn()),
               Expanded(
-                flex: 4,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Image.asset(AppIcons.recripLogo, height: 50),
-                    const SizedBox(height: 24),
-                    ConstrainedBox(
-                      constraints: const BoxConstraints(maxWidth: 340),
-                      child: Text(
-                        'Most powerful subscription renewal management platform. Built for business that want to scale without losing revenue.',
-                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                          color: const Color(0xFF475569),
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                    ),
-                  ],
+                flex: 14,
+                child: _FooterColumn(
+                  title: 'Product',
+                  items: const ['Features', 'Pricing'],
+                  linkColor: _kMutedText,
                 ),
               ),
-              const SizedBox(width: 96),
               Expanded(
-                flex: 6,
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: const [
-                    _FooterColumn(
-                      title: 'Product',
-                      items: ['Features', 'Pricing'],
-                    ),
-                    _FooterColumn(
-                      title: 'Company',
-                      items: ['About', 'Contact'],
-                    ),
-                    _FooterColumn(
-                      title: 'Legal',
-                      items: ['Privacy Policy', 'Terms of Service'],
-                    ),
-                    _FooterSocialColumn(),
-                  ],
+                flex: 14,
+                child: _FooterColumn(
+                  title: 'Company',
+                  items: const ['About', 'Contact'],
+                  linkColor: _kMutedText,
                 ),
               ),
+              Expanded(
+                flex: 14,
+                child: _FooterColumn(
+                  title: 'Legal',
+                  items: const ['Privacy Policy', 'Terms of Service'],
+                  linkColor: _kMutedText,
+                ),
+              ),
+              const Expanded(flex: 14, child: _FooterSocialColumn()),
             ],
           ),
-          const SizedBox(height: 56),
-          const Divider(color: Color(0xFFB4BDD4), thickness: 0.8),
-          const SizedBox(height: 50),
-          Text(
-            '© 2026 Recrip. All rights reserved.',
-            style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-              color: const Color(0xFF64748B),
-              fontSize: 20,
-              fontWeight: FontWeight.w500,
+          const SizedBox(height: 48),
+          Divider(
+            color: Colors.white.withValues(alpha: 0.14),
+            thickness: 1,
+            height: 1,
+          ),
+          const SizedBox(height: 28),
+          SizedBox(
+            width: double.infinity,
+            child: Text(
+              '© 2026 Recrip. All rights reserved.',
+              textAlign: TextAlign.center,
+              style: theme.textTheme.bodyMedium?.copyWith(
+                color: _kMutedText,
+                fontWeight: FontWeight.w500,
+                fontSize: 15,
+              ),
             ),
           ),
         ],
@@ -2481,11 +2234,49 @@ class _FooterSection extends StatelessWidget {
   }
 }
 
+class _FooterBrandColumn extends StatelessWidget {
+  const _FooterBrandColumn();
+
+  static const Color _kTagline = Color(0xFF94A3B8);
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Image.asset(
+          AppIcons.recripLogo,
+          height: 44,
+          fit: BoxFit.contain,
+          filterQuality: FilterQuality.high,
+        ),
+        const SizedBox(height: 22),
+        ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 300),
+          child: Text(
+            'Most powerful subscription renewal management platform. Built for business that want to scale without losing revenue.',
+            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+              color: _kTagline,
+              fontWeight: FontWeight.w400,
+              height: 1.55,
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
 class _FooterColumn extends StatelessWidget {
-  const _FooterColumn({required this.title, required this.items});
+  const _FooterColumn({
+    required this.title,
+    required this.items,
+    required this.linkColor,
+  });
 
   final String title;
   final List<String> items;
+  final Color linkColor;
 
   @override
   Widget build(BuildContext context) {
@@ -2494,19 +2285,21 @@ class _FooterColumn extends StatelessWidget {
       children: [
         Text(
           title,
-          style: Get.theme.textTheme.bodyMedium?.copyWith(
+          style: Get.theme.textTheme.titleSmall?.copyWith(
             color: Colors.white,
-            fontWeight: FontWeight.w500,
+            fontWeight: FontWeight.w700,
+            letterSpacing: 0.15,
           ),
         ),
-        const SizedBox(height: 24),
+        const SizedBox(height: 20),
         ...items.map(
           (item) => Padding(
-            padding: const EdgeInsets.only(bottom: 16),
+            padding: const EdgeInsets.only(bottom: 14),
             child: Text(
               item,
               style: Get.theme.textTheme.bodyMedium?.copyWith(
-                color: Color(0xFF475569),
+                color: linkColor,
+                fontWeight: FontWeight.w500,
               ),
             ),
           ),
@@ -2524,23 +2317,23 @@ class _FooterSocialColumn extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
+        Text(
           'Social',
-          style: TextStyle(
+          style: Get.theme.textTheme.titleSmall?.copyWith(
             color: Colors.white,
-            fontWeight: FontWeight.w500,
-            fontSize: 18,
+            fontWeight: FontWeight.w700,
+            letterSpacing: 0.15,
           ),
         ),
-        const SizedBox(height: 22),
+        const SizedBox(height: 20),
         Row(
           children: const [
             _FooterSocialIcon('assets/images/linkedin.png'),
-            SizedBox(width: 14),
+            SizedBox(width: 12),
             _FooterSocialIcon('assets/images/insta.png'),
-            SizedBox(width: 14),
+            SizedBox(width: 12),
             _FooterSocialIcon('assets/images/twitter-x.png'),
-            SizedBox(width: 14),
+            SizedBox(width: 12),
             _FooterSocialIcon('assets/images/facebook.png'),
           ],
         ),
