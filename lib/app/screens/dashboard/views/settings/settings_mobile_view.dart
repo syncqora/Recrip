@@ -4,6 +4,16 @@ import 'package:get/get.dart';
 import 'package:saas/shared/constants/app_strings.dart';
 import 'package:saas/shared/constants/app_icons.dart';
 
+import 'payments_renewals_view.dart';
+
+/// Mobile (`width < 600`) settings card.
+///
+/// Layout:
+///  - Top: horizontally-scrollable pill tab bar (Profile · Login & Security ·
+///    Payments & Renewals). Pills never truncate; users swipe to reach the
+///    Payments tab if needed.
+///  - Below: per-tab content with full-width form fields and full-width
+///    Cancel/Save buttons that share the row 50/50.
 class SettingsMobileView extends StatefulWidget {
   const SettingsMobileView({super.key});
 
@@ -16,10 +26,12 @@ class _SettingsMobileViewState extends State<SettingsMobileView> {
   static const _textMuted = Color(0xFF666666);
   static const _border = Color(0xFFE5E7EB);
   static const _purple = Color(0xFF4F46E5);
-  static const _tabActiveBg = Color(0xFFEEF2FF);
+  static const _purpleDisabled = Color(0xFFA5B4FC);
+  static const _pillUnselected = Color(0xFFF1F5F9);
   static const _cardShadow = Color(0x0F000000);
 
   int _selectedTabIndex = 0;
+
   final _businessNameController = TextEditingController(
     text: AppStrings.businessNameDefault,
   );
@@ -72,12 +84,8 @@ class _SettingsMobileViewState extends State<SettingsMobileView> {
         color: Colors.white,
         borderRadius: BorderRadius.circular(12),
         border: Border.all(color: _border),
-        boxShadow: [
-          BoxShadow(
-            color: _cardShadow,
-            blurRadius: 12,
-            offset: const Offset(0, 2),
-          ),
+        boxShadow: const [
+          BoxShadow(color: _cardShadow, blurRadius: 12, offset: Offset(0, 2)),
         ],
       ),
       child: Column(
@@ -85,71 +93,67 @@ class _SettingsMobileViewState extends State<SettingsMobileView> {
         mainAxisSize: MainAxisSize.min,
         children: [
           _buildTabBar(),
-          Padding(
-            padding: const EdgeInsets.all(20),
-            child: _selectedTabIndex == 0
-                ? _buildProfileContent()
-                : _buildLoginSecurityContent(),
-          ),
+          const Divider(height: 1, color: _border),
+          Padding(padding: const EdgeInsets.all(16), child: _buildTabContent()),
         ],
       ),
     );
   }
 
+  // -------- Tabs --------
+
   Widget _buildTabBar() {
-    return Row(
-      children: [
-        _buildTab(
-          AppStrings.settingsProfileTabLabel,
-          _selectedTabIndex == 0,
-          () => setState(() => _selectedTabIndex = 0),
-        ),
-        _buildTab(
-          AppStrings.settingsLoginSecurityTabLabel,
-          _selectedTabIndex == 1,
-          () => setState(() => _selectedTabIndex = 1),
-        ),
-      ],
+    return SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          _pillTab(AppStrings.settingsProfileTabLabel, 0),
+          const SizedBox(width: 8),
+          _pillTab(AppStrings.settingsLoginSecurityTabLabel, 1),
+          const SizedBox(width: 8),
+          _pillTab(AppStrings.settingsPaymentsRenewalsTabLabel, 2),
+        ],
+      ),
     );
   }
 
-  Widget _buildTab(String label, bool isSelected, VoidCallback onTap) {
-    return Expanded(
-      child: Material(
-        color: isSelected ? _tabActiveBg : Colors.white,
-        borderRadius: const BorderRadius.vertical(top: Radius.circular(12)),
-        child: InkWell(
-          onTap: onTap,
-          borderRadius: const BorderRadius.vertical(top: Radius.circular(12)),
-          child: Container(
-            padding: const EdgeInsets.symmetric(vertical: 12),
-            decoration: BoxDecoration(
-              borderRadius: const BorderRadius.vertical(
-                top: Radius.circular(12),
-              ),
-              border: Border(
-                bottom: BorderSide(
-                  color: isSelected ? _border : Colors.transparent,
-                ),
-              ),
-            ),
-            child: Center(
-              child: Text(
-                label,
-                style: Get.textTheme.labelMedium?.copyWith(
-                  fontWeight: FontWeight.w600,
-                  color: isSelected ? _purple : _textMuted,
-                ),
-                textAlign: TextAlign.center,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-              ),
+  Widget _pillTab(String label, int index) {
+    final isSelected = _selectedTabIndex == index;
+    return Material(
+      color: isSelected ? _purple : _pillUnselected,
+      borderRadius: BorderRadius.circular(999),
+      child: InkWell(
+        onTap: () => setState(() => _selectedTabIndex = index),
+        borderRadius: BorderRadius.circular(999),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+          child: Text(
+            label,
+            style: Get.textTheme.labelMedium?.copyWith(
+              fontWeight: FontWeight.w600,
+              color: isSelected ? Colors.white : _textDark,
             ),
           ),
         ),
       ),
     );
   }
+
+  Widget _buildTabContent() {
+    switch (_selectedTabIndex) {
+      case 1:
+        return _buildLoginSecurityContent();
+      case 2:
+        return const PaymentsRenewalsView();
+      case 0:
+      default:
+        return _buildProfileContent();
+    }
+  }
+
+  // -------- Profile --------
 
   Widget _buildProfileContent() {
     return Column(
@@ -157,56 +161,22 @@ class _SettingsMobileViewState extends State<SettingsMobileView> {
       mainAxisSize: MainAxisSize.min,
       children: [
         _buildBusinessLogoSection(),
-        const SizedBox(height: 24),
+        const SizedBox(height: 20),
         _buildBusinessNameSection(),
         const SizedBox(height: 24),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.end,
-          children: [
-            OutlinedButton(
-              onPressed: () => setState(() {
-                _businessNameController.text = _initialBusinessName;
-              }),
-              style: OutlinedButton.styleFrom(
-                foregroundColor: _textDark,
-                side: BorderSide(color: _border),
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 20,
-                  vertical: 10,
-                ),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(8),
-                ),
-              ),
-              child: const Text(AppStrings.cancel),
-            ),
-            const SizedBox(width: 12),
-            FilledButton(
-              onPressed: _isProfileDirty
-                  ? () {
-                      FocusScope.of(context).unfocus();
-                    }
-                  : null,
-              style: FilledButton.styleFrom(
-                backgroundColor: _purple,
-                disabledBackgroundColor: const Color(0xFFA5B4FC),
-                foregroundColor: Colors.white,
-                disabledForegroundColor: Colors.white,
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 20,
-                  vertical: 10,
-                ),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(8),
-                ),
-              ),
-              child: const Text(AppStrings.save),
-            ),
-          ],
+        _buildActionRow(
+          onCancel: () => setState(() {
+            _businessNameController.text = _initialBusinessName;
+          }),
+          onSave: _isProfileDirty
+              ? () => FocusScope.of(context).unfocus()
+              : null,
         ),
       ],
     );
   }
+
+  // -------- Login & Security --------
 
   Widget _buildLoginSecurityContent() {
     return Column(
@@ -220,7 +190,7 @@ class _SettingsMobileViewState extends State<SettingsMobileView> {
             color: _textDark,
           ),
         ),
-        const SizedBox(height: 20),
+        const SizedBox(height: 16),
         _buildPasswordField(
           AppStrings.currentPasswordLabel,
           AppStrings.enterCurrentPasswordHint,
@@ -230,7 +200,7 @@ class _SettingsMobileViewState extends State<SettingsMobileView> {
             () => _currentPasswordVisible = !_currentPasswordVisible,
           ),
         ),
-        const SizedBox(height: 16),
+        const SizedBox(height: 14),
         _buildPasswordField(
           AppStrings.newPasswordLabel,
           AppStrings.enterNewPasswordHint,
@@ -239,7 +209,7 @@ class _SettingsMobileViewState extends State<SettingsMobileView> {
           onToggleVisibility: () =>
               setState(() => _newPasswordVisible = !_newPasswordVisible),
         ),
-        const SizedBox(height: 16),
+        const SizedBox(height: 14),
         _buildPasswordField(
           AppStrings.confirmNewPasswordLabel,
           AppStrings.confirmNewPasswordHint,
@@ -250,51 +220,59 @@ class _SettingsMobileViewState extends State<SettingsMobileView> {
           ),
         ),
         const SizedBox(height: 24),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.end,
-          children: [
-            OutlinedButton(
-              onPressed: () => setState(() {
-                _currentPasswordController.clear();
-                _newPasswordController.clear();
-                _confirmPasswordController.clear();
-              }),
-              style: OutlinedButton.styleFrom(
-                foregroundColor: _textDark,
-                side: BorderSide(color: _border),
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 20,
-                  vertical: 10,
-                ),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(8),
-                ),
+        _buildActionRow(
+          onCancel: () => setState(() {
+            _currentPasswordController.clear();
+            _newPasswordController.clear();
+            _confirmPasswordController.clear();
+          }),
+          onSave: _isPasswordFormFilled
+              ? () => FocusScope.of(context).unfocus()
+              : null,
+        ),
+      ],
+    );
+  }
+
+  // -------- Shared widgets --------
+
+  /// Full-width 50/50 Cancel / Save row. Looks balanced on phones.
+  Widget _buildActionRow({
+    required VoidCallback onCancel,
+    required VoidCallback? onSave,
+  }) {
+    return Row(
+      children: [
+        Expanded(
+          child: OutlinedButton(
+            onPressed: onCancel,
+            style: OutlinedButton.styleFrom(
+              foregroundColor: _textDark,
+              side: const BorderSide(color: _border),
+              padding: const EdgeInsets.symmetric(vertical: 12),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(10),
               ),
-              child: const Text(AppStrings.cancel),
             ),
-            const SizedBox(width: 12),
-            FilledButton(
-              onPressed: _isPasswordFormFilled
-                  ? () {
-                      FocusScope.of(context).unfocus();
-                    }
-                  : null,
-              style: FilledButton.styleFrom(
-                backgroundColor: _purple,
-                disabledBackgroundColor: const Color(0xFFA5B4FC),
-                foregroundColor: Colors.white,
-                disabledForegroundColor: Colors.white,
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 20,
-                  vertical: 10,
-                ),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(8),
-                ),
+            child: const Text(AppStrings.cancel),
+          ),
+        ),
+        const SizedBox(width: 12),
+        Expanded(
+          child: FilledButton(
+            onPressed: onSave,
+            style: FilledButton.styleFrom(
+              backgroundColor: _purple,
+              disabledBackgroundColor: _purpleDisabled,
+              foregroundColor: Colors.white,
+              disabledForegroundColor: Colors.white,
+              padding: const EdgeInsets.symmetric(vertical: 12),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(10),
               ),
-              child: const Text(AppStrings.save),
             ),
-          ],
+            child: const Text(AppStrings.save),
+          ),
         ),
       ],
     );
@@ -317,7 +295,7 @@ class _SettingsMobileViewState extends State<SettingsMobileView> {
             color: _textDark,
           ),
         ),
-        const SizedBox(height: 8),
+        const SizedBox(height: 6),
         TextField(
           controller: controller,
           obscureText: isObscure,
@@ -337,16 +315,19 @@ class _SettingsMobileViewState extends State<SettingsMobileView> {
                 isObscure ? AppIcons.eyeClose : AppIcons.eyeOpen,
                 width: 20,
                 height: 20,
-                colorFilter: ColorFilter.mode(_textMuted, BlendMode.srcIn),
+                colorFilter: const ColorFilter.mode(
+                  _textMuted,
+                  BlendMode.srcIn,
+                ),
               ),
             ),
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(10),
-              borderSide: BorderSide(color: _border),
+              borderSide: const BorderSide(color: _border),
             ),
             enabledBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(10),
-              borderSide: BorderSide(color: _border),
+              borderSide: const BorderSide(color: _border),
             ),
             focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(10),
@@ -369,12 +350,12 @@ class _SettingsMobileViewState extends State<SettingsMobileView> {
             color: _textDark,
           ),
         ),
-        const SizedBox(height: 12),
+        const SizedBox(height: 10),
         Row(
           children: [
             Container(
-              width: 64,
-              height: 64,
+              width: 60,
+              height: 60,
               decoration: BoxDecoration(
                 color: Colors.white,
                 shape: BoxShape.circle,
@@ -384,7 +365,7 @@ class _SettingsMobileViewState extends State<SettingsMobileView> {
               child: Center(
                 child: Image.asset(
                   'assets/images/recrip.webp',
-                  height: 32,
+                  height: 30,
                   fit: BoxFit.contain,
                 ),
               ),
@@ -408,7 +389,7 @@ class _SettingsMobileViewState extends State<SettingsMobileView> {
             color: _textDark,
           ),
         ),
-        const SizedBox(height: 12),
+        const SizedBox(height: 10),
         TextField(
           controller: _businessNameController,
           style: Get.textTheme.bodyMedium?.copyWith(color: _textDark),
@@ -423,11 +404,11 @@ class _SettingsMobileViewState extends State<SettingsMobileView> {
             ),
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(10),
-              borderSide: BorderSide(color: _border),
+              borderSide: const BorderSide(color: _border),
             ),
             enabledBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(10),
-              borderSide: BorderSide(color: _border),
+              borderSide: const BorderSide(color: _border),
             ),
             focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(10),
@@ -452,11 +433,11 @@ class _SettingsMobileViewState extends State<SettingsMobileView> {
             color: Colors.white,
             shape: BoxShape.circle,
             border: Border.all(color: _border),
-            boxShadow: [
+            boxShadow: const [
               BoxShadow(
                 color: _cardShadow,
                 blurRadius: 4,
-                offset: const Offset(0, 1),
+                offset: Offset(0, 1),
               ),
             ],
           ),

@@ -135,14 +135,13 @@ class LoginController extends GetxController {
 
     isSubmitting.value = true;
     try {
-      final response = await _authService.login(email: email, password: password);
-      print(
-        const JsonEncoder.withIndent('  ').convert(response.toJson()),
+      final response = await _authService.login(
+        email: email,
+        password: password,
       );
+      print(const JsonEncoder.withIndent('  ').convert(response.toJson()));
       Get.find<AppSettingsController>().isUserLoggedIn.value = true;
-      appNav.changePage(
-        AuthLanding.path(persistedEmail: email),
-      );
+      appNav.changePage(AuthLanding.path(persistedEmail: email));
     } catch (e) {
       Get.snackbar(
         'Login failed',

@@ -158,6 +158,44 @@ abstract final class AppStrings {
       'Manage your business, preferences, and account';
   static const String settingsProfileTabLabel = 'Profile';
   static const String settingsLoginSecurityTabLabel = 'Login & Security';
+  static const String settingsPaymentsRenewalsTabLabel = 'Payments & Renewals';
+
+  // Payments & Renewals
+  static const String paymentDueBannerTitle =
+      'Your next payment is due on 10/05/2026';
+  static const String paymentDueBannerSubtitle =
+      'Renew before the due to continue using the service.';
+  static const String currentPlanLabel = 'Current Plan';
+  static const String currentPlanName = 'Growth';
+  static const String currentPlanActiveSince =
+      'Active since 10 April 2026 | Billed Monthly';
+  static const String currentPlanPrice = '₹2,499';
+  static const String currentPlanPriceSuffix = '/month';
+  static const String browseOtherPlans = 'Browse other Plans';
+  static const String planStarterName = 'Starter';
+  static const String planStarterPrice = '₹1,499';
+  static const String planGrowthPrice = '₹2,499';
+  static const String downgrade = 'Downgrade';
+  static const String selected = 'Selected';
+  static const String upcomingBillLabel = 'Upcoming Bill';
+  static const String upcomingBillAmount = '₹2,499/-';
+  static const String upcomingBillDuePrefix = 'Due ';
+  static const String upcomingBillDueDate = '10 May 2026';
+  static const String upcomingBillPlanLine = 'Growth Plan (1 Month)';
+  static const String upcomingBillPlanAmount = '₹2,118.00';
+  static const String upcomingBillTaxLine = 'GST (18%)';
+  static const String upcomingBillTaxAmount = '₹381.00';
+  static const String upcomingBillTotalLine = 'Total Due';
+  static const String upcomingBillTotalAmount = '₹2,499.00';
+  static const String changePlan = 'Change Plan';
+  static const String renew = 'Renew';
+  static const String paymentHistoryLabel = 'Payment History';
+  static const String paymentHistoryDate = 'Date';
+  static const String paymentHistoryPlan = 'Plan';
+  static const String paymentHistoryAmount = 'Amount';
+  static const String paymentHistoryStatus = 'Status';
+  static const String paymentHistoryInvoice = 'Invoice';
+  static const String paymentHistoryStatusPaid = 'Paid';
   static const String businessLogoLabel = 'Business Logo';
   static const String businessNameLabel = 'Business Name';
   static const String businessNameDefault = 'SaaS';

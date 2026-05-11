@@ -11,6 +11,7 @@ import '../models/auth/revoke_token_request.dart';
 import '../../network/repo/repo.dart';
 import '../../shared/constants/box_constants.dart';
 import '../../shared/utils/app_exceptions.dart';
+import '../../shared/utils/jwt_utils.dart';
 
 /// Application layer: uses [AuthRepository], persists session after login.
 class AuthService extends GetxService {
@@ -46,6 +47,49 @@ class AuthService extends GetxService {
       BoxConstants.loggedInEmail,
       loginEmail.trim().toLowerCase(),
     );
+    await _persistTokenClaims(response.accessToken);
+  }
+
+  /// Decodes the access token payload and persists tenant + user identifiers
+  /// so the rest of the app can read them without re-parsing the JWT.
+  Future<void> _persistTokenClaims(String accessToken) async {
+    final claims = JwtUtils.decodePayload(accessToken);
+    if (claims.isEmpty) return;
+
+    Future<void> writeIfPresent(String key, Object? value) async {
+      if (value == null) return;
+      if (value is String && value.isEmpty) return;
+      await _storage.write(key, value);
+    }
+
+    await writeIfPresent(BoxConstants.userId, claims['user_id']);
+    await writeIfPresent(BoxConstants.username, claims['username']);
+    await writeIfPresent(BoxConstants.userEmail, claims['email']);
+    await writeIfPresent(BoxConstants.tenantId, claims['tenant_id']);
+    await writeIfPresent(BoxConstants.tenantSlug, claims['tenant_slug']);
+    await writeIfPresent(BoxConstants.tenantRole, claims['tenant_role']);
+
+    final rawRoles = claims['roles'];
+    if (rawRoles is List) {
+      await _storage.write(
+        BoxConstants.userRoles,
+        rawRoles.whereType<String>().toList(),
+      );
+    }
+
+    print(
+      '[AuthService] persisted JWT claims -> '
+      'tenant_id=${claims['tenant_id']}, '
+      'tenant_slug=${claims['tenant_slug']}, '
+      'tenant_role=${claims['tenant_role']}, '
+      'user_id=${claims['user_id']}, '
+      'username=${claims['username']}, '
+      'roles=${claims['roles']}',
+    );
+    print(
+      '[AuthService] BoxDB tenantId = '
+      '${_storage.read<String>(BoxConstants.tenantId)}',
+    );
   }
 
   /// Calls `POST /auth/revoke` when an access token exists, then clears local session.
@@ -56,9 +100,7 @@ class AuthService extends GetxService {
     final token = _storage.read<String>(BoxConstants.accessToken);
     if (token != null && token.isNotEmpty) {
       try {
-        revokeBody = await _repository.revoke(
-          RevokeTokenRequest(token: token),
-        );
+        revokeBody = await _repository.revoke(RevokeTokenRequest(token: token));
       } catch (e) {
         revokeError = e;
         print('Logout revoke failed: $e');
@@ -79,13 +121,43 @@ class AuthService extends GetxService {
     await _storage.remove(BoxConstants.tokenScope);
     await _storage.remove(BoxConstants.tokenExpiresAtMs);
     await _storage.remove(BoxConstants.loggedInEmail);
+    await _storage.remove(BoxConstants.userId);
+    await _storage.remove(BoxConstants.username);
+    await _storage.remove(BoxConstants.userEmail);
+    await _storage.remove(BoxConstants.userRoles);
+    await _storage.remove(BoxConstants.tenantId);
+    await _storage.remove(BoxConstants.tenantSlug);
+    await _storage.remove(BoxConstants.tenantRole);
     await _storage.write(BoxConstants.isUserLoggedIn, false);
   }
 
   String? get accessToken => _storage.read<String>(BoxConstants.accessToken);
 
   /// Lowercased email from last successful login; used for admin vs member routing.
-  String? get loggedInEmail => _storage.read<String>(BoxConstants.loggedInEmail);
+  String? get loggedInEmail =>
+      _storage.read<String>(BoxConstants.loggedInEmail);
+
+  /// Tenant id extracted from the access token payload (`tenant_id` claim).
+  String? get tenantId => _storage.read<String>(BoxConstants.tenantId);
+
+  /// Tenant slug from the access token payload (`tenant_slug` claim).
+  String? get tenantSlug => _storage.read<String>(BoxConstants.tenantSlug);
+
+  /// Tenant role from the access token payload (`tenant_role` claim).
+  String? get tenantRole => _storage.read<String>(BoxConstants.tenantRole);
+
+  /// User id from the access token payload (`user_id` claim).
+  String? get userId => _storage.read<String>(BoxConstants.userId);
+
+  /// Username from the access token payload (`username` claim).
+  String? get username => _storage.read<String>(BoxConstants.username);
+
+  /// Roles list from the access token payload (`roles` claim).
+  List<String> get userRoles {
+    final raw = _storage.read(BoxConstants.userRoles);
+    if (raw is List) return raw.whereType<String>().toList();
+    return const <String>[];
+  }
 
   /// POST `/auth/introspect` with the stored access token.
   Future<IntrospectResponse> introspect() async {

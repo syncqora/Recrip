@@ -2,19 +2,26 @@ import 'dart:convert';
 
 import 'package:flutter/foundation.dart';
 import 'package:get/get.dart';
+import 'package:get_storage/get_storage.dart';
 
 import '../../core/models/member/member_schema_models.dart';
+import '../../shared/constants/box_constants.dart';
 import '../../shared/utils/app_exceptions.dart';
 import '../../shared/utils/tracking_id.dart';
 import '../endPoints/end_points.dart';
 import '../services/services.dart';
 
+/// Reads the tenant id persisted at login time from the JWT payload.
+String _tenantId() => GetStorage().read<String>(BoxConstants.tenantId) ?? '';
+
 class MemberServices {
   Future<MemberSchemaResponse> getMemberSchema() async {
     debugPrint('[MemberSchema] getMemberSchema() start');
-    final ApiServices api =
-        Get.find<ApiServices>(tag: ApiServicesTag.dataManagement);
+    final ApiServices api = Get.find<ApiServices>(
+      tag: ApiServicesTag.dataManagement,
+    );
     final headers = <String, String>{
+      'X-Tenant-Id': _tenantId(),
       'X-Tracking-Id': newTrackingId(),
     };
 
@@ -55,9 +62,11 @@ class MemberServices {
     debugPrint(
       '[MemberContent] getMembers() start pageNumber=$pageNumber pageSize=$pageSize',
     );
-    final ApiServices api =
-        Get.find<ApiServices>(tag: ApiServicesTag.dataManagement);
+    final ApiServices api = Get.find<ApiServices>(
+      tag: ApiServicesTag.dataManagement,
+    );
     final headers = <String, String>{
+      'X-Tenant-Id': _tenantId(),
       'X-Tracking-Id': newTrackingId(),
       'X-Client-Id': ApiEndPoints.clientId,
     };
@@ -102,9 +111,11 @@ class MemberServices {
   Future<MemberAsset?> createMember({
     required Map<String, dynamic> body,
   }) async {
-    final ApiServices api =
-        Get.find<ApiServices>(tag: ApiServicesTag.dataManagement);
+    final ApiServices api = Get.find<ApiServices>(
+      tag: ApiServicesTag.dataManagement,
+    );
     final headers = <String, String>{
+      'X-Tenant-Id': _tenantId(),
       'X-Client-Id': ApiEndPoints.clientId,
       'Content-Type': 'application/json',
     };
@@ -143,9 +154,11 @@ class MemberServices {
     required String contentId,
     required Map<String, dynamic> body,
   }) async {
-    final ApiServices api =
-        Get.find<ApiServices>(tag: ApiServicesTag.dataManagement);
+    final ApiServices api = Get.find<ApiServices>(
+      tag: ApiServicesTag.dataManagement,
+    );
     final headers = <String, String>{
+      'X-Tenant-Id': _tenantId(),
       'X-Tracking-Id': newTrackingId(),
       'X-Client-Id': ApiEndPoints.clientId,
       'Content-Type': 'application/json',

@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
-import '../../../authentication/widgets/app_constants.dart';
 import '../../../authentication/widgets/auth_form_field_section.dart';
 import '../../../authentication/widgets/auth_password_field.dart';
 import '../../../authentication/widgets/auth_text_field.dart';
 import 'package:saas/shared/constants/app_strings.dart';
+import 'payments_renewals_view.dart';
 import 'settings_mobile_view.dart';
 import 'settings_tablet_view.dart';
 
@@ -102,7 +102,8 @@ class _SettingsContent extends StatefulWidget {
 }
 
 class _SettingsContentState extends State<_SettingsContent> {
-  int _selectedTabIndex = 0; // 0 = Profile, 1 = Login & Security
+  int _selectedTabIndex =
+      0; // 0 = Profile, 1 = Login & Security, 2 = Payments & Renewals
   final _businessNameController = TextEditingController(
     text: AppStrings.businessNameDefault,
   );
@@ -161,9 +162,7 @@ class _SettingsContentState extends State<_SettingsContent> {
             Expanded(
               child: Padding(
                 padding: const EdgeInsets.all(24),
-                child: _selectedTabIndex == 0
-                    ? _buildProfileContent()
-                    : _buildLoginSecurityContent(),
+                child: _buildTabContent(),
               ),
             ),
           ],
@@ -194,9 +193,26 @@ class _SettingsContentState extends State<_SettingsContent> {
             isSelected: _selectedTabIndex == 1,
             onTap: () => setState(() => _selectedTabIndex = 1),
           ),
+          _buildSidebarTab(
+            AppStrings.settingsPaymentsRenewalsTabLabel,
+            isSelected: _selectedTabIndex == 2,
+            onTap: () => setState(() => _selectedTabIndex = 2),
+          ),
         ],
       ),
     );
+  }
+
+  Widget _buildTabContent() {
+    switch (_selectedTabIndex) {
+      case 1:
+        return _buildLoginSecurityContent();
+      case 2:
+        return const PaymentsRenewalsView();
+      case 0:
+      default:
+        return _buildProfileContent();
+    }
   }
 
   Widget _buildSidebarTab(

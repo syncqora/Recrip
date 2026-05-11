@@ -8,6 +8,12 @@ class BoxConstants {
   static const String tokenExpiresAtMs = 'tokenExpiresAtMs';
   static const String tokenScope = 'tokenScope';
   static const String userId = 'userId';
+  static const String username = 'username';
+  static const String userEmail = 'userEmail';
+  static const String userRoles = 'userRoles';
+  static const String tenantId = 'tenantId';
+  static const String tenantSlug = 'tenantSlug';
+  static const String tenantRole = 'tenantRole';
   static const String isAlreadyInstalled = "isAlreadyInstalled";
   static const String deviceID = 'deviceID';
   static const String buildNumber = 'buildNumber';

@@ -4,6 +4,8 @@ import 'package:get/get.dart';
 import 'package:saas/shared/constants/app_strings.dart';
 import 'package:saas/shared/constants/app_icons.dart';
 
+import 'payments_renewals_view.dart';
+
 class SettingsTabletView extends StatefulWidget {
   const SettingsTabletView({super.key});
 
@@ -88,9 +90,7 @@ class _SettingsTabletViewState extends State<SettingsTabletView> {
             Expanded(
               child: Padding(
                 padding: const EdgeInsets.all(24),
-                child: _selectedTabIndex == 0
-                    ? _buildProfileContent()
-                    : _buildLoginSecurityContent(),
+                child: _buildTabContent(),
               ),
             ),
           ],
@@ -120,9 +120,26 @@ class _SettingsTabletViewState extends State<SettingsTabletView> {
             _selectedTabIndex == 1,
             () => setState(() => _selectedTabIndex = 1),
           ),
+          _buildSidebarTab(
+            AppStrings.settingsPaymentsRenewalsTabLabel,
+            _selectedTabIndex == 2,
+            () => setState(() => _selectedTabIndex = 2),
+          ),
         ],
       ),
     );
+  }
+
+  Widget _buildTabContent() {
+    switch (_selectedTabIndex) {
+      case 1:
+        return _buildLoginSecurityContent();
+      case 2:
+        return const PaymentsRenewalsView();
+      case 0:
+      default:
+        return _buildProfileContent();
+    }
   }
 
   Widget _buildSidebarTab(String label, bool isSelected, VoidCallback onTap) {

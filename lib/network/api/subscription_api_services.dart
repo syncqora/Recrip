@@ -2,12 +2,17 @@ import 'dart:convert';
 
 import 'package:flutter/foundation.dart';
 import 'package:get/get.dart';
+import 'package:get_storage/get_storage.dart';
 
 import '../../core/models/subscription/subscription_schema_models.dart';
+import '../../shared/constants/box_constants.dart';
 import '../../shared/utils/app_exceptions.dart';
 import '../../shared/utils/tracking_id.dart';
 import '../endPoints/end_points.dart';
 import '../services/services.dart';
+
+/// Reads the tenant id persisted at login time from the JWT payload.
+String _tenantId() => GetStorage().read<String>(BoxConstants.tenantId) ?? '';
 
 /// Subscription / asset schema API.
 ///
@@ -19,13 +24,17 @@ import '../services/services.dart';
 class SubscriptionServices {
   Future<SubscriptionSchemaResponse> getSubscriptionSchema() async {
     debugPrint('[SubscriptionSchema] getSubscriptionSchema() start');
-    final ApiServices api =
-        Get.find<ApiServices>(tag: ApiServicesTag.dataManagement);
+    final ApiServices api = Get.find<ApiServices>(
+      tag: ApiServicesTag.dataManagement,
+    );
     final headers = <String, String>{
+      'X-Tenant-Id': _tenantId(),
       'X-Tracking-Id': newTrackingId(),
     };
 
-    debugPrint('[SubscriptionSchema] calling callApi GET ${SubscriptionEndPoints.schemaSubscription}');
+    debugPrint(
+      '[SubscriptionSchema] calling callApi GET ${SubscriptionEndPoints.schemaSubscription}',
+    );
     final Response<dynamic> res = await api.callApi(
       httpMethod: HttpMethod.get,
       endPoint: SubscriptionEndPoints.schemaSubscription,
@@ -71,9 +80,11 @@ class SubscriptionServices {
     debugPrint(
       '[SubscriptionContent] getSubscriptions() start pageNumber=$pageNumber pageSize=$pageSize',
     );
-    final ApiServices api =
-        Get.find<ApiServices>(tag: ApiServicesTag.dataManagement);
+    final ApiServices api = Get.find<ApiServices>(
+      tag: ApiServicesTag.dataManagement,
+    );
     final headers = <String, String>{
+      'X-Tenant-Id': _tenantId(),
       'X-Tracking-Id': newTrackingId(),
       'X-Client-Id': ApiEndPoints.clientId,
     };
