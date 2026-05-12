@@ -7,6 +7,7 @@ import 'package:saas/shared/constants/app_icons.dart';
 import '../business/admin_add_business_content.dart';
 import '../business/admin_business_content.dart';
 import '../business/view_business_modal.dart';
+import '../tenant/admin_tenant_user_section.dart';
 
 class AdminDashboardTabletView extends StatelessWidget {
   const AdminDashboardTabletView({
@@ -173,12 +174,14 @@ class AdminDashboardTabletView extends StatelessWidget {
             )
           : selectedNavIndex == 0
           ? _buildDashboardBody()
-          : AdminBusinessContent(
+          : selectedNavIndex == 1
+          ? AdminBusinessContent(
               isMobile: false,
               isTablet: true,
               onAddBusinessTap: onAddBusinessTap,
               onEditBusinessTap: onEditBusinessTap,
-            ),
+            )
+          : const AdminTenantUserSection(isMobile: false),
     );
   }
 
@@ -229,6 +232,7 @@ class AdminDashboardTabletView extends StatelessWidget {
             const SizedBox(height: 32),
             _buildNavTile(context, 'Dashboard', index: 0),
             _buildNavTile(context, 'Business', index: 1),
+            _buildNavTile(context, 'Tenants & users', index: 2),
             const Spacer(),
             const Divider(thickness: 1, color: _border, height: 1),
             _buildLogoutTile(context),
@@ -446,8 +450,12 @@ class AdminDashboardTabletView extends StatelessWidget {
                   .floor()
                   .clamp(1, visibleRows.length);
               final rowCount = (visibleRows.length / columns).ceil();
-              final availableHeight = constraints.maxHeight - ((rowCount - 1) * spacing);
-              final dynamicCardHeight = (availableHeight / rowCount).clamp(170.0, 280.0);
+              final availableHeight =
+                  constraints.maxHeight - ((rowCount - 1) * spacing);
+              final dynamicCardHeight = (availableHeight / rowCount).clamp(
+                170.0,
+                280.0,
+              );
 
               return GridView.builder(
                 physics: const NeverScrollableScrollPhysics(),

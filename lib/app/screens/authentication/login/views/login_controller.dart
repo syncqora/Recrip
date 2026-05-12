@@ -141,7 +141,9 @@ class LoginController extends GetxController {
       );
       print(const JsonEncoder.withIndent('  ').convert(response.toJson()));
       Get.find<AppSettingsController>().isUserLoggedIn.value = true;
-      appNav.changePage(AuthLanding.path(persistedEmail: email));
+      appNav.changePage(
+        AuthLanding.path(accessToken: _authService.accessToken),
+      );
     } catch (e) {
       Get.snackbar(
         'Login failed',

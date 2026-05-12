@@ -66,14 +66,13 @@ class BasePageController extends BaseController {
             appSettingsController.isUserLoggedIn.value = true;
             boxDb.writeBoolValue(key: BoxConstants.isUserLoggedIn, value: true);
             if (requestedPath != null && _isSupportedPath(requestedPath)) {
-              if (_isProtectedPath(requestedPath) || _isPublicPath(requestedPath)) {
+              if (_isProtectedPath(requestedPath) ||
+                  _isPublicPath(requestedPath)) {
                 _applyLandingPath(_normalizePublicPath(requestedPath));
                 return;
               }
             }
-            _applyLandingPath(
-              AuthLanding.path(intro: intro, persistedEmail: auth.loggedInEmail),
-            );
+            _applyLandingPath(AuthLanding.path(accessToken: auth.accessToken));
             return;
           }
           await auth.clearLocalSessionOnly();
@@ -86,28 +85,26 @@ class BasePageController extends BaseController {
             appSettingsController.isUserLoggedIn.value = true;
             boxDb.writeBoolValue(key: BoxConstants.isUserLoggedIn, value: true);
             if (requestedPath != null && _isSupportedPath(requestedPath)) {
-              if (_isProtectedPath(requestedPath) || _isPublicPath(requestedPath)) {
+              if (_isProtectedPath(requestedPath) ||
+                  _isPublicPath(requestedPath)) {
                 _applyLandingPath(_normalizePublicPath(requestedPath));
                 return;
               }
             }
-            _applyLandingPath(
-              AuthLanding.path(persistedEmail: auth.loggedInEmail),
-            );
+            _applyLandingPath(AuthLanding.path(accessToken: auth.accessToken));
             return;
           }
         } catch (_) {
           appSettingsController.isUserLoggedIn.value = true;
           boxDb.writeBoolValue(key: BoxConstants.isUserLoggedIn, value: true);
           if (requestedPath != null && _isSupportedPath(requestedPath)) {
-            if (_isProtectedPath(requestedPath) || _isPublicPath(requestedPath)) {
+            if (_isProtectedPath(requestedPath) ||
+                _isPublicPath(requestedPath)) {
               _applyLandingPath(_normalizePublicPath(requestedPath));
               return;
             }
           }
-          _applyLandingPath(
-            AuthLanding.path(persistedEmail: auth.loggedInEmail),
-          );
+          _applyLandingPath(AuthLanding.path(accessToken: auth.accessToken));
           return;
         }
       } else {

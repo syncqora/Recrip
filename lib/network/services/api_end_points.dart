@@ -2,7 +2,8 @@
 class ApiEndPoints {
   ApiEndPoints._();
 
-  /// Auth service (login, introspect, revoke). Used by [AuthServices].
+  /// Auth service (login, introspect, revoke) and super-admin platform APIs
+  /// (`/api/tenants`, `/api/users`, etc.). Used by [AuthServices] and [AdminPlatformServices].
   ///
   /// **Web:** CORS must allow this host. For local dev, `API_BASE_URL` sets both
   /// URLs to one origin in `main.dart`.

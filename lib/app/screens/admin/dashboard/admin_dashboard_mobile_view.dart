@@ -7,6 +7,7 @@ import 'package:saas/shared/constants/app_icons.dart';
 import '../business/admin_add_business_content.dart';
 import '../business/admin_business_content.dart';
 import '../business/view_business_modal.dart';
+import '../tenant/admin_tenant_user_section.dart';
 
 class AdminDashboardMobileView extends StatelessWidget {
   const AdminDashboardMobileView({
@@ -175,11 +176,13 @@ class AdminDashboardMobileView extends StatelessWidget {
             )
           : selectedNavIndex == 0
           ? _buildDashboardBody()
-          : AdminBusinessContent(
+          : selectedNavIndex == 1
+          ? AdminBusinessContent(
               isMobile: true,
               onAddBusinessTap: onAddBusinessTap,
               onEditBusinessTap: onEditBusinessTap,
-            ),
+            )
+          : const AdminTenantUserSection(isMobile: true),
     );
   }
 
@@ -230,6 +233,7 @@ class AdminDashboardMobileView extends StatelessWidget {
             const SizedBox(height: 32),
             _buildNavTile(context, 'Dashboard', index: 0),
             _buildNavTile(context, 'Business', index: 1),
+            _buildNavTile(context, 'Tenants & users', index: 2),
             const Spacer(),
             const Divider(thickness: 1, color: _border, height: 1),
             _buildLogoutTile(context),
@@ -510,7 +514,10 @@ class AdminDashboardMobileView extends StatelessWidget {
                 ),
               ),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 4,
+                ),
                 decoration: BoxDecoration(
                   color: _statusBadgeColor(status),
                   borderRadius: BorderRadius.circular(16),

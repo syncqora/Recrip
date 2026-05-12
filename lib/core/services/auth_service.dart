@@ -133,7 +133,7 @@ class AuthService extends GetxService {
 
   String? get accessToken => _storage.read<String>(BoxConstants.accessToken);
 
-  /// Lowercased email from last successful login; used for admin vs member routing.
+  /// Lowercased email from last successful login.
   String? get loggedInEmail =>
       _storage.read<String>(BoxConstants.loggedInEmail);
 

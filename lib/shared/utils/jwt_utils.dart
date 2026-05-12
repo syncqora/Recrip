@@ -37,4 +37,18 @@ class JwtUtils {
     }
     return null;
   }
+
+  /// Whether the JWT payload's `roles` claim includes `super_admin`.
+  ///
+  /// Expects `roles` to be a JSON array of strings (as persisted in
+  /// [AuthService]). Returns `false` if [token] is empty or `roles` is absent
+  /// or not a list.
+  static bool hasSuperAdminRole(String? token) {
+    final roles = decodePayload(token)['roles'];
+    if (roles is! List) return false;
+    for (final r in roles) {
+      if (r == 'super_admin') return true;
+    }
+    return false;
+  }
 }

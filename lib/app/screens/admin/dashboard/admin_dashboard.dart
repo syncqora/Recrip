@@ -14,6 +14,7 @@ import 'admin_dashboard_mobile_view.dart';
 import 'admin_dashboard_tablet_view.dart';
 import '../business/admin_add_business_content.dart';
 import '../business/view_business_modal.dart';
+import '../tenant/admin_tenant_user_section.dart';
 
 class AdminDashboard extends StatefulWidget {
   const AdminDashboard({super.key});
@@ -221,6 +222,7 @@ class _AdminDashboardState extends State<AdminDashboard> {
           const SizedBox(height: 48),
           _buildNavTile('Dashboard', index: 0),
           _buildNavTile('Business', index: 1),
+          _buildNavTile('Tenants & users', index: 2),
           const Spacer(),
           const Divider(thickness: 1, color: _border, height: 1),
           _buildLogoutTile(),
@@ -317,10 +319,10 @@ class _AdminDashboardState extends State<AdminDashboard> {
                 )
               : _selectedNavIndex == 0
               ? _buildDashboardBody()
-              : AdminBusinessContent(
+              : _selectedNavIndex == 1
+              ? AdminBusinessContent(
                   isMobile: false,
-                  onAddBusinessTap: () =>
-                      setState(() {
+                  onAddBusinessTap: () => setState(() {
                     _editingBusiness = null;
                     _isAddingBusiness = true;
                   }),
@@ -328,7 +330,8 @@ class _AdminDashboardState extends State<AdminDashboard> {
                     _editingBusiness = business;
                     _isAddingBusiness = true;
                   }),
-                ),
+                )
+              : const AdminTenantUserSection(isMobile: false),
         ),
       ],
     );

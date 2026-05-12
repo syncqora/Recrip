@@ -89,6 +89,9 @@ Future<void> setupGlobalServices() async {
       permanent: true,
     );
   }
+  if (!Get.isRegistered<AdminPlatformServices>()) {
+    Get.put<AdminPlatformServices>(AdminPlatformServices(), permanent: true);
+  }
   if (!Get.isRegistered<AuthService>()) {
     Get.put<AuthService>(
       AuthService(Get.find<AuthRepository>()),
