@@ -21,6 +21,7 @@ class CreatePlanModalMobileView extends StatelessWidget {
     required this.onCancel,
     required this.onCreate,
     required this.isCreateEnabled,
+    required this.isSubmitting,
   });
 
   final TextEditingController planNameController;
@@ -32,8 +33,9 @@ class CreatePlanModalMobileView extends StatelessWidget {
   final ValueChanged<PlanDuration> onDurationChanged;
   final Future<void> Function(BuildContext) onStatusTap;
   final VoidCallback onCancel;
-  final VoidCallback onCreate;
+  final Future<void> Function() onCreate;
   final bool isCreateEnabled;
+  final bool isSubmitting;
 
   static const _inputBorderRadius = 10.0;
   static const _inputBorderColor = Color(0xFFE2E8F0);
@@ -92,95 +94,95 @@ class CreatePlanModalMobileView extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-            _buildSectionTitle('Plan Details'),
-            const SizedBox(height: 16),
-            AuthFormFieldSection(
-              label: 'Plan Name',
-              spacingAfterLabel: 8,
-              child: TextField(
-                controller: planNameController,
-                cursorColor: Colors.black,
-                onTapOutside: (_) {},
-                style: Get.textTheme.bodyMedium?.copyWith(
-                  color: _labelColor,
-                  fontSize: 14,
-                ),
-                decoration: _inputDecoration(
-                  'Enter Plan Name',
-                  hasValue: planNameController.text.trim().isNotEmpty,
-                ),
-              ),
-            ),
-            const SizedBox(height: 16),
-            AuthFormFieldSection(
-              label: 'Price',
-              spacingAfterLabel: 8,
-              child: TextField(
-                controller: priceController,
-                cursorColor: Colors.black,
-                onTapOutside: (_) {},
-                style: Get.textTheme.bodyMedium?.copyWith(
-                  color: _labelColor,
-                  fontSize: 14,
-                ),
-                decoration: _inputDecoration(
-                  'Enter Plan Price',
-                  hasValue: priceController.text.trim().isNotEmpty,
+              _buildSectionTitle('Plan Details'),
+              const SizedBox(height: 16),
+              AuthFormFieldSection(
+                label: 'Plan Name',
+                spacingAfterLabel: 8,
+                child: TextField(
+                  controller: planNameController,
+                  cursorColor: Colors.black,
+                  onTapOutside: (_) {},
+                  style: Get.textTheme.bodyMedium?.copyWith(
+                    color: _labelColor,
+                    fontSize: 14,
+                  ),
+                  decoration: _inputDecoration(
+                    'Enter Plan Name',
+                    hasValue: planNameController.text.trim().isNotEmpty,
+                  ),
                 ),
               ),
-            ),
-            const SizedBox(height: 16),
-            AuthFormFieldSection(
-              label: 'Status',
-              spacingAfterLabel: 8,
-              child: Builder(
-                builder: (statusContext) => InkWell(
-                  onTap: () {
-                    onStatusTap(statusContext);
-                  },
-                  child: Container(
-                    height: 44,
-                    padding: const EdgeInsets.symmetric(horizontal: 14),
-                    decoration: BoxDecoration(
-                      color: selectedStatus != null
-                          ? _filledFieldColor
-                          : Colors.white,
-                      borderRadius: BorderRadius.circular(_inputBorderRadius),
-                      border: Border.all(color: _inputBorderColor),
-                    ),
-                    child: Row(
-                      children: [
-                        Expanded(
-                          child: Text(
-                            selectedStatus ?? 'Select Plan Status',
-                            style: Get.theme.textTheme.labelMedium?.copyWith(
-                              fontSize: 12,
-                              fontWeight: FontWeight.w500,
-                              height: 1,
-                              color: selectedStatus != null
-                                  ? AppConstants.textColor
-                                  : _dropdownPlaceholderColor,
+              const SizedBox(height: 16),
+              AuthFormFieldSection(
+                label: 'Price',
+                spacingAfterLabel: 8,
+                child: TextField(
+                  controller: priceController,
+                  cursorColor: Colors.black,
+                  onTapOutside: (_) {},
+                  style: Get.textTheme.bodyMedium?.copyWith(
+                    color: _labelColor,
+                    fontSize: 14,
+                  ),
+                  decoration: _inputDecoration(
+                    'Enter Plan Price',
+                    hasValue: priceController.text.trim().isNotEmpty,
+                  ),
+                ),
+              ),
+              const SizedBox(height: 16),
+              AuthFormFieldSection(
+                label: 'Status',
+                spacingAfterLabel: 8,
+                child: Builder(
+                  builder: (statusContext) => InkWell(
+                    onTap: () {
+                      onStatusTap(statusContext);
+                    },
+                    child: Container(
+                      height: 44,
+                      padding: const EdgeInsets.symmetric(horizontal: 14),
+                      decoration: BoxDecoration(
+                        color: selectedStatus != null
+                            ? _filledFieldColor
+                            : Colors.white,
+                        borderRadius: BorderRadius.circular(_inputBorderRadius),
+                        border: Border.all(color: _inputBorderColor),
+                      ),
+                      child: Row(
+                        children: [
+                          Expanded(
+                            child: Text(
+                              selectedStatus ?? 'Select Plan Status',
+                              style: Get.theme.textTheme.labelMedium?.copyWith(
+                                fontSize: 12,
+                                fontWeight: FontWeight.w500,
+                                height: 1,
+                                color: selectedStatus != null
+                                    ? AppConstants.textColor
+                                    : _dropdownPlaceholderColor,
+                              ),
                             ),
                           ),
-                        ),
-                        const Icon(
-                          Icons.keyboard_arrow_down,
-                          size: 20,
-                          color: Color(0xFF64748B),
-                        ),
-                      ],
+                          const Icon(
+                            Icons.keyboard_arrow_down,
+                            size: 20,
+                            color: Color(0xFF64748B),
+                          ),
+                        ],
+                      ),
                     ),
                   ),
                 ),
               ),
-            ),
-            const SizedBox(height: 24),
-            _buildSectionTitle('Select Plan Duration'),
-            const SizedBox(height: 12),
-            _buildDurationRadios(),
-            const SizedBox(height: 16),
-            _buildCustomDurationField(),
-            const SizedBox(height: 140),
+              const SizedBox(height: 24),
+              _buildSectionTitle('Select Plan Duration'),
+              const SizedBox(height: 12),
+              _buildDurationRadios(),
+              const SizedBox(height: 16),
+              _buildCustomDurationField(),
+              const SizedBox(height: 140),
             ],
           ),
         ),
@@ -370,7 +372,7 @@ class CreatePlanModalMobileView extends StatelessWidget {
       children: [
         Expanded(
           child: OutlinedButton(
-            onPressed: onCancel,
+            onPressed: isSubmitting ? null : onCancel,
             style: OutlinedButton.styleFrom(
               foregroundColor: const Color(0xFF334155),
               side: const BorderSide(color: _inputBorderColor),
@@ -385,8 +387,12 @@ class CreatePlanModalMobileView extends StatelessWidget {
         const SizedBox(width: 12),
         Expanded(
           child: AppModalPrimaryButton(
-            label: 'Create Plan',
-            onPressed: isCreateEnabled ? onCreate : null,
+            label: isSubmitting ? 'Creating...' : 'Create Plan',
+            onPressed: (isCreateEnabled && !isSubmitting)
+                ? () async {
+                    await onCreate();
+                  }
+                : null,
             padding: const EdgeInsets.symmetric(vertical: 12),
             borderRadius: 10,
           ),

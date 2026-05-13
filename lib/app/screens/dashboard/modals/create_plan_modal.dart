@@ -21,17 +21,22 @@ class CreatePlanResult {
     required this.duration,
     required this.price,
     required this.isActive,
+    required this.apiDuration,
   });
   final String planName;
   final String duration;
   final String price;
   final bool isActive;
+
+  /// Value for POST `data.duration` (e.g. `monthly`, `yearly`).
+  final String apiDuration;
 }
 
 class CreatePlanModal extends StatefulWidget {
   const CreatePlanModal({super.key, this.onCreate});
 
-  final void Function(CreatePlanResult)? onCreate;
+  /// When non-null, invoked after validation; await completes before submit UI resets.
+  final Future<void> Function(CreatePlanResult)? onCreate;
 
   @override
   State<CreatePlanModal> createState() => _CreatePlanModalState();
@@ -55,6 +60,8 @@ class _CreatePlanModalState extends State<CreatePlanModal> {
     horizontal: 16,
     vertical: 16,
   );
+
+  bool _isSubmitting = false;
 
   bool get _isCreateEnabled =>
       _planNameController.text.trim().isNotEmpty &&
@@ -175,22 +182,50 @@ class _CreatePlanModalState extends State<CreatePlanModal> {
     return 'Custom';
   }
 
-  void _onCreate() {
-    if (!_isCreateEnabled) return;
+  String _apiDurationForPayload() {
+    if (_selectedDuration != null) {
+      switch (_selectedDuration!) {
+        case PlanDuration.days30:
+          return 'monthly';
+        case PlanDuration.months3:
+          return 'quarterly';
+        case PlanDuration.months6:
+          return 'semi_annual';
+        case PlanDuration.months12:
+          return 'yearly';
+      }
+    }
+    if (_customStartDate != null) {
+      return 'custom';
+    }
+    return 'monthly';
+  }
+
+  Future<void> _onCreate() async {
+    if (!_isCreateEnabled || _isSubmitting) return;
     final result = CreatePlanResult(
       planName: _planNameController.text.trim(),
       duration: _getDurationString(),
       price: _priceController.text.trim(),
       isActive: _selectedStatus == 'Active',
+      apiDuration: _apiDurationForPayload(),
     );
-    if (widget.onCreate != null) {
-      widget.onCreate!(result);
-    } else {
-      SuccessToast.show(
-        context,
-        title: 'Plan Created Successfully!',
-        popRoute: true,
-      );
+    setState(() => _isSubmitting = true);
+    try {
+      if (widget.onCreate != null) {
+        await widget.onCreate!(result);
+      } else {
+        if (!mounted) return;
+        SuccessToast.show(
+          context,
+          title: 'Plan Created Successfully!',
+          popRoute: true,
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isSubmitting = false);
+      }
     }
   }
 
@@ -211,6 +246,7 @@ class _CreatePlanModalState extends State<CreatePlanModal> {
         onCancel: () => Navigator.of(context).pop(),
         onCreate: _onCreate,
         isCreateEnabled: _isCreateEnabled,
+        isSubmitting: _isSubmitting,
       );
     }
 
@@ -227,6 +263,7 @@ class _CreatePlanModalState extends State<CreatePlanModal> {
         onCancel: () => Navigator.of(context).pop(),
         onCreate: _onCreate,
         isCreateEnabled: _isCreateEnabled,
+        isSubmitting: _isSubmitting,
       );
     }
 
@@ -567,7 +604,7 @@ class _CreatePlanModalState extends State<CreatePlanModal> {
           width: 94,
           height: 44,
           child: TextButton(
-            onPressed: () => Navigator.of(context).pop(),
+            onPressed: _isSubmitting ? null : () => Navigator.of(context).pop(),
             style: TextButton.styleFrom(
               foregroundColor: AppConstants.supportTextColor,
               padding: const EdgeInsets.fromLTRB(20, 12, 20, 12),
@@ -588,8 +625,10 @@ class _CreatePlanModalState extends State<CreatePlanModal> {
           width: 146,
           height: 44,
           child: AppModalPrimaryButton(
-            label: 'Create Plan',
-            onPressed: _isCreateEnabled ? _onCreate : null,
+            label: _isSubmitting ? 'Creating...' : 'Create Plan',
+            onPressed: (_isCreateEnabled && !_isSubmitting)
+                ? () => _onCreate()
+                : null,
             padding: const EdgeInsets.fromLTRB(20, 12, 20, 12),
             minimumSize: const Size(146, 44),
             borderRadius: 10,

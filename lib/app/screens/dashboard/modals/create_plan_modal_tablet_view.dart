@@ -22,6 +22,7 @@ class CreatePlanModalTabletView extends StatelessWidget {
     required this.onCancel,
     required this.onCreate,
     required this.isCreateEnabled,
+    required this.isSubmitting,
   });
 
   final TextEditingController planNameController;
@@ -33,8 +34,9 @@ class CreatePlanModalTabletView extends StatelessWidget {
   final ValueChanged<PlanDuration> onDurationChanged;
   final Future<void> Function(BuildContext) onStatusTap;
   final VoidCallback onCancel;
-  final VoidCallback onCreate;
+  final Future<void> Function() onCreate;
   final bool isCreateEnabled;
+  final bool isSubmitting;
 
   static const _inputBorderRadius = 10.0;
   static const _inputBorderColor = Color(0xFFE2E8F0);
@@ -315,7 +317,9 @@ class CreatePlanModalTabletView extends StatelessWidget {
                           selectedStatus ?? 'Select Plan Status',
                           style: Get.theme.textTheme.bodyMedium?.copyWith(
                             fontSize: 14,
-                            color: selectedStatus != null ? _labelColor : _hintColor,
+                            color: selectedStatus != null
+                                ? _labelColor
+                                : _hintColor,
                           ),
                         ),
                       ),
@@ -343,7 +347,7 @@ class CreatePlanModalTabletView extends StatelessWidget {
       mainAxisAlignment: MainAxisAlignment.end,
       children: [
         OutlinedButton(
-          onPressed: onCancel,
+          onPressed: isSubmitting ? null : onCancel,
           style: OutlinedButton.styleFrom(
             foregroundColor: const Color(0xFF334155),
             side: const BorderSide(color: _inputBorderColor),
@@ -356,8 +360,12 @@ class CreatePlanModalTabletView extends StatelessWidget {
         ),
         const SizedBox(width: 16),
         AppModalPrimaryButton(
-          label: 'Create Plan',
-          onPressed: isCreateEnabled ? onCreate : null,
+          label: isSubmitting ? 'Creating...' : 'Create Plan',
+          onPressed: (isCreateEnabled && !isSubmitting)
+              ? () async {
+                  await onCreate();
+                }
+              : null,
           padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
           borderRadius: 10,
         ),

@@ -7,6 +7,11 @@ abstract class SubscriptionRepository {
     int pageNumber,
     int pageSize,
   });
+
+  /// POST `/content/asset/subscription`.
+  Future<SubscriptionAsset?> createSubscription({
+    required Map<String, dynamic> body,
+  });
 }
 
 class SubscriptionRepo implements SubscriptionRepository {
@@ -23,4 +28,9 @@ class SubscriptionRepo implements SubscriptionRepository {
     int pageNumber = 1,
     int pageSize = 20,
   }) => services.getSubscriptions(pageNumber: pageNumber, pageSize: pageSize);
+
+  @override
+  Future<SubscriptionAsset?> createSubscription({
+    required Map<String, dynamic> body,
+  }) => services.createSubscription(body: body);
 }

@@ -133,4 +133,56 @@ class SubscriptionServices {
       throw JSONException(e.toString());
     }
   }
+
+  /// POST `/content/asset/subscription` — creates a subscription content asset.
+  ///
+  /// Headers: `Authorization` (via [ApiServices]), `X-Tenant-Id`, `X-Client-Id`,
+  /// `Content-Type`.
+  Future<SubscriptionAsset?> createSubscription({
+    required Map<String, dynamic> body,
+  }) async {
+    debugPrint('[SubscriptionCreate] createSubscription() start');
+    final ApiServices api = Get.find<ApiServices>(
+      tag: ApiServicesTag.dataManagement,
+    );
+    final headers = <String, String>{
+      'X-Tenant-Id': _tenantId(),
+      'X-Client-Id': ApiEndPoints.clientId,
+      'Content-Type': 'application/json',
+    };
+
+    final Response<dynamic> res = await api.callApi(
+      httpMethod: HttpMethod.post,
+      endPoint: SubscriptionEndPoints.contentSubscription,
+      headers: headers,
+      body: body,
+    );
+    debugPrint(
+      '[SubscriptionCreate] status=${res.statusCode} bodyString=\n${res.bodyString}',
+    );
+
+    final raw = res.bodyString;
+    Map<String, dynamic>? map;
+    final responseBody = res.body;
+    if (responseBody is Map<String, dynamic>) {
+      map = responseBody;
+    } else if (raw != null && raw.isNotEmpty) {
+      final decoded = jsonDecode(raw);
+      if (decoded is Map<String, dynamic>) {
+        map = decoded;
+      }
+    }
+    if (map == null) {
+      return null;
+    }
+    final parsed = SubscriptionSchemaResponse.fromJson(map);
+    if (parsed.items.isNotEmpty) {
+      return parsed.items.first;
+    }
+    final data = map['data'];
+    if (data is Map<String, dynamic>) {
+      return SubscriptionAsset.fromJson(data);
+    }
+    return null;
+  }
 }

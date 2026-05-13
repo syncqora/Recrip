@@ -20,6 +20,11 @@ part 'landing_page_tablet_view.dart';
 /// (18 top + 48 nav shell + 12 bottom).
 const double _kLandingNavSpyAnchorBelowSafeTop = 78;
 
+/// Extra pixels added to the spy line so a section counts as "active" when
+/// [Scrollable.ensureVisible] stops with its top just below the anchor (small
+/// [alignment] values leave `dy` slightly above the line otherwise).
+const double _kLandingNavSpySectionTopSlackPx = 72;
+
 /// Mouse, trackpad, touch, and stylus all scroll — avoids janky wheel handling on web/desktop.
 class _LandingScrollBehavior extends MaterialScrollBehavior {
   const _LandingScrollBehavior();
@@ -139,6 +144,7 @@ class _LandingPageState extends State<LandingPage> {
   _TopNavTab? _activeTabFromScrollPhysics(BuildContext context) {
     final anchorY =
         MediaQuery.paddingOf(context).top + _kLandingNavSpyAnchorBelowSafeTop;
+    final effectiveAnchor = anchorY + _kLandingNavSpySectionTopSlackPx;
 
     final tabs = <({_TopNavTab tab, GlobalKey key})>[
       (tab: _TopNavTab.features, key: _featuresKey),
@@ -154,7 +160,7 @@ class _LandingPageState extends State<LandingPage> {
       final ro = target.findRenderObject();
       if (ro is! RenderBox || !ro.hasSize) continue;
       final dy = ro.localToGlobal(Offset.zero).dy;
-      if (dy <= anchorY) {
+      if (dy <= effectiveAnchor) {
         chosen = tab;
       }
     }
@@ -165,7 +171,7 @@ class _LandingPageState extends State<LandingPage> {
     if (!mounted) return;
     _suppressScrollSpy = true;
     _navTabHighlight.value = tab;
-    await _scrollTo(key, alignment: 0.04);
+    await _scrollTo(key, alignment: 0.0);
     if (!mounted) return;
     await Future<void>.delayed(const Duration(milliseconds: 460));
     if (!mounted) return;
@@ -431,74 +437,74 @@ class _TopNav extends StatelessWidget {
         final pillHPad = tight ? 12.0 : 16.0;
         final navShellHPad = tight ? 4.0 : 8.0;
 
-        return Row(
+        final logoRow = Row(
+          mainAxisSize: MainAxisSize.min,
           children: [
-            Row(
+            Image.asset(
+              'assets/images/brand-logo.png',
+              width: 34,
+              height: 34,
+              fit: BoxFit.contain,
+            ),
+            const SizedBox(width: 10),
+            Image.asset(
+              'assets/images/recrip.png',
+              height: 42,
+              fit: BoxFit.contain,
+            ),
+          ],
+        );
+
+        final pillShell = SizedBox(
+          height: 48,
+          child: Container(
+            padding: EdgeInsets.symmetric(
+              horizontal: navShellHPad,
+              vertical: 6.5,
+            ),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(30),
+              border: Border.all(color: const Color(0xFF4F46E5), width: 1),
+              color: const Color(0x14000000),
+            ),
+            child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Image.asset(
-                  'assets/images/brand-logo.png',
-                  width: 34,
-                  height: 34,
-
-                  fit: BoxFit.contain,
+                navPill(
+                  tab: _TopNavTab.features,
+                  label: 'Features',
+                  onTap: onFeatures,
+                  pillHorizontalPadding: pillHPad,
                 ),
-                const SizedBox(width: 10),
-                Image.asset(
-                  'assets/images/recrip.png',
-                  height: 42,
-                  fit: BoxFit.contain,
+                SizedBox(width: pillGap),
+                navPill(
+                  tab: _TopNavTab.howItWorks,
+                  label: 'How it works',
+                  onTap: onSteps,
+                  pillHorizontalPadding: pillHPad,
+                ),
+                SizedBox(width: pillGap),
+                navPill(
+                  tab: _TopNavTab.pricing,
+                  label: 'Pricing',
+                  onTap: onPricing,
+                  pillHorizontalPadding: pillHPad,
+                ),
+                SizedBox(width: pillGap),
+                navPill(
+                  tab: _TopNavTab.contact,
+                  label: 'Contact',
+                  onTap: onContact,
+                  pillHorizontalPadding: pillHPad,
                 ),
               ],
             ),
-            const Spacer(),
-            SizedBox(
-              height: 48,
-              child: Container(
-                padding: EdgeInsets.symmetric(
-                  horizontal: navShellHPad,
-                  vertical: 6.5,
-                ),
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(30),
-                  border: Border.all(color: const Color(0xFF4F46E5), width: 1),
-                  color: const Color(0x14000000),
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    navPill(
-                      tab: _TopNavTab.features,
-                      label: 'Features',
-                      onTap: onFeatures,
-                      pillHorizontalPadding: pillHPad,
-                    ),
-                    SizedBox(width: pillGap),
-                    navPill(
-                      tab: _TopNavTab.howItWorks,
-                      label: 'How it works',
-                      onTap: onSteps,
-                      pillHorizontalPadding: pillHPad,
-                    ),
-                    SizedBox(width: pillGap),
-                    navPill(
-                      tab: _TopNavTab.pricing,
-                      label: 'Pricing',
-                      onTap: onPricing,
-                      pillHorizontalPadding: pillHPad,
-                    ),
-                    SizedBox(width: pillGap),
-                    navPill(
-                      tab: _TopNavTab.contact,
-                      label: 'Contact',
-                      onTap: onContact,
-                      pillHorizontalPadding: pillHPad,
-                    ),
-                  ],
-                ),
-              ),
-            ),
-            const Spacer(),
+          ),
+        );
+
+        final ctaRow = Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
             TextButton(
               onPressed: () => appNav.changePage(AppRoutes.login),
               style: TextButton.styleFrom(
@@ -556,6 +562,20 @@ class _TopNav extends StatelessWidget {
               ),
             ),
           ],
+        );
+
+        return SizedBox(
+          height: 48,
+          width: w,
+          child: Stack(
+            clipBehavior: Clip.none,
+            alignment: Alignment.center,
+            children: [
+              Align(alignment: Alignment.centerLeft, child: logoRow),
+              Align(alignment: Alignment.centerRight, child: ctaRow),
+              pillShell,
+            ],
+          ),
         );
       },
     );
@@ -663,61 +683,14 @@ class _HeroSection extends StatelessWidget {
           ),
           const SizedBox(height: 90),
           Center(
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                FittedBox(
-                  fit: BoxFit.scaleDown,
-                  alignment: Alignment.centerLeft,
-                  child: _HeroDashboardCard(
-                    imagePath: _previewImageFor(selectedTab),
-                    sizeScale: dashboardScale,
-                  ),
-                ),
-                const SizedBox(width: 60),
-                Column(
-                  mainAxisSize: MainAxisSize.min,
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    RichText(
-                      text: TextSpan(
-                        style: Theme.of(context).textTheme.headlineMedium
-                            ?.copyWith(
-                              fontSize: 30,
-                              fontWeight: FontWeight.w900,
-                              color: Colors.white,
-                            ),
-                        children: const [
-                          TextSpan(text: 'Built for '),
-                          TextSpan(
-                            text: 'Modern',
-                            style: TextStyle(color: Color(0xFF4F46E5)),
-                          ),
-                          TextSpan(text: '\n'),
-                          TextSpan(
-                            text: 'Teams',
-                            style: TextStyle(color: Color(0xFF4F46E5)),
-                          ),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(height: 40),
-                    ..._PreviewTab.values.map((tab) {
-                      return Padding(
-                        padding: const EdgeInsets.only(bottom: 16),
-                        child: _PreviewNavItem(
-                          label: _previewLabel(tab),
-                          iconAsset: _previewIcon(tab),
-                          selected: tab == selectedTab,
-                          onTap: () => onTabSelected(tab),
-                        ),
-                      );
-                    }),
-                  ],
-                ),
-              ],
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 1120),
+              child: _HeroPreviewShowcase(
+                selectedTab: selectedTab,
+                onTabSelected: onTabSelected,
+                dashboardScale: dashboardScale,
+                isCompact: false,
+              ),
             ),
           ),
           const SizedBox(height: 40),
@@ -892,61 +865,172 @@ class _HeroDashboardCard extends StatelessWidget {
 
 enum _PreviewTab { dashboard, members, subscriptions, renewals }
 
-class _PreviewNavItem extends StatelessWidget {
-  const _PreviewNavItem({
+/// Framed dashboard mockup with headline above the image, subcopy, and
+/// centered horizontal preview pills (original showcase layout).
+class _HeroPreviewShowcase extends StatelessWidget {
+  const _HeroPreviewShowcase({
+    required this.selectedTab,
+    required this.onTabSelected,
+    required this.dashboardScale,
+    this.isCompact = false,
+  });
+
+  final _PreviewTab selectedTab;
+  final ValueChanged<_PreviewTab> onTabSelected;
+  final double dashboardScale;
+
+  /// Tighter padding and type when used from tablet layout.
+  final bool isCompact;
+
+  @override
+  Widget build(BuildContext context) {
+    final outerPad = isCompact ? 18.0 : 28.0;
+    final subcopySize = isCompact ? 14.0 : 16.0;
+
+    final subcopyStyle = Theme.of(context).textTheme.bodyMedium?.copyWith(
+      color: const Color(0xFFE2DDF7),
+      height: 1.55,
+      fontSize: subcopySize,
+      fontWeight: FontWeight.w400,
+    );
+
+    return Container(
+      width: double.infinity,
+      padding: EdgeInsets.all(outerPad),
+      decoration: BoxDecoration(
+        color: const Color(0xFF08042A),
+        borderRadius: BorderRadius.circular(28),
+        border: Border.all(color: const Color(0xFF4F46E5)),
+        boxShadow: const [
+          BoxShadow(
+            color: Color(0x443C2DD8),
+            blurRadius: 32,
+            offset: Offset(0, 12),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          RichText(
+            textAlign: TextAlign.center,
+            text: TextSpan(
+              style:
+                  Theme.of(context).textTheme.headlineMedium?.copyWith(
+                    fontSize: isCompact ? 24 : 30,
+                    fontWeight: FontWeight.w900,
+                    color: Colors.white,
+                  ) ??
+                  TextStyle(
+                    fontSize: isCompact ? 24 : 30,
+                    fontWeight: FontWeight.w900,
+                    color: Colors.white,
+                  ),
+              children: const [
+                TextSpan(text: 'Built for '),
+                TextSpan(
+                  text: 'Modern Teams',
+                  style: TextStyle(color: Color(0xFF4F46E5)),
+                ),
+              ],
+            ),
+          ),
+          SizedBox(height: isCompact ? 10 : 12),
+          Text(
+            'Switch between core product views to see how Recrip keeps your revenue operations organized.',
+            textAlign: TextAlign.center,
+            style: subcopyStyle,
+          ),
+          SizedBox(height: isCompact ? 18 : 22),
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: const Color(0xFF08042A),
+              borderRadius: BorderRadius.circular(24),
+              border: Border.all(color: const Color(0xFF4F46E5)),
+            ),
+            child: AspectRatio(
+              aspectRatio: 1.6,
+              child: _HeroDashboardCard(
+                imagePath: _previewImageFor(selectedTab),
+                sizeScale: isCompact ? 1.0 : dashboardScale,
+              ),
+            ),
+          ),
+          SizedBox(height: isCompact ? 18 : 22),
+          Wrap(
+            alignment: WrapAlignment.center,
+            spacing: isCompact ? 12 : 16,
+            runSpacing: isCompact ? 12 : 16,
+            children: _PreviewTab.values
+                .map(
+                  (tab) => _HeroPreviewTabChip(
+                    label: _previewLabel(tab),
+                    iconAsset: _previewIcon(tab),
+                    selected: tab == selectedTab,
+                    onTap: () => onTabSelected(tab),
+                    compact: isCompact,
+                  ),
+                )
+                .toList(),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _HeroPreviewTabChip extends StatelessWidget {
+  const _HeroPreviewTabChip({
     required this.label,
     required this.iconAsset,
     required this.selected,
     required this.onTap,
+    this.compact = true,
   });
 
   final String label;
   final String iconAsset;
   final bool selected;
   final VoidCallback onTap;
+  final bool compact;
 
   @override
   Widget build(BuildContext context) {
+    final iconSize = compact ? 18.0 : 20.0;
+    final hPad = compact ? 18.0 : 22.0;
+    final vPad = compact ? 12.0 : 14.0;
     return InkWell(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(30),
-      child: Container(
-        width: 255,
-        height: 56,
-        padding: const EdgeInsets.only(left: 24, right: 96),
-        alignment: Alignment.centerLeft,
+      borderRadius: BorderRadius.circular(999),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 180),
+        padding: EdgeInsets.symmetric(horizontal: hPad, vertical: vPad),
         decoration: BoxDecoration(
           color: selected ? const Color(0xFFEAEFFC) : Colors.transparent,
-          borderRadius: BorderRadius.circular(30),
+          borderRadius: BorderRadius.circular(999),
         ),
         child: Row(
-          mainAxisSize: MainAxisSize.max,
+          mainAxisSize: MainAxisSize.min,
           children: [
             SvgPicture.asset(
               iconAsset,
-              width: 22,
-              height: 22,
+              width: iconSize,
+              height: iconSize,
               colorFilter: ColorFilter.mode(
                 selected ? const Color(0xFF5C57F4) : const Color(0xFF66739B),
                 BlendMode.srcIn,
               ),
             ),
-            const SizedBox(width: 16),
-            Expanded(
-              child: OverflowBox(
-                alignment: Alignment.centerLeft,
-                minWidth: 0,
-                maxWidth: double.infinity,
-                child: Text(
-                  label,
-                  style: TextStyle(
-                    color: selected
-                        ? const Color(0xFF5C57F4)
-                        : const Color(0xFF66739B),
-                    fontWeight: FontWeight.w600,
-                    fontSize: 17,
-                  ),
-                ),
+            SizedBox(width: compact ? 10 : 12),
+            Text(
+              label,
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                color: selected
+                    ? const Color(0xFF5C57F4)
+                    : const Color(0xFF66739B),
+                fontWeight: FontWeight.w700,
+                fontSize: compact ? null : 16,
               ),
             ),
           ],

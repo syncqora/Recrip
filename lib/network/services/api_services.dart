@@ -1,8 +1,14 @@
 import 'package:flutter/foundation.dart'
-    show TargetPlatform, debugPrint, debugPrintStack, defaultTargetPlatform, kIsWeb;
+    show
+        TargetPlatform,
+        debugPrint,
+        debugPrintStack,
+        defaultTargetPlatform,
+        kIsWeb;
 import 'package:get/get_connect.dart';
 import 'package:get_storage/get_storage.dart';
 
+import '../../log_catcher/logs.dart';
 import '../../shared/constants/box_constants.dart';
 import '../../shared/utils/app_exceptions.dart';
 
@@ -21,9 +27,16 @@ abstract final class ApiServicesTag {
 ///
 /// Each instance is pinned to one API host; use [ApiServicesTag] when calling
 /// [Get.find].
+///
+/// Request/response logging follows CoffeeWeb-App `Logs.apiRequestLogger` /
+/// `Logs.apiResponseLogger` (see CoffeeWeb-App `docs/console_request_response_logging.md`):
+/// `dart:developer` [log] with [name] `Recrip APP` / `API SERVICE`, JSON with
+/// single-space indent, and [error] on non-success HTTP status. Login
+/// `password` fields in JSON bodies are redacted; tokens and Authorization
+/// values are logged in full.
 class ApiServices extends GetConnect {
   ApiServices(String rootUrl)
-      : _rootUrl = rootUrl.replaceAll(RegExp(r'/+$'), '');
+    : _rootUrl = rootUrl.replaceAll(RegExp(r'/+$'), '');
 
   final String _rootUrl;
 
@@ -57,7 +70,16 @@ class ApiServices extends GetConnect {
     final path = endPoint.startsWith('/') ? endPoint : '/$endPoint';
     final verb = httpMethod.name.toUpperCase();
     final fullUrl = '${baseUrl ?? ''}$path';
-    debugPrint('[ApiServices] $verb $fullUrl (timeout ${timeout.inSeconds}s)');
+    final token = GetStorage().read<String>(BoxConstants.accessToken);
+    Logs.apiGetConnectRequestLogger(
+      verb: verb,
+      fullUrl: fullUrl,
+      callerHeaders: headers,
+      query: query,
+      body: body,
+      bearerToken: token,
+    );
+
     if (!kIsWeb &&
         defaultTargetPlatform == TargetPlatform.android &&
         (fullUrl.contains('localhost') || fullUrl.contains('127.0.0.1'))) {
@@ -67,8 +89,6 @@ class ApiServices extends GetConnect {
       );
     }
 
-    // GetX only times out the body pipe on IO, not [HttpClient.openUrl] — a stuck
-    // TCP connect can hang forever. Always cap the whole request.
     late Response<dynamic> response;
     try {
       switch (httpMethod) {
@@ -79,22 +99,12 @@ class ApiServices extends GetConnect {
           break;
         case HttpMethod.post:
           response = await httpClient
-              .post<dynamic>(
-                path,
-                body: body,
-                query: query,
-                headers: headers,
-              )
+              .post<dynamic>(path, body: body, query: query, headers: headers)
               .timeout(timeout);
           break;
         case HttpMethod.put:
           response = await httpClient
-              .put<dynamic>(
-                path,
-                body: body,
-                query: query,
-                headers: headers,
-              )
+              .put<dynamic>(path, body: body, query: query, headers: headers)
               .timeout(timeout);
           break;
         case HttpMethod.delete:
@@ -104,12 +114,7 @@ class ApiServices extends GetConnect {
           break;
         case HttpMethod.patch:
           response = await httpClient
-              .patch<dynamic>(
-                path,
-                body: body,
-                query: query,
-                headers: headers,
-              )
+              .patch<dynamic>(path, body: body, query: query, headers: headers)
               .timeout(timeout);
           break;
       }
@@ -117,10 +122,7 @@ class ApiServices extends GetConnect {
       if (e is ApiException) rethrow;
       debugPrint('[ApiServices] $verb $path failed: $e');
       debugPrintStack(stackTrace: st);
-      throw ApiException(
-        '$verb $path failed: $e',
-        statusCode: null,
-      );
+      throw ApiException('$verb $path failed: $e', statusCode: null);
     }
 
     final st = response.statusText?.trim();
@@ -129,8 +131,7 @@ class ApiServices extends GetConnect {
         '[ApiServices] $verb $path → no HTTP status (connection failed). '
         'statusText=${st ?? '(empty)'}',
       );
-      if (kIsWeb &&
-          (st?.toLowerCase().contains('xmlhttprequest') ?? false)) {
+      if (kIsWeb && (st?.toLowerCase().contains('xmlhttprequest') ?? false)) {
         debugPrint(
           '[ApiServices] Flutter web: browser blocked the call (almost always CORS). '
           'The server at $baseUrl must answer OPTIONS preflight with e.g. '
@@ -144,9 +145,15 @@ class ApiServices extends GetConnect {
           'headers for /auth/*). Or use tool/web_cors_proxy.dart + --dart-define=API_BASE_URL=…',
         );
       }
-    } else {
-      debugPrint('[ApiServices] $verb $path → status=${response.statusCode}');
     }
+
+    Logs.apiGetConnectResponseLogger(
+      verb: verb,
+      fullUrl: fullUrl,
+      query: query,
+      response: response,
+    );
+
     if (!response.isOk) {
       ErrorHandler.throwForResponse(response);
     }

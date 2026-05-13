@@ -103,6 +103,7 @@ class _LandingPageTabletViewState extends State<LandingPageTabletView> {
   _TopNavTab? _activeTabFromScrollPhysics(BuildContext context) {
     final anchorY =
         MediaQuery.paddingOf(context).top + _kLandingNavSpyAnchorBelowSafeTop;
+    final effectiveAnchor = anchorY + _kLandingNavSpySectionTopSlackPx;
 
     final tabs = <({_TopNavTab tab, GlobalKey key})>[
       (tab: _TopNavTab.features, key: _featuresKey),
@@ -118,7 +119,7 @@ class _LandingPageTabletViewState extends State<LandingPageTabletView> {
       final ro = target.findRenderObject();
       if (ro is! RenderBox || !ro.hasSize) continue;
       final dy = ro.localToGlobal(Offset.zero).dy;
-      if (dy <= anchorY) {
+      if (dy <= effectiveAnchor) {
         chosen = tab;
       }
     }
@@ -129,7 +130,7 @@ class _LandingPageTabletViewState extends State<LandingPageTabletView> {
     if (!mounted) return;
     _suppressScrollSpy = true;
     _navTabHighlight.value = tab;
-    await _scrollTo(key, alignment: 0.04);
+    await _scrollTo(key, alignment: 0.0);
     if (!mounted) return;
     await Future<void>.delayed(const Duration(milliseconds: 460));
     if (!mounted) return;
@@ -510,149 +511,13 @@ class _TabletHeroSection extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 44),
-          _TabletPreviewShowcase(
+          _HeroPreviewShowcase(
             selectedTab: selectedTab,
             onTabSelected: onTabSelected,
+            dashboardScale: 1,
+            isCompact: MediaQuery.sizeOf(context).width < 900,
           ),
         ],
-      ),
-    );
-  }
-}
-
-class _TabletPreviewShowcase extends StatelessWidget {
-  const _TabletPreviewShowcase({
-    required this.selectedTab,
-    required this.onTabSelected,
-  });
-
-  final _PreviewTab selectedTab;
-  final ValueChanged<_PreviewTab> onTabSelected;
-
-  @override
-  Widget build(BuildContext context) {
-    final isCompact = MediaQuery.sizeOf(context).width < 900;
-    return Container(
-      width: double.infinity,
-      padding: EdgeInsets.all(isCompact ? 18 : 24),
-      decoration: BoxDecoration(
-        color: const Color(0xFF08042A),
-        borderRadius: BorderRadius.circular(28),
-        border: Border.all(color: const Color(0xFF4F46E5)),
-        boxShadow: const [
-          BoxShadow(
-            color: Color(0x443C2DD8),
-            blurRadius: 32,
-            offset: Offset(0, 12),
-          ),
-        ],
-      ),
-      child: Column(
-        children: [
-          Container(
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: const Color(0xFF08042A),
-              borderRadius: BorderRadius.circular(24),
-              border: Border.all(color: const Color(0xFF4F46E5)),
-            ),
-            child: AspectRatio(
-              aspectRatio: 1.6,
-              child: _HeroDashboardCard(
-                imagePath: _previewImageFor(selectedTab),
-                sizeScale: 1,
-              ),
-            ),
-          ),
-          const SizedBox(height: 22),
-          Text(
-            'Built for modern teams',
-            textAlign: TextAlign.center,
-            style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-              color: Colors.white,
-              fontWeight: FontWeight.w900,
-            ),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            'Switch between core product views to see how Recrip keeps your revenue operations organized.',
-            textAlign: TextAlign.center,
-            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-              color: const Color(0xFFE2DDF7),
-              height: 1.55,
-            ),
-          ),
-          const SizedBox(height: 18),
-          Wrap(
-            alignment: WrapAlignment.center,
-            spacing: 12,
-            runSpacing: 12,
-            children: _PreviewTab.values
-                .map(
-                  (tab) => _TabletPreviewTabChip(
-                    label: _previewLabel(tab),
-                    iconAsset: _previewIcon(tab),
-                    selected: tab == selectedTab,
-                    onTap: () => onTabSelected(tab),
-                  ),
-                )
-                .toList(),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _TabletPreviewTabChip extends StatelessWidget {
-  const _TabletPreviewTabChip({
-    required this.label,
-    required this.iconAsset,
-    required this.selected,
-    required this.onTap,
-  });
-
-  final String label;
-  final String iconAsset;
-  final bool selected;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(999),
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 180),
-        padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
-        decoration: BoxDecoration(
-          color: selected ? const Color(0xFFEAEFFC) : Colors.transparent,
-          borderRadius: BorderRadius.circular(999),
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            SvgPicture.asset(
-              iconAsset,
-              width: 18,
-              height: 18,
-              colorFilter: ColorFilter.mode(
-                selected ? const Color(0xFF5C57F4) : const Color(0xFF66739B),
-                BlendMode.srcIn,
-              ),
-            ),
-            const SizedBox(width: 10),
-            Text(
-              label,
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                color: selected
-                    ? const Color(0xFF5C57F4)
-                    : const Color(0xFF66739B),
-                fontWeight: FontWeight.w700,
-              ),
-            ),
-          ],
-        ),
       ),
     );
   }

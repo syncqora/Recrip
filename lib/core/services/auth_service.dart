@@ -8,6 +8,7 @@ import '../models/auth/introspect_response.dart';
 import '../models/auth/login_request.dart';
 import '../models/auth/login_response.dart';
 import '../models/auth/revoke_token_request.dart';
+import '../../log_catcher/logs.dart';
 import '../../network/repo/repo.dart';
 import '../../shared/constants/box_constants.dart';
 import '../../shared/utils/app_exceptions.dart';
@@ -48,6 +49,13 @@ class AuthService extends GetxService {
       loginEmail.trim().toLowerCase(),
     );
     await _persistTokenClaims(response.accessToken);
+    Logs.logPostLoginTokensAndJwtPayload(
+      accessToken: response.accessToken,
+      refreshToken: response.refreshToken,
+      tokenType: response.tokenType,
+      expiresIn: response.expiresIn,
+      scope: response.scope,
+    );
   }
 
   /// Decodes the access token payload and persists tenant + user identifiers
@@ -76,20 +84,6 @@ class AuthService extends GetxService {
         rawRoles.whereType<String>().toList(),
       );
     }
-
-    print(
-      '[AuthService] persisted JWT claims -> '
-      'tenant_id=${claims['tenant_id']}, '
-      'tenant_slug=${claims['tenant_slug']}, '
-      'tenant_role=${claims['tenant_role']}, '
-      'user_id=${claims['user_id']}, '
-      'username=${claims['username']}, '
-      'roles=${claims['roles']}',
-    );
-    print(
-      '[AuthService] BoxDB tenantId = '
-      '${_storage.read<String>(BoxConstants.tenantId)}',
-    );
   }
 
   /// Calls `POST /auth/revoke` when an access token exists, then clears local session.

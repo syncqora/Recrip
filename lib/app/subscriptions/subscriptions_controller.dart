@@ -1,9 +1,11 @@
-import 'package:flutter/material.dart';
+import 'package:flutter/widgets.dart';
 import 'package:get/get.dart';
+import 'package:saas/app/screens/dashboard/modals/create_plan_modal.dart';
 import 'package:saas/core/models/subscription/subscription_schema_models.dart';
 import 'package:saas/core/services/auth_service.dart';
 import 'package:saas/network/repo/subscription_repo.dart';
 
+import 'subscription_create_payload.dart';
 import 'widgets/subscription_plan_row.dart';
 
 class SubscriptionsController extends GetxController {
@@ -92,6 +94,39 @@ class SubscriptionsController extends GetxController {
 
   void addPlan(SubscriptionPlanRow row) {
     plans.assignAll([...plans, row]);
+  }
+
+  /// POST `/content/asset/subscription` from [CreatePlanModal] result.
+  ///
+  /// Returns `true` when the plan was created; on failure shows a snackbar and
+  /// returns `false`.
+  Future<bool> createSubscriptionPlan(CreatePlanResult result) async {
+    final body = SubscriptionCreatePayload.fromCreatePlanResult(result);
+    final newId = body['id']! as String;
+    try {
+      final asset = await _repository.createSubscription(body: body);
+      if (asset != null) {
+        addPlan(_rowFromAsset(asset));
+      } else {
+        addPlan(
+          SubscriptionPlanRow(
+            planName: result.planName,
+            duration: result.duration,
+            price: result.price,
+            isActive: result.isActive,
+            remoteId: newId,
+          ),
+        );
+      }
+      return true;
+    } catch (e) {
+      Get.snackbar(
+        'Error',
+        _authService.messageForError(e),
+        snackPosition: SnackPosition.BOTTOM,
+      );
+      return false;
+    }
   }
 
   @override

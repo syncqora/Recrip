@@ -188,20 +188,18 @@ class SubscriptionsViewBody extends GetView<SubscriptionsController> {
     openModalWithTransition(
       context,
       CreatePlanModal(
-        onCreate: (result) {
-          controller.addPlan(
-            SubscriptionPlanRow(
-              planName: result.planName,
-              duration: result.duration,
-              price: result.price,
-              isActive: result.isActive,
-            ),
-          );
-          Navigator.of(context).pop();
-          SuccessToast.show(
-            context,
-            title: AppStrings.planCreatedSuccessfullyTitle,
-          );
+        onCreate: (result) async {
+          final ok = await controller.createSubscriptionPlan(result);
+          if (!context.mounted) {
+            return;
+          }
+          if (ok) {
+            Navigator.of(context).pop();
+            SuccessToast.show(
+              context,
+              title: AppStrings.planCreatedSuccessfullyTitle,
+            );
+          }
         },
       ),
     );

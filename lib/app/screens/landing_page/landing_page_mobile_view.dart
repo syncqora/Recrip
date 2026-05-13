@@ -71,6 +71,9 @@ class _LandingPageMobileViewState extends State<LandingPageMobileView> {
   /// Approx sticky header offset for scroll-spy anchor (below safe area chip row).
   static const double _navSpyHeaderBelowSafeArea = 118;
 
+  /// Slack for scroll-spy (same intent as desktop `_kLandingNavSpySectionTopSlackPx`).
+  static const double _navSpySectionTopSlackPx = 72;
+
   @override
   void initState() {
     super.initState();
@@ -112,7 +115,7 @@ class _LandingPageMobileViewState extends State<LandingPageMobileView> {
       targetContext,
       duration: const Duration(milliseconds: 420),
       curve: Curves.easeInOut,
-      alignment: 0.04,
+      alignment: 0.0,
     );
   }
 
@@ -196,6 +199,7 @@ class _LandingPageMobileViewState extends State<LandingPageMobileView> {
   _MobileNavTab? _activeTabFromScrollPhysics(BuildContext context) {
     final anchorY =
         MediaQuery.paddingOf(context).top + _navSpyHeaderBelowSafeArea;
+    final effectiveAnchor = anchorY + _navSpySectionTopSlackPx;
 
     final tabs = <({_MobileNavTab tab, GlobalKey key})>[
       (tab: _MobileNavTab.features, key: _featuresKey),
@@ -211,7 +215,7 @@ class _LandingPageMobileViewState extends State<LandingPageMobileView> {
       final ro = target.findRenderObject();
       if (ro is! RenderBox || !ro.hasSize) continue;
       final dy = ro.localToGlobal(Offset.zero).dy;
-      if (dy <= anchorY) {
+      if (dy <= effectiveAnchor) {
         chosen = tab;
       }
     }

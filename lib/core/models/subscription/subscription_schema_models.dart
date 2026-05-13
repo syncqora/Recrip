@@ -78,11 +78,11 @@ class SubscriptionAsset {
 
     return SubscriptionAsset(
       id: json['id'] as String? ?? '',
-      key: json['key'] as String? ?? '',
-      name: json['name'] as String? ?? '',
+      key: json['key'] as String? ?? json['title'] as String? ?? '',
+      name: json['name'] as String? ?? json['title'] as String? ?? '',
       duration: (json['duration'] as num?)?.toInt(),
       price: price,
-      st: json['st'] as String?,
+      st: json['st'] as String? ?? json['status'] as String?,
       cty: json['cty'] as String?,
       urn: json['urn'] as String?,
       ct: json['ct'] as String?,
@@ -97,10 +97,7 @@ class SubscriptionAsset {
 
 /// Parsed GET `/schema/asset/subscription` body.
 class SubscriptionSchemaResponse {
-  const SubscriptionSchemaResponse({
-    required this.header,
-    required this.items,
-  });
+  const SubscriptionSchemaResponse({required this.header, required this.items});
 
   final SubscriptionSchemaResponseHeader header;
   final List<SubscriptionAsset> items;
@@ -120,7 +117,9 @@ class SubscriptionSchemaResponse {
       if (items is List) {
         return items
             .whereType<Map>()
-            .map((e) => SubscriptionAsset.fromJson(Map<String, dynamic>.from(e)))
+            .map(
+              (e) => SubscriptionAsset.fromJson(Map<String, dynamic>.from(e)),
+            )
             .toList();
       }
       // JSON-Schema style document (properties/meta only) — no rows

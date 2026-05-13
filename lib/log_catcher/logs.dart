@@ -1,6 +1,196 @@
+import 'dart:convert';
 import 'dart:developer';
 
+import 'package:get/get_connect.dart';
+import 'package:saas/shared/utils/jwt_utils.dart';
+
 class Logs {
+  static const _banner =
+      '=====================================================================';
+  static const _appLogName = 'Recrip APP';
+  static const _apiLogName = 'API SERVICE';
+  static const _authLogName = 'Recrip AUTH';
+
+  /// Same indent style as CoffeeWeb-App `Logs._safeJsonEncode` (single space).
+  /// Only obvious secrets (e.g. login `password`) are redacted; tokens are left visible.
+  static String _safeJsonEncode(dynamic value) {
+    try {
+      return const JsonEncoder.withIndent(' ').convert(_redactForApiLog(value));
+    } catch (_) {
+      return value?.toString() ?? 'null';
+    }
+  }
+
+  static dynamic _redactForApiLog(dynamic value) {
+    if (value is Map) {
+      final out = <String, dynamic>{};
+      for (final MapEntry(:key, :value) in value.entries) {
+        final k = key.toString();
+        if (k == 'password' ||
+            k == 'old_password' ||
+            k == 'new_password' ||
+            k == 'secret') {
+          out[k] = '***';
+        } else {
+          out[k] = _redactForApiLog(value);
+        }
+      }
+      return out;
+    }
+    if (value is List) {
+      return value.map(_redactForApiLog).toList();
+    }
+    return value;
+  }
+
+  static bool _httpFailed(int? code) {
+    if (code == null) return false;
+    return code < 200 || code >= 300;
+  }
+
+  static Map<String, dynamic> _bodyMapForLog(dynamic body) {
+    if (body == null) return {};
+    if (body is Map) return Map<String, dynamic>.from(body);
+    if (body is String) {
+      final t = body.trim();
+      if (t.isEmpty) return {};
+      try {
+        final decoded = jsonDecode(t);
+        if (decoded is Map) return Map<String, dynamic>.from(decoded);
+        if (decoded is List) return {'_json': decoded};
+      } catch (_) {
+        return {'_raw': t};
+      }
+    }
+    return {'_value': body.toString()};
+  }
+
+  /// Console blocks aligned with CoffeeWeb-App `Logs.apiRequestLogger`
+  /// (`docs/console_request_response_logging.md`): banner, URL, headers, body.
+  ///
+  /// [bearerToken] is logged in full as `Authorization: Bearer <token>` when set
+  /// and the caller did not already supply an Authorization header.
+  static void apiGetConnectRequestLogger({
+    required String verb,
+    required String fullUrl,
+    Map<String, String>? callerHeaders,
+    Map<String, dynamic>? query,
+    dynamic body,
+    String? bearerToken,
+  }) {
+    final urlWithQuery = _urlWithQuery(fullUrl, query);
+    final headers = <String, Object?>{'Content-Type': 'application/json'};
+    if (callerHeaders != null) {
+      for (final e in callerHeaders.entries) {
+        headers[e.key] = e.value;
+      }
+    }
+    if (bearerToken != null &&
+        bearerToken.isNotEmpty &&
+        !headers.keys.any((k) => k.toLowerCase() == 'authorization')) {
+      headers['Authorization'] = 'Bearer $bearerToken';
+    }
+    final requestBody = _bodyMapForLog(body);
+
+    log(_banner, name: _appLogName);
+    log(
+      '\n$verb $urlWithQuery\nRequest Header\n${_safeJsonEncode(headers)}\nRequest Body\n${_safeJsonEncode(requestBody)}',
+      time: DateTime.now(),
+      name: _apiLogName,
+    );
+    log(_banner, name: _appLogName);
+  }
+
+  /// Logs raw tokens and decoded JWT payload after a successful login (debug only).
+  static void logPostLoginTokensAndJwtPayload({
+    required String accessToken,
+    required String refreshToken,
+    required String tokenType,
+    required int expiresIn,
+    required String scope,
+  }) {
+    final claims = JwtUtils.decodePayload(accessToken);
+    final claimsText = claims.isEmpty
+        ? '(empty — token could not be decoded)'
+        : const JsonEncoder.withIndent(' ').convert(claims);
+
+    log(_banner, name: _appLogName);
+    log(
+      '\nSession (after login)\n'
+      'access_token\n$accessToken\n'
+      'refresh_token\n$refreshToken\n'
+      'token_type\n$tokenType\n'
+      'expires_in\n$expiresIn\n'
+      'scope\n$scope\n'
+      'JWT payload (decoded only, not verified)\n$claimsText',
+      time: DateTime.now(),
+      name: _authLogName,
+    );
+    log(_banner, name: _appLogName);
+  }
+
+  /// Same pattern as CoffeeWeb-App `Logs.apiResponseLogger`.
+  static void apiGetConnectResponseLogger({
+    required String verb,
+    required String fullUrl,
+    Map<String, dynamic>? query,
+    required Response<dynamic> response,
+  }) {
+    final code = response.statusCode;
+    final raw = response.bodyString;
+    final hasBody = raw != null && raw.trim().isNotEmpty;
+    final hasDecodedBody = response.body != null;
+
+    final statusText = response.statusText?.trim() ?? '';
+    final hasError = !response.isOk || _httpFailed(code);
+    final logUrl = _urlWithQuery(fullUrl, query);
+    dynamic responseBody;
+    if (hasBody) {
+      final trimmed = raw.trim();
+      if (trimmed.startsWith('{') || trimmed.startsWith('[')) {
+        try {
+          responseBody = jsonDecode(trimmed);
+        } catch (_) {
+          responseBody = trimmed;
+        }
+      } else {
+        responseBody = trimmed;
+      }
+    } else if (hasDecodedBody) {
+      responseBody = response.body;
+    } else {
+      responseBody = {};
+    }
+
+    log(_banner, name: _appLogName);
+    if (hasError) {
+      log(
+        '\n$verb $logUrl\nResponse Body\n${_safeJsonEncode(responseBody)}',
+        name: _apiLogName,
+        time: DateTime.now(),
+        error: 'ERROR :  ${code?.toString() ?? 'null'} -  $statusText',
+      );
+    } else {
+      log(
+        '\n$verb $logUrl\nResponse Body\n${_safeJsonEncode(responseBody)}',
+        time: DateTime.now(),
+        name: _apiLogName,
+      );
+    }
+    log(_banner, name: _appLogName);
+  }
+
+  static String _urlWithQuery(String fullUrl, Map<String, dynamic>? query) {
+    if (query == null || query.isEmpty) return fullUrl;
+    final flat = <String, String>{};
+    for (final e in query.entries) {
+      flat[e.key] = e.value?.toString() ?? '';
+    }
+    final q = Uri(queryParameters: flat).query;
+    if (q.isEmpty) return fullUrl;
+    return fullUrl.contains('?') ? '$fullUrl&$q' : '$fullUrl?$q';
+  }
+
   // static void appErrorLogger({
   //   Object? error,
   //   StackTrace? stackTrace,
