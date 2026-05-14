@@ -5,6 +5,7 @@ import '../../../../../core/controllers/app_settings_controller.dart';
 import '../../../../../core/di/get_injector.dart';
 import '../../../../../core/services/auth_service.dart';
 import '../../../../../network/repo/member_repo.dart';
+import '../../../../../shared/utils/uuid_v4.dart';
 import '../../../../../routes/app_pages.dart';
 import '../members/members_mobile_view.dart';
 
@@ -51,6 +52,7 @@ class DashboardController extends GetxController {
   void onViewAllRenewals() {
     selectedNavIndex.value = 3;
   }
+
   void onSendRemindersNow() {}
 
   Future<void> loadMembers() async {
@@ -62,7 +64,9 @@ class DashboardController extends GetxController {
         pageNumber: 1,
         pageSize: 20,
       );
-      memberTableData.assignAll(response.items.map(_memberRowFromAsset).toList());
+      memberTableData.assignAll(
+        response.items.map(_memberRowFromAsset).toList(),
+      );
     } catch (e) {
       membersErrorMessage.value = _authService.messageForError(e);
       memberTableData.clear();
@@ -191,10 +195,7 @@ class DashboardController extends GetxController {
 
   String _toIsoUtc(DateTime date) => date.toUtc().toIso8601String();
 
-  String _newAssetId() {
-    final micros = DateTime.now().microsecondsSinceEpoch;
-    return 'MEMBER-$micros';
-  }
+  String _newAssetId() => newUuidV4();
 
   String _formatDate(String? iso) {
     if (iso == null || iso.trim().isEmpty) return '—';

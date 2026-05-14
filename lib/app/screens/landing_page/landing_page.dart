@@ -917,12 +917,12 @@ class _HeroPreviewShowcase extends StatelessWidget {
             text: TextSpan(
               style:
                   Theme.of(context).textTheme.headlineMedium?.copyWith(
-                    fontSize: isCompact ? 24 : 30,
+                    fontSize: 40,
                     fontWeight: FontWeight.w900,
                     color: Colors.white,
                   ) ??
                   TextStyle(
-                    fontSize: isCompact ? 24 : 30,
+                    fontSize: 40,
                     fontWeight: FontWeight.w900,
                     color: Colors.white,
                   ),

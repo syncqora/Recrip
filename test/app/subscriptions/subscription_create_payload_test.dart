@@ -15,8 +15,15 @@ void main() {
       final map = SubscriptionCreatePayload.fromCreatePlanResult(result);
       expect(map['title'], 'Gold');
       expect(map['status'], 'published');
-      expect(map['id'], isA<String>());
-      expect((map['id'] as String).startsWith('sub_'), isTrue);
+      final id = map['id'] as String;
+      expect(
+        id,
+        matches(
+          RegExp(
+            r'^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$',
+          ),
+        ),
+      );
       expect(map['description'], contains('Gold'));
       expect(map['description'], contains('₹1,299.50'));
       final data = map['data'] as Map<String, dynamic>;
