@@ -55,7 +55,9 @@ class Dashboard extends GetView<DashboardController> {
 
   @override
   Widget build(BuildContext context) {
-    Get.put(DashboardController());
+    if (!Get.isRegistered<DashboardController>()) {
+      Get.put(DashboardController());
+    }
     final width = MediaQuery.sizeOf(context).width;
     if (width < _mobileBreakpoint) {
       return const DashboardMobileView();
@@ -405,51 +407,59 @@ class Dashboard extends GetView<DashboardController> {
   }
 
   Widget _buildSummaryCards() {
-    final cards = [
-      _SummaryCard(
-        iconPath: AppIcons.usersTab,
-        iconColor: Colors.white,
-        circleBg: _iconCirclePurple,
-        value: '284',
-        valueColor: Colors.black,
-        label: AppStrings.summaryActiveMembers,
-      ),
-      _SummaryCard(
-        iconPath: AppIcons.alarmClockTab,
-        iconColor: Colors.white,
-        circleBg: _iconCircleOrange,
-        value: '18',
-        valueColor: Colors.black,
-        label: AppStrings.summaryExpiring7Days,
-      ),
-      _SummaryCard(
-        iconPath: AppIcons.shieldXTab,
-        iconColor: Colors.white,
-        circleBg: _iconCircleRed,
-        value: '7',
-        valueColor: Colors.black,
-        label: AppStrings.expired,
-      ),
-      _SummaryCard(
-        iconPath: AppIcons.bookCheckTab,
-        iconColor: Colors.white,
-        circleBg: _iconCircleGreen,
-        value: '96',
-        valueColor: Colors.black,
-        label: AppStrings.summaryRenewedThisMonth,
-      ),
-    ];
-    return Row(
-      children: [
-        for (int i = 0; i < cards.length; i++)
-          Expanded(
-            child: Padding(
-              padding: EdgeInsets.only(right: i < cards.length - 1 ? 25 : 0),
-              child: _summaryCard(cards[i]),
+    return Obx(() {
+      final loading = controller.memberCountsLoading.value;
+      final active = controller.activeMemberCount.value;
+      final expiring = controller.expiringMemberCount.value;
+      final expired = controller.expiredMemberCount.value;
+      String label(int count) => loading ? '…' : '$count';
+
+      final cards = [
+        _SummaryCard(
+          iconPath: AppIcons.usersTab,
+          iconColor: Colors.white,
+          circleBg: _iconCirclePurple,
+          value: label(active),
+          valueColor: Colors.black,
+          label: AppStrings.summaryActiveMembers,
+        ),
+        _SummaryCard(
+          iconPath: AppIcons.alarmClockTab,
+          iconColor: Colors.white,
+          circleBg: _iconCircleOrange,
+          value: label(expiring),
+          valueColor: Colors.black,
+          label: AppStrings.summaryExpiring7Days,
+        ),
+        _SummaryCard(
+          iconPath: AppIcons.shieldXTab,
+          iconColor: Colors.white,
+          circleBg: _iconCircleRed,
+          value: label(expired),
+          valueColor: Colors.black,
+          label: AppStrings.expired,
+        ),
+        _SummaryCard(
+          iconPath: AppIcons.bookCheckTab,
+          iconColor: Colors.white,
+          circleBg: _iconCircleGreen,
+          value: '96',
+          valueColor: Colors.black,
+          label: AppStrings.summaryRenewedThisMonth,
+        ),
+      ];
+      return Row(
+        children: [
+          for (int i = 0; i < cards.length; i++)
+            Expanded(
+              child: Padding(
+                padding: EdgeInsets.only(right: i < cards.length - 1 ? 25 : 0),
+                child: _summaryCard(cards[i]),
+              ),
             ),
-          ),
-      ],
-    );
+        ],
+      );
+    });
   }
 
   Widget _summaryCard(_SummaryCard c) {
@@ -548,164 +558,162 @@ class Dashboard extends GetView<DashboardController> {
           ],
         ),
         child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Padding(
-            padding: const EdgeInsets.fromLTRB(20, 20, 20, 16),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                Text(
-                  AppStrings.actionRequiredRenewals,
-                  style: Get.textTheme.titleMedium?.copyWith(
-                    color: _textDark,
-                    fontWeight: FontWeight.bold,
-                  ),
-                  overflow: TextOverflow.ellipsis,
-                  maxLines: 1,
-                ),
-                GestureDetector(
-                  onTap: controller.onViewAllRenewals,
-                  child: Text(
-                    AppStrings.viewAllRenewals,
-                    style: Get.textTheme.labelMedium?.copyWith(
-                      color: _purple,
-                      fontWeight: FontWeight.w600,
-                      //decoration: TextDecoration.underline,
-                      decorationColor: _purple,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-          const Divider(height: 1, thickness: 1, color: Color(0xFFE2E8F0)),
-          Table(
-            columnWidths: const {
-              0: FlexColumnWidth(2),
-              1: FlexColumnWidth(1),
-              2: FlexColumnWidth(1.2),
-              3: FlexColumnWidth(1),
-              4: FixedColumnWidth(120),
-            },
-            children: [
-              TableRow(
-                decoration: const BoxDecoration(
-                  color: Color(0xFFF8FAFC),
-                  border: Border(
-                    bottom: BorderSide(color: Color(0xFFE5E7EB), width: 1),
-                  ),
-                ),
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(20, 20, 20, 16),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
-                  _tableCell(
-                    AppStrings.tableHeaderName,
-                    isHeader: true,
-                    align: Alignment.centerLeft,
-                    isNameColumn: true,
+                  Text(
+                    AppStrings.actionRequiredRenewals,
+                    style: Get.textTheme.titleMedium?.copyWith(
+                      color: _textDark,
+                      fontWeight: FontWeight.bold,
+                    ),
+                    overflow: TextOverflow.ellipsis,
+                    maxLines: 1,
                   ),
-                  _tableCell(
-                    AppStrings.plan,
-                    isHeader: true,
-                    align: Alignment.center,
-                  ),
-                  _tableCell(
-                    AppStrings.tableHeaderExpiry,
-                    isHeader: true,
-                    align: Alignment.center,
-                  ),
-                  _tableCell(
-                    AppStrings.status,
-                    isHeader: true,
-                    align: Alignment.center,
-                  ),
-                  _tableCell(
-                    AppStrings.tableHeaderAction,
-                    isHeader: true,
-                    align: Alignment.center,
-                    isActionColumn: true,
+                  GestureDetector(
+                    onTap: controller.onViewAllRenewals,
+                    child: Text(
+                      AppStrings.viewAllRenewals,
+                      style: Get.textTheme.labelMedium?.copyWith(
+                        color: _purple,
+                        fontWeight: FontWeight.w600,
+                        //decoration: TextDecoration.underline,
+                        decorationColor: _purple,
+                      ),
+                    ),
                   ),
                 ],
               ),
-            ],
-          ),
-          if (membersController.isLoading.value && rows.isEmpty)
-            const Expanded(
-              child: Center(child: CircularProgressIndicator()),
-            )
-          else if (rows.isEmpty)
-            Expanded(
-              child: Center(
-                child: Text(
-                  AppStrings.membersEmptyState,
-                  style: Get.textTheme.bodySmall?.copyWith(color: _textMuted),
+            ),
+            const Divider(height: 1, thickness: 1, color: Color(0xFFE2E8F0)),
+            Table(
+              columnWidths: const {
+                0: FlexColumnWidth(2),
+                1: FlexColumnWidth(1),
+                2: FlexColumnWidth(1.2),
+                3: FlexColumnWidth(1),
+                4: FixedColumnWidth(120),
+              },
+              children: [
+                TableRow(
+                  decoration: const BoxDecoration(
+                    color: Color(0xFFF8FAFC),
+                    border: Border(
+                      bottom: BorderSide(color: Color(0xFFE5E7EB), width: 1),
+                    ),
+                  ),
+                  children: [
+                    _tableCell(
+                      AppStrings.tableHeaderName,
+                      isHeader: true,
+                      align: Alignment.centerLeft,
+                      isNameColumn: true,
+                    ),
+                    _tableCell(
+                      AppStrings.plan,
+                      isHeader: true,
+                      align: Alignment.center,
+                    ),
+                    _tableCell(
+                      AppStrings.tableHeaderExpiry,
+                      isHeader: true,
+                      align: Alignment.center,
+                    ),
+                    _tableCell(
+                      AppStrings.status,
+                      isHeader: true,
+                      align: Alignment.center,
+                    ),
+                    _tableCell(
+                      AppStrings.tableHeaderAction,
+                      isHeader: true,
+                      align: Alignment.center,
+                      isActionColumn: true,
+                    ),
+                  ],
                 ),
-              ),
-            )
-          else
-            Expanded(
-              child: Scrollbar(
-                controller: controller.renewalsScrollController,
-                thickness: 4,
-                radius: const Radius.circular(2),
-                thumbVisibility: true,
-                child: SingleChildScrollView(
+              ],
+            ),
+            if (membersController.isLoading.value && rows.isEmpty)
+              const Expanded(child: Center(child: CircularProgressIndicator()))
+            else if (rows.isEmpty)
+              Expanded(
+                child: Center(
+                  child: Text(
+                    AppStrings.membersEmptyState,
+                    style: Get.textTheme.bodySmall?.copyWith(color: _textMuted),
+                  ),
+                ),
+              )
+            else
+              Expanded(
+                child: Scrollbar(
                   controller: controller.renewalsScrollController,
-                  scrollDirection: Axis.vertical,
-                  child: Table(
-                    columnWidths: const {
-                      0: FlexColumnWidth(2),
-                      1: FlexColumnWidth(1),
-                      2: FlexColumnWidth(1.2),
-                      3: FlexColumnWidth(1),
-                      4: FixedColumnWidth(120),
-                    },
-                    children: rows
-                        .map(
-                          (row) => TableRow(
-                            decoration: const BoxDecoration(
-                              color: Colors.white,
-                              border: Border(
-                                bottom: BorderSide(
-                                  color: Color(0xFFE5E7EB),
-                                  width: 1,
+                  thickness: 4,
+                  radius: const Radius.circular(2),
+                  thumbVisibility: true,
+                  child: SingleChildScrollView(
+                    controller: controller.renewalsScrollController,
+                    scrollDirection: Axis.vertical,
+                    child: Table(
+                      columnWidths: const {
+                        0: FlexColumnWidth(2),
+                        1: FlexColumnWidth(1),
+                        2: FlexColumnWidth(1.2),
+                        3: FlexColumnWidth(1),
+                        4: FixedColumnWidth(120),
+                      },
+                      children: rows
+                          .map(
+                            (row) => TableRow(
+                              decoration: const BoxDecoration(
+                                color: Colors.white,
+                                border: Border(
+                                  bottom: BorderSide(
+                                    color: Color(0xFFE5E7EB),
+                                    width: 1,
+                                  ),
                                 ),
                               ),
+                              children: [
+                                _tableCell(
+                                  row.name,
+                                  align: Alignment.centerLeft,
+                                  isNameColumn: true,
+                                ),
+                                _tableCell(row.plan, align: Alignment.center),
+                                _tableCell(row.expiry, align: Alignment.center),
+                                _tableCell(
+                                  row.status,
+                                  isBadge: true,
+                                  isExpired: row.isExpired,
+                                  align: Alignment.center,
+                                ),
+                                _tableCell(
+                                  '',
+                                  isActions: true,
+                                  align: Alignment.center,
+                                  context: context,
+                                  renewalRow: row,
+                                  isActionColumn: true,
+                                ),
+                              ],
                             ),
-                            children: [
-                              _tableCell(
-                                row.name,
-                                align: Alignment.centerLeft,
-                                isNameColumn: true,
-                              ),
-                              _tableCell(row.plan, align: Alignment.center),
-                              _tableCell(row.expiry, align: Alignment.center),
-                              _tableCell(
-                                row.status,
-                                isBadge: true,
-                                isExpired: row.isExpired,
-                                align: Alignment.center,
-                              ),
-                              _tableCell(
-                                '',
-                                isActions: true,
-                                align: Alignment.center,
-                                context: context,
-                                renewalRow: row,
-                                isActionColumn: true,
-                              ),
-                            ],
-                          ),
-                        )
-                        .toList(),
+                          )
+                          .toList(),
+                    ),
                   ),
                 ),
               ),
-            ),
-        ],
-      ),
-    );
+          ],
+        ),
+      );
     });
   }
 

@@ -5,40 +5,53 @@ import '../screens/dashboard/modals/create_plan_modal.dart';
 abstract final class SubscriptionCreatePayload {
   SubscriptionCreatePayload._();
 
-  /// Default [data.subscriptionType] when the UI does not collect a tier.
-  static const String defaultSubscriptionType = 'standard';
+  static const String urn = 'urn:resource:asset:subscription';
+  static const String contentType = 'subscription';
+  static const List<String> productIds = ['recrip'];
 
-  /// Maps modal output to the content API contract (id, title, description, status, data).
+  /// Maps modal output to the content API contract.
   static Map<String, dynamic> fromCreatePlanResult(CreatePlanResult result) {
     final id = newUuidV4();
+    final days = result.durationDays;
+    final start = result.startDate.toUtc();
+    final end = start.add(Duration(days: days));
     final price = _parsePrice(result.price);
-    final status = result.isActive ? 'published' : 'draft';
-    final data = <String, dynamic>{
-      'subscriptionType': defaultSubscriptionType,
-      'duration': result.apiDuration,
+
+    final body = <String, dynamic>{
+      'urn': urn,
+      'st': result.isActive ? 'published' : 'draft',
+      'id': id,
+      'key': id,
+      'cty': contentType,
+      'status': result.isActive ? 'active' : 'inactive',
+      'prd': productIds,
+      'ct': _toIsoUtc(start),
+      'ut': _toIsoUtc(end),
+      'name': result.planName,
+      'duration': days,
+      'custom_duration': days,
+      'tid': '',
     };
     if (price != null) {
-      data['price'] = price;
+      body['price'] = price;
     }
-
-    return <String, dynamic>{
-      'id': id,
-      'title': result.planName,
-      'description': _description(result),
-      'status': status,
-      'data': data,
-    };
+    return body;
   }
 
-  static String _description(CreatePlanResult result) {
-    return '${result.planName}: price ${result.price}, period ${result.duration}.';
-  }
+  static String _toIsoUtc(DateTime date) => date.toUtc().toIso8601String();
 
-  static double? _parsePrice(String raw) {
+  static num? _parsePrice(String raw) {
     final cleaned = raw.replaceAll(RegExp(r'[^0-9.]'), '');
     if (cleaned.isEmpty) {
       return null;
     }
-    return double.tryParse(cleaned);
+    final parsed = double.tryParse(cleaned);
+    if (parsed == null) {
+      return null;
+    }
+    if (parsed == parsed.roundToDouble()) {
+      return parsed.round();
+    }
+    return parsed;
   }
 }

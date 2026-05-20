@@ -4,17 +4,28 @@ import 'package:saas/app/subscriptions/subscription_create_payload.dart';
 
 void main() {
   group('SubscriptionCreatePayload', () {
-    test('fromCreatePlanResult maps fields and parses price', () {
-      const result = CreatePlanResult(
-        planName: 'Gold',
-        duration: '12 Months',
-        price: '₹1,299.50',
+    test('fromCreatePlanResult maps asset fields and parses price', () {
+      final result = CreatePlanResult(
+        planName: 'Monthly',
+        duration: '30 Days',
+        price: '₹1,000',
         isActive: true,
-        apiDuration: 'yearly',
+        apiDuration: 'monthly',
+        durationDays: 30,
+        startDate: DateTime.utc(2026, 5, 13),
       );
       final map = SubscriptionCreatePayload.fromCreatePlanResult(result);
-      expect(map['title'], 'Gold');
-      expect(map['status'], 'published');
+      expect(map['urn'], SubscriptionCreatePayload.urn);
+      expect(map['st'], 'published');
+      expect(map['cty'], 'subscription');
+      expect(map['status'], 'active');
+      expect(map['prd'], ['recrip']);
+      expect(map['name'], 'Monthly');
+      expect(map['duration'], 30);
+      expect(map['custom_duration'], 30);
+      expect(map['tid'], '');
+      expect(map['price'], 1000);
+      expect(map['key'], map['id']);
       final id = map['id'] as String;
       expect(
         id,
@@ -24,24 +35,25 @@ void main() {
           ),
         ),
       );
-      expect(map['description'], contains('Gold'));
-      expect(map['description'], contains('₹1,299.50'));
-      final data = map['data'] as Map<String, dynamic>;
-      expect(data['subscriptionType'], 'standard');
-      expect(data['duration'], 'yearly');
-      expect(data['price'], 1299.5);
+      expect(map['ct'], '2026-05-13T00:00:00.000Z');
+      expect(map['ut'], '2026-06-12T00:00:00.000Z');
     });
 
-    test('inactive maps to draft status', () {
-      const result = CreatePlanResult(
+    test('inactive maps to draft and inactive status', () {
+      final result = CreatePlanResult(
         planName: 'X',
         duration: '30 Days',
         price: '10',
         isActive: false,
         apiDuration: 'monthly',
+        durationDays: 1,
+        startDate: DateTime.utc(2026, 1, 1),
       );
       final map = SubscriptionCreatePayload.fromCreatePlanResult(result);
-      expect(map['status'], 'draft');
+      expect(map['st'], 'draft');
+      expect(map['status'], 'inactive');
+      expect(map['duration'], 1);
+      expect(map['custom_duration'], 1);
     });
   });
 }

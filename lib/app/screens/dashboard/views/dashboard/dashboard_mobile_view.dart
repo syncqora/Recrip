@@ -180,7 +180,7 @@ class DashboardMobileView extends StatelessWidget {
         children: [
           _buildHeader(context),
           const SizedBox(height: 20),
-          _buildSummaryGrid(),
+          _buildSummaryGrid(controller),
           const SizedBox(height: 20),
           _buildInsightsCard(),
           const SizedBox(height: 16),
@@ -407,42 +407,50 @@ class DashboardMobileView extends StatelessWidget {
     );
   }
 
-  Widget _buildSummaryGrid() {
-    final cards = [
-      _SummaryItem(
-        AppIcons.usersTab,
-        _iconCirclePurple,
-        '284',
-        AppStrings.summaryActiveMembers,
-      ),
-      _SummaryItem(
-        AppIcons.alarmClockTab,
-        _iconCircleOrange,
-        '18',
-        AppStrings.summaryExpiring7Days,
-      ),
-      _SummaryItem(
-        AppIcons.shieldXTab,
-        _iconCircleRed,
-        '7',
-        AppStrings.expired,
-      ),
-      _SummaryItem(
-        AppIcons.bookCheckTab,
-        _iconCircleGreen,
-        '96',
-        AppStrings.summaryRenewedThisMonth,
-      ),
-    ];
-    return GridView.count(
-      crossAxisCount: 2,
-      shrinkWrap: true,
-      physics: const NeverScrollableScrollPhysics(),
-      mainAxisSpacing: 12,
-      crossAxisSpacing: 12,
-      childAspectRatio: 1.5,
-      children: cards.map((c) => _summaryCard(c)).toList(),
-    );
+  Widget _buildSummaryGrid(DashboardController controller) {
+    return Obx(() {
+      final loading = controller.memberCountsLoading.value;
+      final active = controller.activeMemberCount.value;
+      final expiring = controller.expiringMemberCount.value;
+      final expired = controller.expiredMemberCount.value;
+      String label(int count) => loading ? '…' : '$count';
+
+      final cards = [
+        _SummaryItem(
+          AppIcons.usersTab,
+          _iconCirclePurple,
+          label(active),
+          AppStrings.summaryActiveMembers,
+        ),
+        _SummaryItem(
+          AppIcons.alarmClockTab,
+          _iconCircleOrange,
+          label(expiring),
+          AppStrings.summaryExpiring7Days,
+        ),
+        _SummaryItem(
+          AppIcons.shieldXTab,
+          _iconCircleRed,
+          label(expired),
+          AppStrings.expired,
+        ),
+        _SummaryItem(
+          AppIcons.bookCheckTab,
+          _iconCircleGreen,
+          '96',
+          AppStrings.summaryRenewedThisMonth,
+        ),
+      ];
+      return GridView.count(
+        crossAxisCount: 2,
+        shrinkWrap: true,
+        physics: const NeverScrollableScrollPhysics(),
+        mainAxisSpacing: 12,
+        crossAxisSpacing: 12,
+        childAspectRatio: 1.5,
+        children: cards.map((c) => _summaryCard(c)).toList(),
+      );
+    });
   }
 
   Widget _summaryCard(_SummaryItem c) {

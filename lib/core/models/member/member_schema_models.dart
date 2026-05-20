@@ -106,10 +106,7 @@ class MemberAsset {
 }
 
 class MemberSchemaResponse {
-  const MemberSchemaResponse({
-    required this.header,
-    required this.items,
-  });
+  const MemberSchemaResponse({required this.header, required this.items});
 
   final MemberResponseHeader header;
   final List<MemberAsset> items;
@@ -134,7 +131,9 @@ class MemberSchemaResponse {
       if (m.containsKey('properties') && m.containsKey('type')) {
         return [];
       }
-      if (m.containsKey('id') || m.containsKey('name') || m.containsKey('urn')) {
+      if (m.containsKey('id') ||
+          m.containsKey('name') ||
+          m.containsKey('urn')) {
         return [MemberAsset.fromJson(m)];
       }
     }
@@ -146,6 +145,37 @@ class MemberSchemaResponse {
     final header = headerRaw is Map
         ? MemberResponseHeader.fromJson(Map<String, dynamic>.from(headerRaw))
         : const MemberResponseHeader();
-    return MemberSchemaResponse(header: header, items: _parseData(json['data']));
+    return MemberSchemaResponse(
+      header: header,
+      items: _parseData(json['data']),
+    );
+  }
+}
+
+/// Parsed GET `/count/asset/member?status=…` body.
+///
+/// Count is the numeric value in `data` (e.g. `"data": 2`).
+class MemberCountResponse {
+  const MemberCountResponse({required this.count});
+
+  final int count;
+
+  factory MemberCountResponse.fromJson(Map<String, dynamic> json) {
+    final data = json['data'];
+    if (data == null) {
+      return const MemberCountResponse(count: 0);
+    }
+    if (data is num) {
+      return MemberCountResponse(count: data.toInt());
+    }
+    if (data is String) {
+      final parsed = int.tryParse(data.trim());
+      if (parsed != null) {
+        return MemberCountResponse(count: parsed);
+      }
+    }
+    throw FormatException(
+      'Invalid member count response: expected numeric `data`, got $data',
+    );
   }
 }

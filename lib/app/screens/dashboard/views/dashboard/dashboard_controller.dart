@@ -18,6 +18,11 @@ class DashboardController extends GetxController {
   final membersLoading = false.obs;
   final membersErrorMessage = RxnString();
 
+  final activeMemberCount = 0.obs;
+  final expiringMemberCount = 0.obs;
+  final expiredMemberCount = 0.obs;
+  final memberCountsLoading = false.obs;
+
   late final MemberRepository _memberRepository;
   late final AuthService _authService;
 
@@ -27,6 +32,31 @@ class DashboardController extends GetxController {
     _memberRepository = Get.find<MemberRepository>();
     _authService = Get.find<AuthService>();
     loadMembers();
+    loadMemberCounts();
+  }
+
+  /// Fetches active, expiring, and expired counts from `/count/asset/member`.
+  ///
+  /// Each status is loaded independently so one failure does not block the others.
+  Future<void> loadMemberCounts() async {
+    memberCountsLoading.value = true;
+    await Future.wait([
+      _loadCountForStatus('active', activeMemberCount),
+      _loadCountForStatus('expiring', expiringMemberCount),
+      _loadCountForStatus('expired', expiredMemberCount),
+    ]);
+    memberCountsLoading.value = false;
+  }
+
+  Future<void> _loadCountForStatus(String status, RxInt target) async {
+    try {
+      final response = await _memberRepository.countMembers(status: status);
+      target.value = response.count;
+    } catch (_) {
+      // Count failures must not surface on the Members tab (it reuses
+      // [membersErrorMessage] for the member list API only).
+      target.value = 0;
+    }
   }
 
   @override
@@ -118,6 +148,7 @@ class DashboardController extends GetxController {
             status: MemberStatus.active,
           );
     memberTableData.insert(0, row);
+    await loadMemberCounts();
   }
 
   Future<void> updateMember({

@@ -3,10 +3,8 @@ import '../api/member_api_services.dart';
 
 abstract class MemberRepository {
   Future<MemberSchemaResponse> getMemberSchema();
-  Future<MemberSchemaResponse> getMembers({
-    int pageNumber,
-    int pageSize,
-  });
+  Future<MemberCountResponse> countMembers({required String status});
+  Future<MemberSchemaResponse> getMembers({int pageNumber, int pageSize});
   Future<MemberAsset?> createMember({required Map<String, dynamic> body});
   Future<MemberAsset?> updateMember({
     required String contentId,
@@ -21,6 +19,10 @@ class MemberRepo implements MemberRepository {
 
   @override
   Future<MemberSchemaResponse> getMemberSchema() => services.getMemberSchema();
+
+  @override
+  Future<MemberCountResponse> countMembers({required String status}) =>
+      services.countMembers(status: status);
 
   @override
   Future<MemberSchemaResponse> getMembers({

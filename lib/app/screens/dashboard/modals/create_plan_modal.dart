@@ -22,14 +22,22 @@ class CreatePlanResult {
     required this.price,
     required this.isActive,
     required this.apiDuration,
+    required this.durationDays,
+    required this.startDate,
   });
   final String planName;
   final String duration;
   final String price;
   final bool isActive;
 
-  /// Value for POST `data.duration` (e.g. `monthly`, `yearly`).
+  /// Legacy label for duration presets (e.g. `monthly`, `yearly`).
   final String apiDuration;
+
+  /// Plan length in days (`duration` and `custom_duration` in the API body).
+  final int durationDays;
+
+  /// Plan period start (`ct` in the API body).
+  final DateTime startDate;
 }
 
 class CreatePlanModal extends StatefulWidget {
@@ -201,6 +209,37 @@ class _CreatePlanModalState extends State<CreatePlanModal> {
     return 'monthly';
   }
 
+  int _durationDaysForPayload() {
+    switch (_selectedDuration) {
+      case PlanDuration.days30:
+        return 30;
+      case PlanDuration.months3:
+        return 90;
+      case PlanDuration.months6:
+        return 180;
+      case PlanDuration.months12:
+        return 365;
+      case null:
+        break;
+    }
+    if (_customStartDate != null) {
+      return 1;
+    }
+    return 30;
+  }
+
+  DateTime _startDateForPayload() {
+    if (_customStartDate != null) {
+      return DateTime(
+        _customStartDate!.year,
+        _customStartDate!.month,
+        _customStartDate!.day,
+      );
+    }
+    final now = DateTime.now();
+    return DateTime(now.year, now.month, now.day);
+  }
+
   Future<void> _onCreate() async {
     if (!_isCreateEnabled || _isSubmitting) return;
     final result = CreatePlanResult(
@@ -209,6 +248,8 @@ class _CreatePlanModalState extends State<CreatePlanModal> {
       price: _priceController.text.trim(),
       isActive: _selectedStatus == 'Active',
       apiDuration: _apiDurationForPayload(),
+      durationDays: _durationDaysForPayload(),
+      startDate: _startDateForPayload(),
     );
     setState(() => _isSubmitting = true);
     try {

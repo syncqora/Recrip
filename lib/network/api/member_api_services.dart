@@ -55,6 +55,55 @@ class MemberServices {
     }
   }
 
+  /// GET `/count/asset/member?status={status}`
+  Future<MemberCountResponse> countMembers({required String status}) async {
+    debugPrint('[MemberCount] countMembers() status=$status');
+    final ApiServices api = Get.find<ApiServices>(
+      tag: ApiServicesTag.dataManagement,
+    );
+    final headers = <String, String>{
+      'X-Tenant-Id': _tenantId(),
+      'X-Client-Id': ApiEndPoints.clientId,
+    };
+    final query = <String, dynamic>{'status': status};
+
+    final Response<dynamic> res = await api.callApi(
+      httpMethod: HttpMethod.get,
+      endPoint: MemberEndPoints.countMember,
+      headers: headers,
+      query: query,
+    );
+
+    try {
+      final raw = res.bodyString;
+      Map<String, dynamic>? map;
+      final body = res.body;
+      if (body is Map<String, dynamic>) {
+        map = body;
+      } else if (body is Map) {
+        map = Map<String, dynamic>.from(body);
+      } else if (raw != null && raw.isNotEmpty) {
+        final decoded = jsonDecode(raw);
+        if (decoded is Map<String, dynamic>) {
+          map = decoded;
+        } else if (decoded is Map) {
+          map = Map<String, dynamic>.from(decoded);
+        }
+      }
+      if (map == null) {
+        throw JSONException('Invalid member count response');
+      }
+      return MemberCountResponse.fromJson(map);
+    } on JSONException {
+      rethrow;
+    } on FormatException catch (e) {
+      throw JSONException(e.message);
+    } catch (e) {
+      if (e is ApiException || e is JSONException) rethrow;
+      throw JSONException(e.toString());
+    }
+  }
+
   Future<MemberSchemaResponse> getMembers({
     int pageNumber = 1,
     int pageSize = 20,

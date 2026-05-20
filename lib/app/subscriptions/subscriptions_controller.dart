@@ -60,7 +60,7 @@ class SubscriptionsController extends GetxController {
 
   SubscriptionPlanRow _rowFromAsset(SubscriptionAsset a) {
     final name = a.name.isNotEmpty ? a.name : (a.key.isNotEmpty ? a.key : a.id);
-    final durationLabel = a.duration != null ? '${a.duration} Months' : '—';
+    final durationLabel = a.duration != null ? '${a.duration} Days' : '—';
     final priceLabel = a.price != null ? _formatPrice(a.price!) : '—';
     final published = a.st == 'published';
     return SubscriptionPlanRow(
