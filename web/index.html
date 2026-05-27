@@ -17,6 +17,10 @@
   <base href="$FLUTTER_BASE_HREF">
 
   <meta charset="UTF-8">
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+  <meta http-equiv="Pragma" content="no-cache">
+  <meta http-equiv="Expires" content="0">
+  <meta name="recrip-build-id" content="$RECRIP_BUILD_ID">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <!-- Mobile browser / PWA chrome: match app scaffold (see landing Color(0xFF090611)). -->
   <meta name="theme-color" content="#090611" media="(prefers-color-scheme: light)">
@@ -163,26 +167,54 @@
       });
     };
   </script>
-  <!-- Migrate away from offline-first PWA installs: unregister SW + drop Flutter caches
-       so returning visitors load the current main.dart.js (not only in incognito). -->
+  <!-- Drop legacy PWA caches + reload once when deploy build id changes (normal tab vs incognito). -->
   <script>
     (function () {
-      if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.getRegistrations().then(function (regs) {
-          regs.forEach(function (reg) {
-            reg.unregister();
-          });
-        });
+      var BUILD_ID = document.querySelector('meta[name="recrip-build-id"]');
+      BUILD_ID = BUILD_ID ? BUILD_ID.getAttribute('content') : 'dev';
+      var storageKey = 'recrip_build_id';
+      var reloadKey = 'recrip_cache_reload';
+
+      function purgeOfflineCaches() {
+        var tasks = [];
+        if ('serviceWorker' in navigator) {
+          tasks.push(
+            navigator.serviceWorker.getRegistrations().then(function (regs) {
+              return Promise.all(regs.map(function (reg) { return reg.unregister(); }));
+            })
+          );
+        }
+        if ('caches' in window) {
+          tasks.push(
+            caches.keys().then(function (names) {
+              return Promise.all(names.map(function (name) { return caches.delete(name); }));
+            })
+          );
+        }
+        return Promise.all(tasks);
       }
-      if ('caches' in window) {
-        caches.keys().then(function (names) {
-          names.forEach(function (name) {
-            if (/flutter/i.test(String(name))) {
-              caches.delete(name);
-            }
-          });
-        });
+
+      var previous = null;
+      try {
+        previous = localStorage.getItem(storageKey);
+      } catch (e) { /* private mode */ }
+
+      if (previous && previous !== BUILD_ID) {
+        try {
+          if (!sessionStorage.getItem(reloadKey)) {
+            sessionStorage.setItem(reloadKey, '1');
+            purgeOfflineCaches().finally(function () {
+              try { localStorage.setItem(storageKey, BUILD_ID); } catch (e) {}
+              location.reload();
+            });
+            return;
+          }
+          sessionStorage.removeItem(reloadKey);
+        } catch (e) { /* ignore */ }
       }
+
+      try { localStorage.setItem(storageKey, BUILD_ID); } catch (e) {}
+      purgeOfflineCaches();
     })();
   </script>
   <script src="flutter_bootstrap.js" async></script>

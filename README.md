@@ -53,3 +53,7 @@ Example: if your username is `vishal` and the repo is `saas`, open:
   App: `https://username.github.io/saas/` → shows your Flutter app (with trailing slash).
 
 - **Wait 1–2 minutes** after the workflow succeeds; then refresh the app URL.
+
+### Site looks old in normal browser but new in incognito?
+
+See **[docs/web-cache-and-stale-deploys.md](docs/web-cache-and-stale-deploys.md)**. After a deploy, hard-refresh once (`Ctrl+Shift+R` / `Cmd+Shift+R`) or clear site data for `recrip.com`.

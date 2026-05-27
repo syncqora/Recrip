@@ -110,6 +110,15 @@ jobs:
             --dart-define=ENVIRONMENT=production
           cp web/_headers build/web/_headers
 
+      - name: 🏷️ Stamp build id (cache bust for returning visitors)
+        run: |
+          BUILD_ID="${GITHUB_SHA:0:7}"
+          perl -i -pe "s/\\\$RECRIP_BUILD_ID/${BUILD_ID}/g" build/web/index.html
+          sed -i "s|src=\"flutter_bootstrap.js\"|src=\"flutter_bootstrap.js?v=${BUILD_ID}\"|g" build/web/index.html
+          TODAY="$(date -u +%Y-%m-%d)"
+          sed -i "s|<lastmod>.*</lastmod>|<lastmod>${TODAY}</lastmod>|" build/web/sitemap.xml
+          echo "Build id: ${BUILD_ID}"
+
       - name: 📊 Analyze build output
         run: |
           echo "📦 Build Analysis:"

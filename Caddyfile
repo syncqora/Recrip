@@ -3,10 +3,22 @@
   encode zstd gzip
   file_server
 
+  # Entry + app bundles change every deploy — never long-cache (fixes stale site in normal tabs).
+  @noCacheEntry {
+    path / /index.html
+    path /flutter_bootstrap.js
+    path /flutter.js
+    path /flutter_service_worker.js
+    path /main.dart.js
+    path /main.dart.wasm
+    path /manifest.json
+  }
+  header @noCacheEntry Cache-Control "no-cache, no-store, must-revalidate"
+
+  # Hashed / versioned static blobs only (do not match *.js globally — that cached old main.dart.js).
   @immutableAssets {
     path /assets/*
-    path *.js
-    path *.wasm
+    path /canvaskit/*
     path *.css
     path *.png
     path *.jpg
@@ -18,9 +30,6 @@
     path *.woff2
   }
   header @immutableAssets Cache-Control "public, max-age=31536000, immutable"
-
-  @htmlFiles path / /index.html /flutter_bootstrap.js /flutter_service_worker.js
-  header @htmlFiles Cache-Control "public, max-age=0, must-revalidate"
 
   try_files {path} /index.html
 }

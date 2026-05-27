@@ -10,7 +10,7 @@ COPY . .
 RUN flutter build web \
   --release \
   --base-href "/" \
-  --pwa-strategy=offline-first \
+  --pwa-strategy=none \
   --optimization-level=4 \
   --no-source-maps \
   --dart-define=ENVIRONMENT=production
