@@ -75,10 +75,10 @@ class _LandingPageState extends State<LandingPage> {
       setState(() => _renderDeferredSections = true);
       for (final path in const [
         AppIcons.recripLogo,
-        'assets/images/Dashboard.webp',
-        'assets/images/Members.webp',
-        'assets/images/Renewals.webp',
-        'assets/images/subscriptions.webp',
+        'assets/images/dashboard-new.png',
+        'assets/images/members-new.png',
+        'assets/images/subscriptions-new.png',
+        'assets/images/renewals-new.png',
       ]) {
         precacheImage(AssetImage(path), context);
       }
@@ -2491,13 +2491,13 @@ class _SectionTitle extends StatelessWidget {
 String _previewImageFor(_PreviewTab tab) {
   switch (tab) {
     case _PreviewTab.dashboard:
-      return 'assets/images/Dashboard.webp';
+      return 'assets/images/dashboard-new.png';
     case _PreviewTab.members:
-      return 'assets/images/Members.webp';
+      return 'assets/images/members-new.png';
     case _PreviewTab.subscriptions:
-      return 'assets/images/subscriptions.webp';
+      return 'assets/images/subscriptions-new.png';
     case _PreviewTab.renewals:
-      return 'assets/images/Renewals.webp';
+      return 'assets/images/renewals-new.png';
   }
 }
 

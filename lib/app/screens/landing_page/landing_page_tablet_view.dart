@@ -36,10 +36,10 @@ class _LandingPageTabletViewState extends State<LandingPageTabletView> {
         AppIcons.recripLogo,
         'assets/images/brand-logo.png',
         'assets/images/recrip.png',
-        'assets/images/Dashboard.webp',
-        'assets/images/Members.webp',
-        'assets/images/Renewals.webp',
-        'assets/images/subscriptions.webp',
+        'assets/images/dashboard-new.png',
+        'assets/images/members-new.png',
+        'assets/images/subscriptions-new.png',
+        'assets/images/renewals-new.png',
       ]) {
         precacheImage(AssetImage(path), context);
       }
