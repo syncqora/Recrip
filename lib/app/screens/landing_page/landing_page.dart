@@ -2419,9 +2419,9 @@ class _FooterSocialColumn extends StatelessWidget {
           children: const [
             _FooterSocialIcon('assets/images/linkedin.png'),
             SizedBox(width: 12),
-            _FooterSocialIcon('assets/images/insta.png'),
+            _FooterSocialIcon('assets/images/instagram.png'),
             SizedBox(width: 12),
-            _FooterSocialIcon('assets/images/twitter-x.png'),
+            _FooterSocialIcon('assets/images/twitter.png'),
             SizedBox(width: 12),
             _FooterSocialIcon('assets/images/facebook.png'),
           ],
