@@ -16,7 +16,7 @@ Production on **Docker/Caddy** previously set `Cache-Control: immutable` on **al
 
 1. **`Caddyfile`** — no long-cache on `main.dart.js`, `flutter_bootstrap.js`, `flutter.js`.
 2. **`Dockerfile`** — `--pwa-strategy=none` (matches CI).
-3. **`web/index.html`** — no-cache meta tags, unregister all SWs, clear all caches, reload once when `recrip-build-id` changes.
+3. **`web/index.html`** — on every visit, fetches `recrip-build.json` and **automatically reloads once** if the server build is newer than the cached page or last visit (users do not need a special URL).
 4. **`.github/workflows/deploy.yml`** — inject git SHA build id, `recrip-build.json`, cache-bust `main.dart.js` in bootstrap scripts.
 5. **`Dockerfile`** — same stamping for **Railway** deploys (was missing — live site had literal `$RECRIP_BUILD_ID`).
 
@@ -38,17 +38,12 @@ Production on **Docker/Caddy** previously set `Cache-Control: immutable` on **al
 3. DevTools → **Network** → enable **Disable cache** → reload.
 4. Hard reload: **Cmd+Shift+R** (Mac) or **Ctrl+Shift+R** (Windows).
 
-### One-click recovery URL (after latest deploy)
+## After deploying (for you, not every visitor)
 
-Open: **`https://recrip.com/?recrip_refresh=1`**
-
-That purges service workers + cache storage, then reloads the current build.
-
-## After deploying
-
-1. Run **Deploy to GitHub Pages** (or redeploy Docker) from `main`.
-2. Visit **`https://recrip.com/?recrip_refresh=1`** once, or use **Clear site data** as above.
-3. For **Google Search** still showing old text: [Google Search Console](https://search.google.com/search-console) → URL inspection → `https://recrip.com/` → **Request indexing**.
+1. Run **Deploy to GitHub Pages** (or redeploy Docker on Railway) from `main`.
+2. **Returning users** who open `https://recrip.com/` normally get the new UI automatically (one silent reload when `recrip-build.json` reports a new `buildId`).
+3. **One-time edge case:** users who still have a very old cached `index.html` from before these fixes may need **one** hard refresh (`Cmd+Shift+R`) or **Clear site data** — after that, future deploys update automatically.
+4. For **Google Search** still showing old text: [Google Search Console](https://search.google.com/search-console) → URL inspection → **Request indexing**.
 
 ## Verify headers (optional)
 

@@ -56,4 +56,4 @@ Example: if your username is `vishal` and the repo is `saas`, open:
 
 ### Site looks old in normal browser but new in incognito?
 
-See **[docs/web-cache-and-stale-deploys.md](docs/web-cache-and-stale-deploys.md)**. After a deploy, hard-refresh once (`Ctrl+Shift+R` / `Cmd+Shift+R`) or clear site data for `recrip.com`.
+See **[docs/web-cache-and-stale-deploys.md](docs/web-cache-and-stale-deploys.md)**. After each deploy, returning visitors should get the new UI automatically on the next normal visit to `https://recrip.com/`. If you still see an old build once, hard-refresh (`Ctrl+Shift+R` / `Cmd+Shift+R`) or clear site data — future deploys should not need that.

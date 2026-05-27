@@ -167,18 +167,17 @@
       });
     };
   </script>
-  <!-- Purge SW + Cache storage BEFORE loading Flutter (local/session storage alone is not enough). -->
+  <!-- On every visit: fetch live deploy id; auto-reload once if server has a newer build (no URL needed). -->
   <script>
     (function () {
       var storageKey = 'recrip_build_id';
-      var reloadKey = 'recrip_cache_reload';
-      var params = new URLSearchParams(window.location.search);
-      var forceRefresh = params.get('recrip_refresh') === '1';
+      var reloadKey = 'recrip_auto_reload';
 
       function readPageBuildId() {
         var meta = document.querySelector('meta[name="recrip-build-id"]');
-        var id = meta ? meta.getAttribute('content') : 'dev';
-        return id && id.indexOf('$RECRIP') !== 0 ? id : 'dev';
+        var id = meta ? meta.getAttribute('content') : '';
+        if (!id || id.indexOf('$RECRIP') === 0) return null;
+        return id;
       }
 
       function purgeOfflineCaches() {
@@ -200,14 +199,6 @@
         return Promise.all(tasks);
       }
 
-      function stripRefreshParam() {
-        if (!params.has('recrip_refresh')) return;
-        params.delete('recrip_refresh');
-        var q = params.toString();
-        var next = window.location.pathname + (q ? '?' + q : '') + window.location.hash;
-        window.history.replaceState(null, '', next);
-      }
-
       function fetchLiveBuildId() {
         return fetch('/recrip-build.json?_=' + Date.now(), { cache: 'no-store' })
           .then(function (res) { return res.ok ? res.json() : null; })
@@ -224,54 +215,42 @@
         document.body.appendChild(script);
       }
 
-      function scheduleReloadAfterPurge(buildId) {
-        try {
-          if (!sessionStorage.getItem(reloadKey)) {
-            sessionStorage.setItem(reloadKey, '1');
-            return purgeOfflineCaches().finally(function () {
-              try { localStorage.setItem(storageKey, buildId); } catch (e) {}
-              window.location.reload();
-            });
-          }
-          sessionStorage.removeItem(reloadKey);
-        } catch (e) { /* private mode */ }
-        return purgeOfflineCaches();
+      /** True when the server has shipped a build newer than this page or last visit. */
+      function needsAutoReload(storedId, liveId, pageId) {
+        if (!liveId) return false;
+        if (pageId && pageId !== liveId) return true;
+        if (storedId && storedId !== liveId) return true;
+        return false;
       }
 
       purgeOfflineCaches()
-        .then(function () {
-          if (forceRefresh) {
+        .then(fetchLiveBuildId)
+        .then(function (liveId) {
+          var pageId = readPageBuildId();
+          var buildId = liveId || pageId || 'dev';
+          var storedId = null;
+          try { storedId = localStorage.getItem(storageKey); } catch (e) {}
+
+          if (needsAutoReload(storedId, liveId, pageId)) {
             try {
               if (!sessionStorage.getItem(reloadKey)) {
                 sessionStorage.setItem(reloadKey, '1');
-                try { localStorage.removeItem(storageKey); } catch (e) {}
+                if (liveId) {
+                  try { localStorage.setItem(storageKey, liveId); } catch (e) {}
+                }
                 return purgeOfflineCaches().finally(function () {
-                  window.location.replace(window.location.pathname + window.location.hash);
+                  window.location.reload();
                 });
               }
               sessionStorage.removeItem(reloadKey);
-            } catch (e) { /* private mode */ }
-          }
-          return fetchLiveBuildId();
-        })
-        .then(function (liveId) {
-          var pageId = readPageBuildId();
-          var buildId = liveId || pageId;
-          var previous = null;
-          try { previous = localStorage.getItem(storageKey); } catch (e) {}
-
-          var mustReload =
-            forceRefresh ||
-            (previous && liveId && previous !== liveId) ||
-            (previous && !liveId && previous !== pageId);
-
-          if (mustReload && !forceRefresh) {
-            return scheduleReloadAfterPurge(buildId);
+            } catch (e) { /* private mode — continue without reload guard */ }
           }
 
-          try { localStorage.setItem(storageKey, buildId); } catch (e) {}
+          if (liveId) {
+            try { localStorage.setItem(storageKey, liveId); } catch (e) {}
+          }
           try { sessionStorage.removeItem(reloadKey); } catch (e) {}
-          stripRefreshParam();
+
           return purgeOfflineCaches().then(function () {
             loadFlutter(buildId);
           });
