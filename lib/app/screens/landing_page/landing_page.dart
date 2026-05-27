@@ -824,16 +824,20 @@ class _HeroDashboardCard extends StatelessWidget {
 
   final String imagePath;
   final double sizeScale;
+  static const double _baseWidth = 725;
+  static const double _baseHeight = 453;
 
   @override
   Widget build(BuildContext context) {
     final dpr = MediaQuery.devicePixelRatioOf(context);
-    final cacheW = (725 * sizeScale * dpr).round().clamp(1, 4096);
-    final cacheH = (453 * sizeScale * dpr).round().clamp(1, 4096);
+    // Decode at full base size for the current DPR so tiny text in the
+    // screenshot stays sharp even when the card is scaled down responsively.
+    final cacheW = (_baseWidth * dpr).round().clamp(1, 8192);
+    final cacheH = (_baseHeight * dpr).round().clamp(1, 8192);
 
     return SizedBox(
-      width: 725 * sizeScale,
-      height: 453 * sizeScale,
+      width: _baseWidth * sizeScale,
+      height: _baseHeight * sizeScale,
       child: Container(
         clipBehavior: Clip.antiAlias,
         decoration: BoxDecoration(
@@ -854,6 +858,7 @@ class _HeroDashboardCard extends StatelessWidget {
             fit: BoxFit.contain,
             alignment: Alignment.center,
             filterQuality: FilterQuality.high,
+            gaplessPlayback: true,
             cacheWidth: cacheW,
             cacheHeight: cacheH,
           ),
