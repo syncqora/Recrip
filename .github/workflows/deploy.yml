@@ -113,8 +113,14 @@ jobs:
       - name: 🏷️ Stamp build id (cache bust for returning visitors)
         run: |
           BUILD_ID="${GITHUB_SHA:0:7}"
+          BUILT_AT="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
           perl -i -pe "s/\\\$RECRIP_BUILD_ID/${BUILD_ID}/g" build/web/index.html
-          sed -i "s|src=\"flutter_bootstrap.js\"|src=\"flutter_bootstrap.js?v=${BUILD_ID}\"|g" build/web/index.html
+          printf '%s\n' "{\"buildId\":\"${BUILD_ID}\",\"builtAt\":\"${BUILT_AT}\"}" > build/web/recrip-build.json
+          for f in build/web/flutter_bootstrap.js build/web/flutter.js; do
+            if [ -f "$f" ]; then
+              sed -i "s|main\\.dart\\.js|main.dart.js?v=${BUILD_ID}|g" "$f"
+            fi
+          done
           TODAY="$(date -u +%Y-%m-%d)"
           sed -i "s|<lastmod>.*</lastmod>|<lastmod>${TODAY}</lastmod>|" build/web/sitemap.xml
           echo "Build id: ${BUILD_ID}"
@@ -134,7 +140,7 @@ jobs:
       - name: 🔧 Verify build integrity
         run: |
           cd build/web
-          REQUIRED_FILES=("index.html" "main.dart.js" "flutter.js" "manifest.json" "sitemap.xml" "robots.txt")
+          REQUIRED_FILES=("index.html" "main.dart.js" "flutter.js" "manifest.json" "sitemap.xml" "robots.txt" "recrip-build.json")
           MISSING_FILES=()
           
           for file in "${REQUIRED_FILES[@]}"; do

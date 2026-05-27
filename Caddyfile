@@ -12,6 +12,7 @@
     path /main.dart.js
     path /main.dart.wasm
     path /manifest.json
+    path /recrip-build.json
   }
   header @noCacheEntry Cache-Control "no-cache, no-store, must-revalidate"
 

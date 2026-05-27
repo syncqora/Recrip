@@ -167,13 +167,19 @@
       });
     };
   </script>
-  <!-- Drop legacy PWA caches + reload once when deploy build id changes (normal tab vs incognito). -->
+  <!-- Purge SW + Cache storage BEFORE loading Flutter (local/session storage alone is not enough). -->
   <script>
     (function () {
-      var BUILD_ID = document.querySelector('meta[name="recrip-build-id"]');
-      BUILD_ID = BUILD_ID ? BUILD_ID.getAttribute('content') : 'dev';
       var storageKey = 'recrip_build_id';
       var reloadKey = 'recrip_cache_reload';
+      var params = new URLSearchParams(window.location.search);
+      var forceRefresh = params.get('recrip_refresh') === '1';
+
+      function readPageBuildId() {
+        var meta = document.querySelector('meta[name="recrip-build-id"]');
+        var id = meta ? meta.getAttribute('content') : 'dev';
+        return id && id.indexOf('$RECRIP') !== 0 ? id : 'dev';
+      }
 
       function purgeOfflineCaches() {
         var tasks = [];
@@ -194,29 +200,83 @@
         return Promise.all(tasks);
       }
 
-      var previous = null;
-      try {
-        previous = localStorage.getItem(storageKey);
-      } catch (e) { /* private mode */ }
+      function stripRefreshParam() {
+        if (!params.has('recrip_refresh')) return;
+        params.delete('recrip_refresh');
+        var q = params.toString();
+        var next = window.location.pathname + (q ? '?' + q : '') + window.location.hash;
+        window.history.replaceState(null, '', next);
+      }
 
-      if (previous && previous !== BUILD_ID) {
+      function fetchLiveBuildId() {
+        return fetch('/recrip-build.json?_=' + Date.now(), { cache: 'no-store' })
+          .then(function (res) { return res.ok ? res.json() : null; })
+          .catch(function () { return null; })
+          .then(function (json) {
+            return json && json.buildId ? String(json.buildId) : null;
+          });
+      }
+
+      function loadFlutter(buildId) {
+        var script = document.createElement('script');
+        script.src = 'flutter_bootstrap.js?v=' + encodeURIComponent(buildId) + '&_=' + Date.now();
+        script.async = true;
+        document.body.appendChild(script);
+      }
+
+      function scheduleReloadAfterPurge(buildId) {
         try {
           if (!sessionStorage.getItem(reloadKey)) {
             sessionStorage.setItem(reloadKey, '1');
-            purgeOfflineCaches().finally(function () {
-              try { localStorage.setItem(storageKey, BUILD_ID); } catch (e) {}
-              location.reload();
+            return purgeOfflineCaches().finally(function () {
+              try { localStorage.setItem(storageKey, buildId); } catch (e) {}
+              window.location.reload();
             });
-            return;
           }
           sessionStorage.removeItem(reloadKey);
-        } catch (e) { /* ignore */ }
+        } catch (e) { /* private mode */ }
+        return purgeOfflineCaches();
       }
 
-      try { localStorage.setItem(storageKey, BUILD_ID); } catch (e) {}
-      purgeOfflineCaches();
+      purgeOfflineCaches()
+        .then(function () {
+          if (forceRefresh) {
+            try {
+              if (!sessionStorage.getItem(reloadKey)) {
+                sessionStorage.setItem(reloadKey, '1');
+                try { localStorage.removeItem(storageKey); } catch (e) {}
+                return purgeOfflineCaches().finally(function () {
+                  window.location.replace(window.location.pathname + window.location.hash);
+                });
+              }
+              sessionStorage.removeItem(reloadKey);
+            } catch (e) { /* private mode */ }
+          }
+          return fetchLiveBuildId();
+        })
+        .then(function (liveId) {
+          var pageId = readPageBuildId();
+          var buildId = liveId || pageId;
+          var previous = null;
+          try { previous = localStorage.getItem(storageKey); } catch (e) {}
+
+          var mustReload =
+            forceRefresh ||
+            (previous && liveId && previous !== liveId) ||
+            (previous && !liveId && previous !== pageId);
+
+          if (mustReload && !forceRefresh) {
+            return scheduleReloadAfterPurge(buildId);
+          }
+
+          try { localStorage.setItem(storageKey, buildId); } catch (e) {}
+          try { sessionStorage.removeItem(reloadKey); } catch (e) {}
+          stripRefreshParam();
+          return purgeOfflineCaches().then(function () {
+            loadFlutter(buildId);
+          });
+        });
     })();
   </script>
-  <script src="flutter_bootstrap.js" async></script>
 </body>
 </html>
