@@ -18,7 +18,7 @@ RUN flutter build web \
 # Stamp deploy id + bust main.dart.js URL (Railway Docker deploy; GH Actions mirrors in deploy.yml).
 RUN set -eux; \
   BUILD_ID="${RAILWAY_GIT_COMMIT_SHA:-${SOURCE_VERSION:-local}}"; \
-  BUILD_ID="${BUILD_ID:0:7}"; \
+  BUILD_ID="$(printf '%s' "$BUILD_ID" | cut -c1-7)"; \
   BUILT_AT="$(date -u +%Y-%m-%dT%H:%M:%SZ)"; \
   perl -i -pe "s/\\\$RECRIP_BUILD_ID/${BUILD_ID}/g" build/web/index.html; \
   printf '{"buildId":"%s","builtAt":"%s"}\n' "$BUILD_ID" "$BUILT_AT" > build/web/recrip-build.json; \
