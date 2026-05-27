@@ -2417,13 +2417,13 @@ class _FooterSocialColumn extends StatelessWidget {
         const SizedBox(height: 20),
         Row(
           children: const [
-            _FooterSocialIcon('assets/images/linkedin.png'),
+            _FooterSocialIcon('assets/images/linkedin-new.png'),
             SizedBox(width: 12),
             _FooterSocialIcon('assets/images/instagram.png'),
             SizedBox(width: 12),
             _FooterSocialIcon('assets/images/twitter.png'),
             SizedBox(width: 12),
-            _FooterSocialIcon('assets/images/facebook.png'),
+            _FooterSocialIcon('assets/images/facebook-new.png'),
           ],
         ),
       ],

@@ -27,10 +27,10 @@ const _landingMobileRasterWarmupPaths = <String>{
   'assets/images/members-new.png',
   'assets/images/subscriptions-new.png',
   'assets/images/renewals-new.png',
-  'assets/images/linkedin.png',
+  'assets/images/linkedin-new.png',
   'assets/images/instagram.png',
   'assets/images/twitter.png',
-  'assets/images/facebook.png',
+  'assets/images/facebook-new.png',
 };
 
 class LandingPageMobileView extends StatefulWidget {
@@ -2228,13 +2228,13 @@ class _MobileFooterSection extends StatelessWidget {
           const SizedBox(height: 10),
           Row(
             children: const [
-              _MobileFooterSocialIcon('assets/images/linkedin.png'),
+              _MobileFooterSocialIcon('assets/images/linkedin-new.png'),
               SizedBox(width: 12),
               _MobileFooterSocialIcon('assets/images/instagram.png'),
               SizedBox(width: 12),
               _MobileFooterSocialIcon('assets/images/twitter.png'),
               SizedBox(width: 12),
-              _MobileFooterSocialIcon('assets/images/facebook.png'),
+              _MobileFooterSocialIcon('assets/images/facebook-new.png'),
             ],
           ),
           const SizedBox(height: 24),
