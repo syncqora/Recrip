@@ -853,7 +853,7 @@ class _HeroDashboardCard extends StatelessWidget {
             imagePath,
             fit: BoxFit.contain,
             alignment: Alignment.center,
-            filterQuality: FilterQuality.low,
+            filterQuality: FilterQuality.high,
             cacheWidth: cacheW,
             cacheHeight: cacheH,
           ),
