@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:saas/core/models/member/member_schema_models.dart';
+import 'package:saas/app/subscriptions/subscriptions_binding.dart';
+import 'package:saas/app/subscriptions/subscriptions_controller.dart';
 import '../../../../../core/controllers/app_settings_controller.dart';
 import '../../../../../core/di/get_injector.dart';
 import '../../../../../core/services/auth_service.dart';
@@ -22,6 +24,7 @@ class DashboardController extends GetxController {
   final expiringMemberCount = 0.obs;
   final expiredMemberCount = 0.obs;
   final memberCountsLoading = false.obs;
+  final moduleSwitchLoading = false.obs;
 
   late final MemberRepository _memberRepository;
   late final AuthService _authService;
@@ -66,10 +69,9 @@ class DashboardController extends GetxController {
   }
 
   void onNavTap(int index) {
+    if (selectedNavIndex.value == index) return;
     selectedNavIndex.value = index;
-    if (index == 1 && memberTableData.isEmpty && !membersLoading.value) {
-      loadMembers();
-    }
+    _loadModuleDataFor(index);
   }
 
   Future<void> onLogout() async {
@@ -84,6 +86,43 @@ class DashboardController extends GetxController {
   }
 
   void onSendRemindersNow() {}
+
+  Future<void> _loadModuleDataFor(int index) async {
+    moduleSwitchLoading.value = true;
+    try {
+      if (index == 1 || index == 3 || index == 4) {
+        if (memberTableData.isEmpty || membersErrorMessage.value != null) {
+          await loadMembers();
+        } else if (membersLoading.value) {
+          await _waitUntil(() => !membersLoading.value);
+        }
+      } else if (index == 2) {
+        SubscriptionsBinding.ensureRegistered();
+        final subscriptionsController = Get.find<SubscriptionsController>();
+        if (subscriptionsController.plans.isEmpty ||
+            subscriptionsController.errorMessage.value != null) {
+          await subscriptionsController.loadInitialData();
+        } else if (subscriptionsController.isLoading.value) {
+          await _waitUntil(() => !subscriptionsController.isLoading.value);
+        }
+      } else {
+        await Future<void>.delayed(const Duration(milliseconds: 120));
+      }
+    } finally {
+      moduleSwitchLoading.value = false;
+    }
+  }
+
+  Future<void> _waitUntil(
+    bool Function() condition, {
+    Duration timeout = const Duration(seconds: 8),
+  }) async {
+    final deadline = DateTime.now().add(timeout);
+    while (!condition()) {
+      if (DateTime.now().isAfter(deadline)) break;
+      await Future<void>.delayed(const Duration(milliseconds: 50));
+    }
+  }
 
   Future<void> loadMembers() async {
     membersLoading.value = true;

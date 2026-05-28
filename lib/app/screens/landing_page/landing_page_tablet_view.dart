@@ -8,11 +8,14 @@ class LandingPageTabletView extends StatefulWidget {
 }
 
 class _LandingPageTabletViewState extends State<LandingPageTabletView> {
+  static const String _faqChatbotControllerTag =
+      'landing-faq-chatbot-controller-tablet';
   final _featuresKey = GlobalKey();
   final _stepsKey = GlobalKey();
   final _pricingKey = GlobalKey();
   final _contactKey = GlobalKey();
   final _scrollController = ScrollController();
+  late final FaqChatbotController _faqChatbotController;
 
   final ValueNotifier<_TopNavTab?> _navTabHighlight = ValueNotifier(null);
   final ValueNotifier<_PreviewTab> _previewTabHighlight = ValueNotifier(
@@ -27,6 +30,10 @@ class _LandingPageTabletViewState extends State<LandingPageTabletView> {
   @override
   void initState() {
     super.initState();
+    _faqChatbotController = Get.put(
+      FaqChatbotController(entries: landingChatbotEntries),
+      tag: _faqChatbotControllerTag,
+    );
     LoginController.registerHeroIfNeeded();
     _scrollController.addListener(_scheduleNavSpyIfNeeded);
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -53,6 +60,7 @@ class _LandingPageTabletViewState extends State<LandingPageTabletView> {
   void dispose() {
     _scrollController.removeListener(_scheduleNavSpyIfNeeded);
     _scrollController.dispose();
+    Get.delete<FaqChatbotController>(tag: _faqChatbotControllerTag);
     _navTabHighlight.dispose();
     _previewTabHighlight.dispose();
     LoginController.deleteHeroIfRegistered();
@@ -264,6 +272,10 @@ class _LandingPageTabletViewState extends State<LandingPageTabletView> {
           ),
         ),
       ),
+      floatingActionButton: _LandingChatbotFab(
+        controller: _faqChatbotController,
+      ),
+      floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
     );
   }
 }
@@ -1097,10 +1109,12 @@ class _TabletFaqSection extends StatelessWidget {
             constraints: const BoxConstraints(maxWidth: 860),
             child: Column(
               children: [
-                ...faqs.asMap().entries.map(
+                ...landingFaqCardEntries.asMap().entries.map(
                   (entry) => Padding(
                     padding: EdgeInsets.only(
-                      bottom: entry.key == faqs.length - 1 ? 0 : 18,
+                      bottom: entry.key == landingFaqCardEntries.length - 1
+                          ? 0
+                          : 18,
                     ),
                     child: _FaqCard(faq: entry.value),
                   ),

@@ -58,6 +58,11 @@ class LoginController extends GetxController {
   }
 
   void _onEmailFocusChange() {
+    if (emailFocusNode.hasFocus) {
+      isUsernameHovered.value = true;
+      return;
+    }
+    isUsernameHovered.value = false;
     if (!emailFocusNode.hasFocus) {
       validateEmailOnLeaveField();
     }
@@ -107,11 +112,20 @@ class LoginController extends GetxController {
   }
 
   void setUsernameHovered(bool value) {
-    isUsernameHovered.value = value;
+    // While focused (typing/selecting), avoid hover-driven rebuilds that can
+    // interrupt web drag-selection highlight behavior.
+    if (emailFocusNode.hasFocus) return;
+    if (isUsernameHovered.value != value) {
+      isUsernameHovered.value = value;
+    }
   }
 
   void setPasswordHovered(bool value) {
-    isPasswordHovered.value = value;
+    // Same guard for password field to keep mouse drag text selection stable.
+    if (passwordFocusNode.hasFocus) return;
+    if (isPasswordHovered.value != value) {
+      isPasswordHovered.value = value;
+    }
   }
 
   void setForgotPasswordHovered(bool value) {

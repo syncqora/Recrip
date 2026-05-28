@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
@@ -36,53 +37,70 @@ class AuthTextField extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return TextField(
-      controller: controller,
-      focusNode: focusNode,
-      textInputAction: textInputAction,
-      onSubmitted: onSubmitted,
-      readOnly: readOnly,
-      keyboardType: keyboardType,
-      autocorrect: autocorrect,
-      onTapOutside: dismissKeyboardOnTapOutside
-          ? (_) => FocusManager.instance.primaryFocus?.unfocus()
-          : (_) {},
-      style: Get.theme.textTheme.bodySmall?.copyWith(
-        color: AppConstants.textColor,
+    return Theme(
+      data: Theme.of(context).copyWith(
+        textSelectionTheme: const TextSelectionThemeData(
+          selectionColor: Color(0x664F46E5),
+          selectionHandleColor: Color(0xFF4F46E5),
+        ),
       ),
-      cursorColor: Colors.black,
-      decoration: InputDecoration(
-        errorText: errorText,
-        errorMaxLines: 3,
-        isDense: true,
-        contentPadding: const EdgeInsets.symmetric(
-          horizontal: 12,
-          vertical: 14,
+      child: TextField(
+        controller: controller,
+        focusNode: focusNode,
+        textInputAction: textInputAction,
+        onSubmitted: onSubmitted,
+        readOnly: readOnly,
+        keyboardType: keyboardType,
+        autocorrect: autocorrect,
+        enableInteractiveSelection: true,
+        onTapOutside: dismissKeyboardOnTapOutside
+            ? (_) {
+                // On web, letting pointer gestures proceed avoids interrupting
+                // drag-to-select behavior when users select text in the field.
+                if (!kIsWeb) {
+                  FocusManager.instance.primaryFocus?.unfocus();
+                }
+              }
+            : (_) {},
+        style: Get.theme.textTheme.bodySmall?.copyWith(
+          color: AppConstants.textColor,
         ),
-        constraints: BoxConstraints(minHeight: AppConstants.fieldHeight),
-        hintText: hint,
-        hintStyle: Get.theme.textTheme.labelMedium!.copyWith(
-          color: AppConstants.hintColor,
-          fontWeight: FontWeight.w400,
-        ),
-        filled: true,
-        fillColor: fillColor,
-        hoverColor: fillColor,
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(AppConstants.fieldBorderRadius),
-          borderSide: const BorderSide(color: AppConstants.borderColor),
-        ),
-        enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(AppConstants.fieldBorderRadius),
-          borderSide: BorderSide(
-            color: isHovered
-                ? AppConstants.focusedBorderColor
-                : AppConstants.borderColor,
+        cursorColor: Colors.black,
+        decoration: InputDecoration(
+          errorText: errorText,
+          errorMaxLines: 3,
+          isDense: true,
+          contentPadding: const EdgeInsets.symmetric(
+            horizontal: 12,
+            vertical: 14,
           ),
-        ),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(AppConstants.fieldBorderRadius),
-          borderSide: const BorderSide(color: AppConstants.focusedBorderColor),
+          constraints: BoxConstraints(minHeight: AppConstants.fieldHeight),
+          hintText: hint,
+          hintStyle: Get.theme.textTheme.labelMedium!.copyWith(
+            color: AppConstants.hintColor,
+            fontWeight: FontWeight.w400,
+          ),
+          filled: true,
+          fillColor: fillColor,
+          hoverColor: fillColor,
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(AppConstants.fieldBorderRadius),
+            borderSide: const BorderSide(color: AppConstants.borderColor),
+          ),
+          enabledBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(AppConstants.fieldBorderRadius),
+            borderSide: BorderSide(
+              color: isHovered
+                  ? AppConstants.focusedBorderColor
+                  : AppConstants.borderColor,
+            ),
+          ),
+          focusedBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(AppConstants.fieldBorderRadius),
+            borderSide: const BorderSide(
+              color: AppConstants.focusedBorderColor,
+            ),
+          ),
         ),
       ),
     );

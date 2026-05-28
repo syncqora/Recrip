@@ -7,6 +7,7 @@ import 'package:saas/shared/constants/app_strings.dart';
 import '../../../../../shared/widgets/primary_action_button.dart';
 import '../../../../../shared/widgets/success_toast.dart';
 import '../../../../../shared/widgets/app_close_button.dart';
+import '../../../../../shared/widgets/dashboard_module_skeleton.dart';
 import '../../../../../shared/widgets/send_reminders_button.dart';
 import 'dashboard_controller.dart';
 import '../../modals/add_member_modal.dart';
@@ -18,7 +19,6 @@ import '../reports/reports_view.dart';
 import '../settings/settings_view.dart';
 import 'package:saas/app/subscriptions/subscriptions_view.dart';
 import 'package:saas/shared/constants/app_icons.dart';
-import '../payments/payments_view.dart';
 
 /// Tablet layout: app bar with hamburger + drawer, no persistent sidebar.
 /// Dashboard content: header, 2x2 KPI cards, AI Insights + Upcoming Reminders, renewals table.
@@ -50,7 +50,6 @@ class DashboardTabletView extends StatelessWidget {
     reminders: AppIcons.bellRing,
     reports: AppIcons.chartColumnBig,
     settings: AppIcons.settings,
-    payments: AppIcons.creditCard,
   );
 
   static final _renewalRows = [
@@ -158,13 +157,15 @@ class DashboardTabletView extends StatelessWidget {
       drawer: _buildDrawer(context, controller),
       body: Obx(() {
         final index = controller.selectedNavIndex.value;
+        if (controller.moduleSwitchLoading.value) {
+          return DashboardModuleSkeleton(navIndex: index);
+        }
         if (index == 1) return const MembersView();
         if (index == 2) return const SubscriptionsView();
         if (index == 3) return const RenewalsView();
         if (index == 4) return const RemindersView();
         if (index == 5) return const ReportsView();
         if (index == 6) return const SettingsView();
-        if (index == 7) return const PaymentsView();
         return _buildDashboardContent(context, controller);
       }),
     );
@@ -226,7 +227,6 @@ class DashboardTabletView extends StatelessWidget {
                         AppStrings.navReminders,
                         AppStrings.navReports,
                         AppStrings.navSettings,
-                        AppStrings.navPayments,
                       ].asMap().entries.map((e) {
                         final isActive =
                             controller.selectedNavIndex.value == e.key;
@@ -324,8 +324,6 @@ class DashboardTabletView extends StatelessWidget {
         return _menuIcons.reports;
       case 6:
         return _menuIcons.settings;
-      case 7:
-        return _menuIcons.payments;
       default:
         return _menuIcons.dashboard;
     }

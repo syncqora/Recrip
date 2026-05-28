@@ -7,7 +7,10 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:get/get.dart';
 import 'package:http/http.dart' as http;
 import 'package:saas/app/screens/authentication/login/views/login_controller.dart';
+import 'package:saas/app/screens/landing_page/controllers/faq_chatbot_controller.dart';
+import 'package:saas/app/screens/landing_page/data/landing_faq_data.dart';
 import 'package:saas/app/screens/landing_page/landing_page_mobile_view.dart';
+import 'package:saas/app/screens/landing_page/widgets/landing_faq_chatbot_card.dart';
 import 'package:saas/core/di/get_injector.dart';
 import 'package:saas/routes/app_pages.dart';
 import 'package:saas/shared/constants/app_icons.dart';
@@ -45,11 +48,14 @@ class LandingPage extends StatefulWidget {
 
 class _LandingPageState extends State<LandingPage> {
   static const double _fullScrollUnlockTarget = 1080;
+  static const String _faqChatbotControllerTag =
+      'landing-faq-chatbot-controller';
   final _featuresKey = GlobalKey();
   final _stepsKey = GlobalKey();
   final _pricingKey = GlobalKey();
   final _contactKey = GlobalKey();
   final _scrollController = ScrollController();
+  late final FaqChatbotController _faqChatbotController;
 
   /// Isolated from scroll body so spy updates don’t rebuild the whole page.
   final ValueNotifier<_TopNavTab?> _navTabHighlight = ValueNotifier(null);
@@ -68,6 +74,10 @@ class _LandingPageState extends State<LandingPage> {
   @override
   void initState() {
     super.initState();
+    _faqChatbotController = Get.put(
+      FaqChatbotController(entries: landingChatbotEntries),
+      tag: _faqChatbotControllerTag,
+    );
     LoginController.registerHeroIfNeeded();
     _scrollController.addListener(_scheduleNavSpyIfNeeded);
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -92,6 +102,7 @@ class _LandingPageState extends State<LandingPage> {
   void dispose() {
     _scrollController.removeListener(_scheduleNavSpyIfNeeded);
     _scrollController.dispose();
+    Get.delete<FaqChatbotController>(tag: _faqChatbotControllerTag);
     _navTabHighlight.dispose();
     _previewTabHighlight.dispose();
     LoginController.deleteHeroIfRegistered();
@@ -371,6 +382,10 @@ class _LandingPageState extends State<LandingPage> {
           ],
         ),
       ),
+      floatingActionButton: _LandingChatbotFab(
+        controller: _faqChatbotController,
+      ),
+      floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
     );
   }
 }
@@ -2002,7 +2017,7 @@ class _FaqSection extends StatelessWidget {
                     flex: 46,
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
-                      children: faqs
+                      children: landingFaqCardEntries
                           .map(
                             (faq) => Padding(
                               padding: const EdgeInsets.only(bottom: 24),
@@ -2029,7 +2044,7 @@ class _FaqCard extends StatelessWidget {
 
   static const double _kBorderRadius = 20;
 
-  final _Faq faq;
+  final FaqChatEntry faq;
 
   @override
   Widget build(BuildContext context) {
@@ -2175,6 +2190,76 @@ class _QuestionCard extends StatelessWidget {
       ),
     );
   }
+}
+
+class _LandingChatbotFab extends StatelessWidget {
+  const _LandingChatbotFab({required this.controller});
+
+  final FaqChatbotController controller;
+
+  @override
+  Widget build(BuildContext context) {
+    return FloatingActionButton(
+      heroTag: null,
+      backgroundColor: const Color(0xFF312E91),
+      foregroundColor: Colors.white,
+      onPressed: () => _showLandingChatbotDialog(context, controller),
+      child: const Icon(Icons.chat_bubble_rounded),
+    );
+  }
+}
+
+void _showLandingChatbotDialog(
+  BuildContext context,
+  FaqChatbotController controller,
+) {
+  showDialog<void>(
+    context: context,
+    barrierDismissible: true,
+    barrierColor: Colors.black.withValues(alpha: 0.55),
+    builder: (_) {
+      return Align(
+        alignment: Alignment.bottomRight,
+        child: Padding(
+          padding: const EdgeInsets.only(right: 20, bottom: 20, left: 20),
+          child: Material(
+            color: Colors.transparent,
+            child: Stack(
+              children: [
+                ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: 430),
+                  child: LandingFaqChatbotCard(controller: controller),
+                ),
+                Positioned(
+                  top: 10,
+                  right: 10,
+                  child: MouseRegion(
+                    cursor: SystemMouseCursors.click,
+                    child: GestureDetector(
+                      onTap: () => Navigator.of(context).pop(),
+                      child: Container(
+                        width: 30,
+                        height: 30,
+                        decoration: BoxDecoration(
+                          color: Colors.white.withValues(alpha: 0.12),
+                          shape: BoxShape.circle,
+                        ),
+                        child: const Icon(
+                          Icons.close_rounded,
+                          color: Colors.white,
+                          size: 18,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
+    },
+  );
 }
 
 class _BottomCtaSection extends StatelessWidget {
@@ -2624,21 +2709,6 @@ const contactHighlights = [
   '24/7 Priority Support',
 ];
 
-const faqs = [
-  _Faq(
-    'Can I customize the notification messages?',
-    'Absolutely! You can fully customize the content, timing, and channel (WhatsApp, Email) for every notification sent.',
-  ),
-  _Faq(
-    'Is my customer data secure?',
-    'Yes, we use bank-grade encryption and are fully GDPR and SOC2 compliant. Your data is isolated and protected at all times.',
-  ),
-  _Faq(
-    'What businesses is Recrip best for?',
-    'Recrip is designed for any business with recurring subscriptions, including gyms, salons, clinics, SaaS, and service providers.',
-  ),
-];
-
 class _Feature {
   const _Feature(this.title, this.description, this.iconAsset, this.color);
 
@@ -2666,11 +2736,4 @@ class _PricingPlan {
   final String name;
   final String price;
   final List<String> items;
-}
-
-class _Faq {
-  const _Faq(this.question, this.answer);
-
-  final String question;
-  final String answer;
 }

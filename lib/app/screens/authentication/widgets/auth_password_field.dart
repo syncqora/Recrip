@@ -33,57 +33,69 @@ class AuthPasswordField extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return TextField(
-      controller: controller,
-      focusNode: focusNode,
-      textInputAction: textInputAction,
-      onSubmitted: onSubmitted,
-      obscureText: obscureText,
-      style: Get.theme.textTheme.bodySmall?.copyWith(
-        color: AppConstants.textColor,
+    return Theme(
+      data: Theme.of(context).copyWith(
+        textSelectionTheme: const TextSelectionThemeData(
+          selectionColor: Color(0x664F46E5),
+          selectionHandleColor: Color(0xFF4F46E5),
+        ),
       ),
-      cursorColor: Colors.black,
-      decoration: InputDecoration(
-        errorText: errorText,
-        errorMaxLines: 3,
-        isDense: true,
-        contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
-        constraints: BoxConstraints(minHeight: AppConstants.fieldHeight),
-        hintText: hint,
-        hintStyle: Get.theme.textTheme.labelMedium!.copyWith(
-          color: AppConstants.hintColor,
-          fontWeight: FontWeight.w400,
+      child: TextField(
+        controller: controller,
+        focusNode: focusNode,
+        textInputAction: textInputAction,
+        onSubmitted: onSubmitted,
+        obscureText: obscureText,
+        enableInteractiveSelection: true,
+        style: Get.theme.textTheme.bodySmall?.copyWith(
+          color: AppConstants.textColor,
         ),
-        filled: true,
-        fillColor: AppConstants.fieldFillColor,
-        hoverColor: AppConstants.fieldFillColor,
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(AppConstants.fieldBorderRadius),
-          borderSide: BorderSide(color: Colors.grey.shade300),
-        ),
-        enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(AppConstants.fieldBorderRadius),
-          borderSide: BorderSide(
-            color: isHovered
-                ? AppConstants.focusedBorderColor
-                : Colors.grey.shade300,
+        cursorColor: Colors.black,
+        decoration: InputDecoration(
+          errorText: errorText,
+          errorMaxLines: 3,
+          isDense: true,
+          contentPadding: const EdgeInsets.symmetric(
+            horizontal: 12,
+            vertical: 14,
           ),
-        ),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(AppConstants.fieldBorderRadius),
-          borderSide: const BorderSide(
-            color: AppConstants.focusedBorderColor,
+          constraints: BoxConstraints(minHeight: AppConstants.fieldHeight),
+          hintText: hint,
+          hintStyle: Get.theme.textTheme.labelMedium!.copyWith(
+            color: AppConstants.hintColor,
+            fontWeight: FontWeight.w400,
           ),
-        ),
-        suffixIcon: IconButton(
-          onPressed: onToggleVisibility,
-          icon: SvgPicture.asset(
-            obscureText ? AppIcons.eyeClose : AppIcons.eyeOpen,
-            width: 16,
-            height: 16,
-            colorFilter: const ColorFilter.mode(
-              Color(0xFF64748B),
-              BlendMode.srcIn,
+          filled: true,
+          fillColor: AppConstants.fieldFillColor,
+          hoverColor: AppConstants.fieldFillColor,
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(AppConstants.fieldBorderRadius),
+            borderSide: BorderSide(color: Colors.grey.shade300),
+          ),
+          enabledBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(AppConstants.fieldBorderRadius),
+            borderSide: BorderSide(
+              color: isHovered
+                  ? AppConstants.focusedBorderColor
+                  : Colors.grey.shade300,
+            ),
+          ),
+          focusedBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(AppConstants.fieldBorderRadius),
+            borderSide: const BorderSide(
+              color: AppConstants.focusedBorderColor,
+            ),
+          ),
+          suffixIcon: IconButton(
+            onPressed: onToggleVisibility,
+            icon: SvgPicture.asset(
+              obscureText ? AppIcons.eyeClose : AppIcons.eyeOpen,
+              width: 16,
+              height: 16,
+              colorFilter: const ColorFilter.mode(
+                Color(0xFF64748B),
+                BlendMode.srcIn,
+              ),
             ),
           ),
         ),

@@ -104,7 +104,7 @@ class _AddMemberModalState extends State<AddMemberModal> {
       initialDate: _startDate ?? DateTime.now(),
       firstDate: DateTime(2020),
       lastDate: DateTime(2030),
-      helpText: 'Select start date',
+      useGridCalendarStyle: true,
     );
     if (date != null) setState(() => _startDate = date);
   }
@@ -681,7 +681,10 @@ class _AddMemberModalState extends State<AddMemberModal> {
               const SizedBox(height: 8),
               Builder(
                 builder: (_) {
-                  final calculated = calculateExpiryDate(_selectedPlan, _startDate);
+                  final calculated = calculateExpiryDate(
+                    _selectedPlan,
+                    _startDate,
+                  );
                   final samePlan = _selectedPlan == widget.initialPlan;
                   final sameStart =
                       _startDate != null &&
@@ -689,7 +692,8 @@ class _AddMemberModalState extends State<AddMemberModal> {
                       _startDate!.year == _initialStartDate!.year &&
                       _startDate!.month == _initialStartDate!.month &&
                       _startDate!.day == _initialStartDate!.day;
-                  final expiry = (isEditMode &&
+                  final expiry =
+                      (isEditMode &&
                           samePlan &&
                           sameStart &&
                           _initialExpiryDate != null)

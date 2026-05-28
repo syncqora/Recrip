@@ -92,6 +92,10 @@ class AppTheme {
       scrolledUnderElevation: 0,
       surfaceTintColor: Colors.transparent,
     ),
+    textSelectionTheme: const TextSelectionThemeData(
+      selectionColor: Color(0x664F46E5),
+      selectionHandleColor: Color(0xFF4F46E5),
+    ),
     textTheme: Typography.material2021().black
         .apply(fontFamily: _inter)
         .merge(_lightTextTheme()),
@@ -115,6 +119,10 @@ class AppTheme {
       elevation: 0,
       scrolledUnderElevation: 0,
       surfaceTintColor: Colors.transparent,
+    ),
+    textSelectionTheme: const TextSelectionThemeData(
+      selectionColor: Color(0x664F46E5),
+      selectionHandleColor: Color(0xFF4F46E5),
     ),
     textTheme: Typography.material2021().white
         .apply(fontFamily: _inter)
