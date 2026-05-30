@@ -38,10 +38,6 @@ class Dashboard extends GetView<DashboardController> {
   static const _sidebarTextColor = Color(0xFF475569);
   static const _textDark = Color(0xFF0F172A);
   static const _textMuted = Color(0xFF666666);
-  static const _border = Color(0xFFE5E7EB);
-  static const _expiredBadge = Color(0xFFFEE2E2);
-  static const _expiringBadge = Color(0xFFFEF3C7);
-  static const _renewedGreen = Color(0xFF5AC464);
   static const _iconCirclePurple = Color(0xFF4F46E5);
   static const _iconCircleOrange = Color(0xFFF59E0B);
   static const _iconCircleRed = Color(0xFFDC2626);
@@ -211,8 +207,10 @@ class Dashboard extends GetView<DashboardController> {
                   item.iconPath,
                   width: 24,
                   height: 24,
-                  color: item.isActive ? _purple : _sidebarIconColor,
-                  colorBlendMode: BlendMode.srcIn,
+                  colorFilter: ColorFilter.mode(
+                    item.isActive ? _purple : _sidebarIconColor,
+                    BlendMode.srcIn,
+                  ),
                 ),
                 const SizedBox(width: 16),
                 Text(
@@ -247,8 +245,10 @@ class Dashboard extends GetView<DashboardController> {
                   AppIcons.logOut,
                   width: 24,
                   height: 24,
-                  color: _sidebarIconColor,
-                  colorBlendMode: BlendMode.srcIn,
+                  colorFilter: const ColorFilter.mode(
+                    _sidebarIconColor,
+                    BlendMode.srcIn,
+                  ),
                 ),
                 const SizedBox(width: 16),
                 Text(
@@ -286,9 +286,6 @@ class Dashboard extends GetView<DashboardController> {
             ),
             child: Obx(() {
               final index = controller.selectedNavIndex.value;
-              if (controller.moduleSwitchLoading.value) {
-                return DashboardModuleSkeleton(navIndex: index);
-              }
               if (index == 1) return const MembersView();
               if (index == 2) return const SubscriptionsView();
               if (index == 3) return const RenewalsView();
@@ -353,8 +350,7 @@ class Dashboard extends GetView<DashboardController> {
                 AppIcons.headset,
                 width: 24,
                 height: 24,
-                color: _textMuted,
-                colorBlendMode: BlendMode.srcIn,
+                colorFilter: ColorFilter.mode(_textMuted, BlendMode.srcIn),
               ),
             ),
           ),
@@ -479,8 +475,7 @@ class Dashboard extends GetView<DashboardController> {
                 c.iconPath,
                 width: 24,
                 height: 24,
-                color: c.iconColor,
-                colorBlendMode: BlendMode.srcIn,
+                colorFilter: ColorFilter.mode(c.iconColor, BlendMode.srcIn),
               ),
             ),
             const SizedBox(width: 24),

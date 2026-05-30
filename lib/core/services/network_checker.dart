@@ -1,6 +1,8 @@
 import 'dart:async';
 import 'package:connectivity_plus/connectivity_plus.dart';
+import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:saas/core/locale/locale_keys.dart';
 
 /// A service class that monitors network connectivity status using the Connectivity package.
 /// It updates and provides the current connectivity status throughout the app.
@@ -40,7 +42,7 @@ class NetworkChecker extends GetxService {
     List<ConnectivityResult> connectivityResult = [ConnectivityResult.none];
     try {
       connectivityResult = await connectivity.checkConnectivity();
-    } catch (error, stackTrace) {
+    } catch (error) {
       /*Logs.appErrorLogger(
           swaggerDataCategory: SwaggerDataCategory.platformDispatcher,
           error: error,
@@ -56,48 +58,43 @@ class NetworkChecker extends GetxService {
   Future<void> _updateConnectionStatus(
     List<ConnectivityResult> connectivityResult,
   ) async {
-    /*isShowNetworkConnectivityMessage.value = true;
-    switch (connectivityResult) {
-      case ConnectivityResult.wifi:
-        _setConnectedStatus(true, LocaleKeys.wifi.tr);
-        break;
-      case ConnectivityResult.mobile:
-        _setConnectedStatus(true, LocaleKeys.mobile.tr);
-        break;
-      case ConnectivityResult.none:
-        _setConnectedStatus(false, LocaleKeys.noInternet.tr);
-        break;
-      default:
-        Get.snackbar(
-            LocaleKeys.errorNetwork.tr, LocaleKeys.networkFailedMessage.tr);
-        break;
-    }*/
+    isShowNetworkConnectivityMessage.value = true;
+
     if (connectivityResult.contains(ConnectivityResult.none)) {
       isConnected.value = false;
       connectionType.value = "No Internet";
+      if (isShowNetworkConnectivityMessage.value) {
+        Get.showSnackbar(
+          GetSnackBar(
+            titleText: Text(LocaleKeys.errorNetwork),
+            messageText: Text(LocaleKeys.networkFailedMessage),
+            snackPosition: SnackPosition.BOTTOM,
+            backgroundColor: Colors.red,
+            duration: const Duration(seconds: 3),
+            margin: const EdgeInsets.all(16),
+          ),
+        );
+      }
     } else {
+      isConnected.value = true;
       if (connectivityResult.contains(ConnectivityResult.mobile)) {
-        isConnected.value = true;
         connectionType.value = "mobile";
       } else if (connectivityResult.contains(ConnectivityResult.wifi)) {
-        isConnected.value = true;
         connectionType.value = "wifi";
       } else if (connectivityResult.contains(ConnectivityResult.ethernet)) {
-        isConnected.value = true;
-        connectionType.value = "connectedEthernet";
+        connectionType.value = "ethernet";
       } else if (connectivityResult.contains(ConnectivityResult.vpn)) {
-        isConnected.value = true;
-        connectionType.value = "connectedVPN";
+        connectionType.value = "vpn";
       } else if (connectivityResult.contains(ConnectivityResult.other)) {
-        isConnected.value = true;
-        connectionType.value = "connectedUnknown";
+        connectionType.value = "other";
+      } else {
+        connectionType.value = "unknown";
       }
     }
-    /*if (isShowNetworkConnectivityMessage.value) {
-      Future.delayed(const Duration(seconds: 3), () {
-        isShowNetworkConnectivityMessage.value = false;
-      });
-    }*/
+
+    Future.delayed(const Duration(seconds: 3), () {
+      isShowNetworkConnectivityMessage.value = false;
+    });
   }
 
   /// Sets the connectivity status and type.

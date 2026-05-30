@@ -5,6 +5,7 @@ import '../../../authentication/widgets/app_constants.dart';
 import 'package:saas/shared/constants/app_strings.dart';
 import 'package:saas/shared/themes/popup_menu_interaction_theme.dart';
 import 'package:saas/shared/widgets/primary_action_button.dart';
+import 'package:saas/shared/widgets/dashboard_module_skeleton.dart';
 
 import '../../modals/add_member_modal.dart';
 import '../../modals/modal_route_helper.dart';
@@ -55,11 +56,8 @@ class MembersView extends GetView<MembersController> {
             const SizedBox(height: 32),
             _buildSearchRow(context, isMobile, isTablet: isTablet),
             const SizedBox(height: 16),
-            if (isLoading)
-              const Padding(
-                padding: EdgeInsets.symmetric(vertical: 48),
-                child: Center(child: CircularProgressIndicator()),
-              )
+            if (isLoading && tableData.isEmpty)
+              const DashboardDataTableSkeleton(height: 360)
             else if (errorMessage != null)
               Padding(
                 padding: const EdgeInsets.symmetric(vertical: 16),

@@ -4,9 +4,9 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:get/get.dart';
 import 'package:saas/shared/constants/app_strings.dart';
 import '../../../../../shared/widgets/primary_action_button.dart';
+import '../../../../../shared/widgets/dashboard_module_skeleton.dart';
 import '../../../../../shared/widgets/success_toast.dart';
 import '../../../../../shared/widgets/app_close_button.dart';
-import '../../../../../shared/widgets/dashboard_module_skeleton.dart';
 import '../../../../../shared/widgets/send_reminders_button.dart';
 import 'dashboard_controller.dart';
 import '../../modals/add_member_modal.dart';
@@ -154,9 +154,6 @@ class DashboardMobileView extends StatelessWidget {
       drawer: _buildDrawer(context, controller),
       body: Obx(() {
         final index = controller.selectedNavIndex.value;
-        if (controller.moduleSwitchLoading.value) {
-          return DashboardModuleSkeleton(navIndex: index);
-        }
         if (index == 1) return const MembersView();
         if (index == 2) return const SubscriptionsView();
         if (index == 3) return const RenewalsView();
@@ -265,9 +262,7 @@ class DashboardMobileView extends StatelessWidget {
                                     width: 24,
                                     height: 24,
                                     colorFilter: ColorFilter.mode(
-                                      isActive
-                                          ? _purple
-                                          : _sidebarIconColor,
+                                      isActive ? _purple : _sidebarIconColor,
                                       BlendMode.srcIn,
                                     ),
                                   ),
@@ -409,29 +404,42 @@ class DashboardMobileView extends StatelessWidget {
 
   Widget _buildSummaryGrid(DashboardController controller) {
     return Obx(() {
-      final loading = controller.memberCountsLoading.value;
+      if (controller.memberCountsLoading.value) {
+        return GridView.count(
+          crossAxisCount: 2,
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          mainAxisSpacing: 12,
+          crossAxisSpacing: 12,
+          childAspectRatio: 1.5,
+          children: List.generate(
+            4,
+            (_) => const DashboardKpiCardSkeleton(minHeight: 96),
+          ),
+        );
+      }
+
       final active = controller.activeMemberCount.value;
       final expiring = controller.expiringMemberCount.value;
       final expired = controller.expiredMemberCount.value;
-      String label(int count) => loading ? '…' : '$count';
 
       final cards = [
         _SummaryItem(
           AppIcons.usersTab,
           _iconCirclePurple,
-          label(active),
+          '$active',
           AppStrings.summaryActiveMembers,
         ),
         _SummaryItem(
           AppIcons.alarmClockTab,
           _iconCircleOrange,
-          label(expiring),
+          '$expiring',
           AppStrings.summaryExpiring7Days,
         ),
         _SummaryItem(
           AppIcons.shieldXTab,
           _iconCircleRed,
-          label(expired),
+          '$expired',
           AppStrings.expired,
         ),
         _SummaryItem(

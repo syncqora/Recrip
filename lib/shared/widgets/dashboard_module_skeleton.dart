@@ -1,7 +1,71 @@
 import 'package:flutter/material.dart';
 import 'package:skeletonizer/skeletonizer.dart';
 
-/// Skeleton shown while dashboard modules are loading.
+/// Pulse effect shared by dashboard skeleton widgets.
+const dashboardSkeletonPulseEffect = PulseEffect(
+  from: Color(0xFFE6EBF7),
+  to: Color(0xFFF4F6FC),
+  duration: Duration(milliseconds: 1100),
+);
+
+/// Wraps [child] with the dashboard pulse skeleton effect.
+class DashboardSkeletonZone extends StatelessWidget {
+  /// Creates a skeleton zone with the shared dashboard pulse effect.
+  const DashboardSkeletonZone({super.key, required this.child});
+
+  /// Widget tree rendered inside the skeletonizer zone.
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    return Skeletonizer.zone(
+      effect: dashboardSkeletonPulseEffect,
+      child: child,
+    );
+  }
+}
+
+/// Placeholder for a KPI / summary card while counts are loading.
+class DashboardKpiCardSkeleton extends StatelessWidget {
+  /// Creates a KPI card skeleton with an optional minimum height.
+  const DashboardKpiCardSkeleton({super.key, this.minHeight = 120});
+
+  /// Minimum height to match real summary cards.
+  final double minHeight;
+
+  @override
+  Widget build(BuildContext context) {
+    return DashboardSkeletonZone(
+      child: ConstrainedBox(
+        constraints: BoxConstraints(minHeight: minHeight),
+        child: const _KpiCardSkeleton(),
+      ),
+    );
+  }
+}
+
+/// Placeholder for a data table while rows are loading.
+class DashboardDataTableSkeleton extends StatelessWidget {
+  /// Creates a table card skeleton, optionally with a fixed height.
+  const DashboardDataTableSkeleton({super.key, this.height});
+
+  /// When set, constrains the skeleton height (useful in scroll views).
+  final double? height;
+
+  @override
+  Widget build(BuildContext context) {
+    final skeleton = const DashboardSkeletonZone(
+      child: _LargeTableCardSkeleton(),
+    );
+    if (height == null) return skeleton;
+    return SizedBox(height: height, child: skeleton);
+  }
+}
+
+/// Full-page skeleton shown while dashboard modules are loading.
+///
+/// Prefer [DashboardKpiCardSkeleton], [DashboardDataTableSkeleton], and
+/// [DashboardRenewalsTableRowsSkeleton] so static headers and controls stay visible.
 class DashboardModuleSkeleton extends StatelessWidget {
   const DashboardModuleSkeleton({super.key, this.navIndex = 0});
 
@@ -12,12 +76,7 @@ class DashboardModuleSkeleton extends StatelessWidget {
     return LayoutBuilder(
       builder: (context, constraints) {
         final isCompact = constraints.maxWidth < 900;
-        return Skeletonizer.zone(
-          effect: const PulseEffect(
-            from: Color(0xFFE6EBF7),
-            to: Color(0xFFF4F6FC),
-            duration: Duration(milliseconds: 1100),
-          ),
+        return DashboardSkeletonZone(
           child: Padding(
             padding: const EdgeInsets.all(20),
             child: _moduleSkeletonFor(isCompact),
@@ -719,13 +778,6 @@ class _SettingsFormSkeleton extends StatelessWidget {
   }
 }
 
-/// Pulse effect shared by dashboard skeleton widgets.
-const dashboardSkeletonPulseEffect = PulseEffect(
-  from: Color(0xFFE6EBF7),
-  to: Color(0xFFF4F6FC),
-  duration: Duration(milliseconds: 1100),
-);
-
 /// Skeleton rows for the dashboard "Action Required - Renewals" table body.
 class DashboardRenewalsTableRowsSkeleton extends StatelessWidget {
   /// Creates skeleton rows for the renewals table.
@@ -744,8 +796,7 @@ class DashboardRenewalsTableRowsSkeleton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Skeletonizer.zone(
-      effect: dashboardSkeletonPulseEffect,
+    return DashboardSkeletonZone(
       child: Table(
         columnWidths: _columnWidths,
         children: List.generate(rowCount, (_) => _buildSkeletonRow()),

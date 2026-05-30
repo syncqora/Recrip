@@ -24,7 +24,6 @@ class DashboardController extends GetxController {
   final expiringMemberCount = 0.obs;
   final expiredMemberCount = 0.obs;
   final memberCountsLoading = false.obs;
-  final moduleSwitchLoading = false.obs;
 
   late final MemberRepository _memberRepository;
   late final AuthService _authService;
@@ -38,17 +37,28 @@ class DashboardController extends GetxController {
     loadMemberCounts();
   }
 
+  /// Track if member counts are currently loading to prevent duplicate requests.
+  bool _memberCountsLoadingFlag = false;
+
   /// Fetches active, expiring, and expired counts from `/count/asset/member`.
   ///
   /// Each status is loaded independently so one failure does not block the others.
   Future<void> loadMemberCounts() async {
+    if (_memberCountsLoadingFlag) return;
+
+    _memberCountsLoadingFlag = true;
     memberCountsLoading.value = true;
-    await Future.wait([
-      _loadCountForStatus('active', activeMemberCount),
-      _loadCountForStatus('expiring', expiringMemberCount),
-      _loadCountForStatus('expired', expiredMemberCount),
-    ]);
-    memberCountsLoading.value = false;
+
+    try {
+      await Future.wait([
+        _loadCountForStatus('active', activeMemberCount),
+        _loadCountForStatus('expiring', expiringMemberCount),
+        _loadCountForStatus('expired', expiredMemberCount),
+      ]);
+    } finally {
+      memberCountsLoading.value = false;
+      _memberCountsLoadingFlag = false;
+    }
   }
 
   Future<void> _loadCountForStatus(String status, RxInt target) async {
@@ -87,29 +97,45 @@ class DashboardController extends GetxController {
 
   void onSendRemindersNow() {}
 
-  Future<void> _loadModuleDataFor(int index) async {
-    moduleSwitchLoading.value = true;
-    try {
-      if (index == 1 || index == 3 || index == 4) {
-        if (memberTableData.isEmpty || membersErrorMessage.value != null) {
-          await loadMembers();
-        } else if (membersLoading.value) {
-          await _waitUntil(() => !membersLoading.value);
-        }
-      } else if (index == 2) {
+  /// Whether navigating to [index] requires fetching or waiting on module data.
+  bool _moduleNeedsLoading(int index) {
+    switch (index) {
+      case 1:
+      case 3:
+      case 4:
+        return memberTableData.isEmpty ||
+            membersErrorMessage.value != null ||
+            membersLoading.value;
+      case 2:
         SubscriptionsBinding.ensureRegistered();
         final subscriptionsController = Get.find<SubscriptionsController>();
-        if (subscriptionsController.plans.isEmpty ||
-            subscriptionsController.errorMessage.value != null) {
-          await subscriptionsController.loadInitialData();
-        } else if (subscriptionsController.isLoading.value) {
-          await _waitUntil(() => !subscriptionsController.isLoading.value);
-        }
-      } else {
-        await Future<void>.delayed(const Duration(milliseconds: 120));
+        return subscriptionsController.plans.isEmpty ||
+            subscriptionsController.errorMessage.value != null ||
+            subscriptionsController.isLoading.value;
+      default:
+        // Dashboard, reports, and settings reuse already-loaded state.
+        return false;
+    }
+  }
+
+  Future<void> _loadModuleDataFor(int index) async {
+    if (!_moduleNeedsLoading(index)) return;
+
+    if (index == 1 || index == 3 || index == 4) {
+      if (memberTableData.isEmpty || membersErrorMessage.value != null) {
+        await loadMembers();
+      } else if (membersLoading.value) {
+        await _waitUntil(() => !membersLoading.value);
       }
-    } finally {
-      moduleSwitchLoading.value = false;
+    } else if (index == 2) {
+      SubscriptionsBinding.ensureRegistered();
+      final subscriptionsController = Get.find<SubscriptionsController>();
+      if (subscriptionsController.plans.isEmpty ||
+          subscriptionsController.errorMessage.value != null) {
+        await subscriptionsController.loadInitialData();
+      } else if (subscriptionsController.isLoading.value) {
+        await _waitUntil(() => !subscriptionsController.isLoading.value);
+      }
     }
   }
 
@@ -124,7 +150,13 @@ class DashboardController extends GetxController {
     }
   }
 
+  /// Track if members are currently loading to prevent duplicate requests.
+  bool _membersLoadingFlag = false;
+
   Future<void> loadMembers() async {
+    if (_membersLoadingFlag) return;
+
+    _membersLoadingFlag = true;
     membersLoading.value = true;
     membersErrorMessage.value = null;
     try {
@@ -141,6 +173,7 @@ class DashboardController extends GetxController {
       memberTableData.clear();
     } finally {
       membersLoading.value = false;
+      _membersLoadingFlag = false;
     }
   }
 

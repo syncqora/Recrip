@@ -7,6 +7,7 @@ import 'package:saas/app/screens/dashboard/modals/modal_route_helper.dart';
 import 'package:saas/shared/constants/app_strings.dart';
 import 'package:saas/shared/widgets/success_toast.dart';
 
+import 'package:saas/shared/widgets/dashboard_module_skeleton.dart';
 import 'subscriptions_binding.dart';
 import 'subscriptions_controller.dart';
 import 'widgets/subscription_plan_row.dart';
@@ -83,10 +84,7 @@ class SubscriptionsViewBody extends GetView<SubscriptionsController> {
               ],
               const SizedBox(height: 20),
               if (loading && tableData.isEmpty)
-                const SizedBox(
-                  height: 220,
-                  child: Center(child: CircularProgressIndicator()),
-                )
+                const DashboardDataTableSkeleton(height: 360)
               else if (!loading && tableData.isEmpty && err == null)
                 Padding(
                   padding: const EdgeInsets.symmetric(vertical: 32),

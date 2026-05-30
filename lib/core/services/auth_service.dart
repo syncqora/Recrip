@@ -1,4 +1,6 @@
+import 'dart:async';
 import 'dart:convert';
+import 'dart:io';
 
 import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
@@ -176,6 +178,15 @@ class AuthService extends GetxService {
   String messageForError(Object error) {
     if (error is ApiException) return error.message;
     if (error is JSONException) return error.message;
+    if (error is SocketException) {
+      return 'Unable to connect to server. Please check your internet connection.';
+    }
+    if (error is TimeoutException) {
+      return 'Request timed out. Please try again.';
+    }
+    if (error is HttpException) {
+      return 'Server communication error. Please try again.';
+    }
     return 'Something went wrong. Please try again.';
   }
 }
