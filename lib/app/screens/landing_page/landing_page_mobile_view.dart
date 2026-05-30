@@ -6,6 +6,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_swiper_view/flutter_swiper_view.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:get/get.dart';
+import 'package:saas/app/screens/landing_page/controllers/faq_chatbot_controller.dart';
+import 'package:saas/app/screens/landing_page/data/landing_faq_data.dart';
+import 'package:saas/app/screens/landing_page/widgets/landing_faq_chatbot_card.dart';
 import 'package:saas/core/di/get_injector.dart';
 import 'package:saas/routes/app_pages.dart';
 import 'package:saas/shared/constants/app_icons.dart';
@@ -41,6 +44,8 @@ class LandingPageMobileView extends StatefulWidget {
 }
 
 class _LandingPageMobileViewState extends State<LandingPageMobileView> {
+  static const String _faqChatbotControllerTag =
+      'landing-faq-chatbot-controller-mobile';
   final _featuresKey = GlobalKey();
   final _previewKey = GlobalKey();
   final _stepsKey = GlobalKey();
@@ -48,6 +53,7 @@ class _LandingPageMobileViewState extends State<LandingPageMobileView> {
   final _contactKey = GlobalKey();
 
   final _scrollController = ScrollController();
+  late final FaqChatbotController _faqChatbotController;
 
   /// Nav highlight isolated so scroll-spy updates don’t rebuild the whole page.
   final ValueNotifier<_MobileNavTab?> _navHighlight =
@@ -77,6 +83,10 @@ class _LandingPageMobileViewState extends State<LandingPageMobileView> {
   @override
   void initState() {
     super.initState();
+    _faqChatbotController = Get.put(
+      FaqChatbotController(entries: landingChatbotEntries),
+      tag: _faqChatbotControllerTag,
+    );
     _scrollController.addListener(_scheduleNavSpyIfNeeded);
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
@@ -94,6 +104,7 @@ class _LandingPageMobileViewState extends State<LandingPageMobileView> {
     _scrollController.removeListener(_scheduleNavSpyIfNeeded);
     _scrollController.dispose();
     _navHighlight.dispose();
+    Get.delete<FaqChatbotController>(tag: _faqChatbotControllerTag);
     super.dispose();
   }
 
@@ -308,6 +319,91 @@ class _LandingPageMobileViewState extends State<LandingPageMobileView> {
           ],
         ),
       ),
+      floatingActionButton: FloatingActionButton(
+        heroTag: 'landing-mobile-chatbot-fab',
+        backgroundColor: const Color(0xFF312E91),
+        foregroundColor: Colors.white,
+        onPressed: () => _showMobileChatbotDialog(context),
+        child: SvgPicture.asset(
+          AppIcons.headset,
+          width: 22,
+          height: 22,
+          colorFilter: const ColorFilter.mode(
+            Colors.white,
+            BlendMode.srcIn,
+          ),
+        ),
+      ),
+      floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
+    );
+  }
+
+  void _showMobileChatbotDialog(BuildContext context) {
+    showDialog<void>(
+      context: context,
+      barrierDismissible: true,
+      barrierColor: Colors.black.withValues(alpha: 0.55),
+      builder: (_) {
+        return Align(
+          alignment: Alignment.bottomCenter,
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(10, 28, 10, 12),
+            child: Material(
+              color: Colors.transparent,
+              child: Stack(
+                clipBehavior: Clip.none,
+                children: [
+                  ConstrainedBox(
+                    constraints: const BoxConstraints(maxWidth: 430),
+                    child: LandingFaqChatbotCard(controller: _faqChatbotController),
+                  ),
+                  Positioned(
+                    top: -18,
+                    right: -4,
+                    child: MouseRegion(
+                      cursor: SystemMouseCursors.click,
+                      child: GestureDetector(
+                        onTap: () => Navigator.of(context).pop(),
+                        child: Container(
+                          width: 36,
+                          height: 36,
+                          decoration: BoxDecoration(
+                            color: const Color(
+                              0xFF1E1B4B,
+                            ).withValues(alpha: 0.92),
+                            shape: BoxShape.circle,
+                            border: Border.all(
+                              color: Colors.white.withValues(alpha: 0.12),
+                            ),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withValues(alpha: 0.18),
+                                blurRadius: 14,
+                                offset: const Offset(0, 6),
+                              ),
+                            ],
+                          ),
+                          child: Center(
+                            child: SvgPicture.asset(
+                              AppIcons.closeButton,
+                              width: 18,
+                              height: 18,
+                              colorFilter: const ColorFilter.mode(
+                                Colors.white,
+                                BlendMode.srcIn,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        );
+      },
     );
   }
 }

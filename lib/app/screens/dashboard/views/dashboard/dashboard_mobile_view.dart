@@ -2,7 +2,6 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:get/get.dart';
-
 import 'package:saas/shared/constants/app_strings.dart';
 import '../../../../../shared/widgets/primary_action_button.dart';
 import '../../../../../shared/widgets/success_toast.dart';
@@ -137,8 +136,7 @@ class DashboardMobileView extends StatelessWidget {
                   AppIcons.headset,
                   width: 24,
                   height: 24,
-                  color: _textMuted,
-                  colorBlendMode: BlendMode.srcIn,
+                  colorFilter: ColorFilter.mode(_textMuted, BlendMode.srcIn),
                 ),
               ),
             ),
@@ -266,10 +264,12 @@ class DashboardMobileView extends StatelessWidget {
                                     _getIconForIndex(e.key),
                                     width: 24,
                                     height: 24,
-                                    color: isActive
-                                        ? _purple
-                                        : _sidebarIconColor,
-                                    colorBlendMode: BlendMode.srcIn,
+                                    colorFilter: ColorFilter.mode(
+                                      isActive
+                                          ? _purple
+                                          : _sidebarIconColor,
+                                      BlendMode.srcIn,
+                                    ),
                                   ),
                                   const SizedBox(width: 12),
                                   Text(
@@ -319,8 +319,10 @@ class DashboardMobileView extends StatelessWidget {
                         AppIcons.logOut,
                         width: 24,
                         height: 24,
-                        color: _sidebarIconColor,
-                        colorBlendMode: BlendMode.srcIn,
+                        colorFilter: ColorFilter.mode(
+                          _sidebarIconColor,
+                          BlendMode.srcIn,
+                        ),
                       ),
                       const SizedBox(width: 12),
                       Text(
@@ -480,8 +482,10 @@ class DashboardMobileView extends StatelessWidget {
               c.iconPath,
               width: 24,
               height: 24,
-              color: Colors.white,
-              colorBlendMode: BlendMode.srcIn,
+              colorFilter: const ColorFilter.mode(
+                Colors.white,
+                BlendMode.srcIn,
+              ),
             ),
           ),
           const SizedBox(width: 12),

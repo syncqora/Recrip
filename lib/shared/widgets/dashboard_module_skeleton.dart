@@ -718,3 +718,113 @@ class _SettingsFormSkeleton extends StatelessWidget {
     );
   }
 }
+
+/// Pulse effect shared by dashboard skeleton widgets.
+const dashboardSkeletonPulseEffect = PulseEffect(
+  from: Color(0xFFE6EBF7),
+  to: Color(0xFFF4F6FC),
+  duration: Duration(milliseconds: 1100),
+);
+
+/// Skeleton rows for the dashboard "Action Required - Renewals" table body.
+class DashboardRenewalsTableRowsSkeleton extends StatelessWidget {
+  /// Creates skeleton rows for the renewals table.
+  const DashboardRenewalsTableRowsSkeleton({super.key, this.rowCount = 7});
+
+  /// Number of placeholder rows to render.
+  final int rowCount;
+
+  static const _columnWidths = <int, TableColumnWidth>{
+    0: FlexColumnWidth(2),
+    1: FlexColumnWidth(1),
+    2: FlexColumnWidth(1.2),
+    3: FlexColumnWidth(1),
+    4: FixedColumnWidth(120),
+  };
+
+  @override
+  Widget build(BuildContext context) {
+    return Skeletonizer.zone(
+      effect: dashboardSkeletonPulseEffect,
+      child: Table(
+        columnWidths: _columnWidths,
+        children: List.generate(rowCount, (_) => _buildSkeletonRow()),
+      ),
+    );
+  }
+
+  TableRow _buildSkeletonRow() {
+    return TableRow(
+      decoration: const BoxDecoration(
+        color: Colors.white,
+        border: Border(bottom: BorderSide(color: Color(0xFFE5E7EB), width: 1)),
+      ),
+      children: [
+        _skeletonCell(
+          const Bone.text(words: 2),
+          align: Alignment.centerLeft,
+          isNameColumn: true,
+        ),
+        _skeletonCell(const Bone.text(words: 1), align: Alignment.center),
+        _skeletonCell(const Bone.text(words: 1), align: Alignment.center),
+        _skeletonCell(
+          const Bone.button(height: 32, width: 91),
+          align: Alignment.center,
+        ),
+        _skeletonCell(
+          const FittedBox(
+            fit: BoxFit.scaleDown,
+            alignment: Alignment.center,
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Bone.circle(size: 36),
+                SizedBox(width: 8),
+                Bone.circle(size: 36),
+              ],
+            ),
+          ),
+          align: Alignment.center,
+          isActionColumn: true,
+        ),
+      ],
+    );
+  }
+
+  Widget _skeletonCell(
+    Widget child, {
+    Alignment align = Alignment.centerLeft,
+    bool isNameColumn = false,
+    bool isActionColumn = false,
+  }) {
+    const horizontalPadding = 20.0;
+    const verticalPadding = 12.0;
+    const nameColumnLeftPadding = 15.0;
+    const actionColumnRightPadding = 15.0;
+
+    final padding = isNameColumn
+        ? const EdgeInsets.fromLTRB(
+            horizontalPadding + nameColumnLeftPadding,
+            verticalPadding,
+            horizontalPadding,
+            verticalPadding,
+          )
+        : isActionColumn
+        ? const EdgeInsets.fromLTRB(
+            horizontalPadding,
+            verticalPadding,
+            horizontalPadding + actionColumnRightPadding,
+            verticalPadding,
+          )
+        : const EdgeInsets.symmetric(
+            horizontal: horizontalPadding,
+            vertical: verticalPadding,
+          );
+
+    return Padding(
+      padding: padding,
+      child: Align(alignment: align, child: child),
+    );
+  }
+}

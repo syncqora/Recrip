@@ -637,7 +637,11 @@ class Dashboard extends GetView<DashboardController> {
               ],
             ),
             if (membersController.isLoading.value && rows.isEmpty)
-              const Expanded(child: Center(child: CircularProgressIndicator()))
+              const Expanded(
+                child: SingleChildScrollView(
+                  child: DashboardRenewalsTableRowsSkeleton(),
+                ),
+              )
             else if (rows.isEmpty)
               Expanded(
                 child: Center(

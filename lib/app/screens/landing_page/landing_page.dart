@@ -2204,7 +2204,15 @@ class _LandingChatbotFab extends StatelessWidget {
       backgroundColor: const Color(0xFF312E91),
       foregroundColor: Colors.white,
       onPressed: () => _showLandingChatbotDialog(context, controller),
-      child: const Icon(Icons.chat_bubble_rounded),
+      child: SvgPicture.asset(
+        AppIcons.headset,
+        width: 22,
+        height: 22,
+        colorFilter: const ColorFilter.mode(
+          Colors.white,
+          BlendMode.srcIn,
+        ),
+      ),
     );
   }
 }
@@ -2221,33 +2229,55 @@ void _showLandingChatbotDialog(
       return Align(
         alignment: Alignment.bottomRight,
         child: Padding(
-          padding: const EdgeInsets.only(right: 20, bottom: 20, left: 20),
+          padding: const EdgeInsets.only(
+            top: 28,
+            right: 20,
+            bottom: 20,
+            left: 20,
+          ),
           child: Material(
             color: Colors.transparent,
             child: Stack(
+              clipBehavior: Clip.none,
               children: [
                 ConstrainedBox(
                   constraints: const BoxConstraints(maxWidth: 430),
                   child: LandingFaqChatbotCard(controller: controller),
                 ),
                 Positioned(
-                  top: 10,
-                  right: 10,
+                  top: -18,
+                  right: -10,
                   child: MouseRegion(
                     cursor: SystemMouseCursors.click,
                     child: GestureDetector(
                       onTap: () => Navigator.of(context).pop(),
-                      child: Container(
-                        width: 30,
-                        height: 30,
+                        child: Container(
+                          width: 36,
+                          height: 36,
                         decoration: BoxDecoration(
-                          color: Colors.white.withValues(alpha: 0.12),
+                          color: const Color(0xFF1E1B4B).withValues(alpha: 0.92),
                           shape: BoxShape.circle,
+                          border: Border.all(
+                            color: Colors.white.withValues(alpha: 0.12),
+                          ),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withValues(alpha: 0.18),
+                              blurRadius: 14,
+                              offset: const Offset(0, 6),
+                            ),
+                          ],
                         ),
-                        child: const Icon(
-                          Icons.close_rounded,
-                          color: Colors.white,
-                          size: 18,
+                        child: Center(
+                          child: SvgPicture.asset(
+                            AppIcons.closeButton,
+                            width: 18,
+                            height: 18,
+                            colorFilter: const ColorFilter.mode(
+                              Colors.white,
+                              BlendMode.srcIn,
+                            ),
+                          ),
                         ),
                       ),
                     ),

@@ -4,13 +4,20 @@ import 'package:get/get.dart';
 /// Chatbot question/answer source item.
 class FaqChatEntry {
   /// Creates an FAQ source entry used by the chatbot.
-  const FaqChatEntry({required this.question, required this.answer});
+  const FaqChatEntry({
+    required this.question,
+    required this.answer,
+    this.relatedQuestions = const <String>[],
+  });
 
   /// Exact question text to match.
   final String question;
 
   /// Bot answer returned for this exact question.
   final String answer;
+
+  /// Suggested follow-up questions shown after this answer.
+  final List<String> relatedQuestions;
 }
 
 /// Individual chat message shown in the chatbot UI.
@@ -81,6 +88,7 @@ class FaqChatbotController extends GetxController {
   final RxList<FaqChatMessage> messages = <FaqChatMessage>[].obs;
   final RxBool isBotTyping = false.obs;
   final RxBool showMajorQuestions = true.obs;
+  final RxList<FaqChatEntry> suggestedEntries = <FaqChatEntry>[].obs;
 
   /// Top suggested questions displayed as quick chips.
   List<FaqChatEntry> get majorEntries {
@@ -94,6 +102,7 @@ class FaqChatbotController extends GetxController {
   void onInit() {
     super.onInit();
     messages.add(FaqChatMessage(text: greetingMessage, isBot: true));
+    suggestedEntries.assignAll(majorEntries);
   }
 
   /// Sends one user message and appends bot response.
@@ -114,7 +123,28 @@ class FaqChatbotController extends GetxController {
 
     isBotTyping.value = false;
     messages.add(FaqChatMessage(text: response, isBot: true));
+    suggestedEntries.assignAll(_suggestionsFor(bestEntry));
     showMajorQuestions.value = true;
+  }
+
+  List<FaqChatEntry> _suggestionsFor(FaqChatEntry? entry) {
+    if (entry == null || entry.relatedQuestions.isEmpty) {
+      return majorEntries;
+    }
+
+    final suggestions = <FaqChatEntry>[];
+    for (final question in entry.relatedQuestions) {
+      final match = _entries.firstWhereOrNull(
+        (candidate) =>
+            candidate.question.trim().toLowerCase() ==
+            question.trim().toLowerCase(),
+      );
+      if (match != null) {
+        suggestions.add(match);
+      }
+    }
+
+    return suggestions.isEmpty ? majorEntries : suggestions;
   }
 
   Duration _typingDelayFor(String response) {
@@ -173,11 +203,12 @@ class FaqChatbotController extends GetxController {
     messages.close();
     isBotTyping.close();
     showMajorQuestions.close();
+    suggestedEntries.close();
     super.onClose();
   }
 }
 
 const _kFaqChatGreetingMessage =
-    'Hi! Ask me any one of the FAQ questions shown on the left.';
+    'Hi there! How can I help you today?';
 const _kFaqChatFallbackMessage =
     "I couldn't find that in our FAQs. Please ask one of the listed FAQ questions.";
