@@ -21,20 +21,24 @@ int _landingRasterDecodePx(BuildContext context, double logical) {
   return (logical * dpr).round().clamp(1, 4096);
 }
 
-/// All PNG/WebP raster assets referenced on mobile landing — warmed on first frame.
-const _landingMobileRasterWarmupPaths = <String>{
-  AppIcons.recripLogo,
+/// Hero + carousel rasters — precached on first frame (above the fold).
+const _landingHeroRasterPaths = <String>[
   'assets/images/brand-logo.png',
   'assets/images/recrip.png',
   'assets/images/dashboard-new.png',
   'assets/images/members-new.png',
   'assets/images/subscriptions-new.png',
   'assets/images/renewals-new.png',
+];
+
+/// Footer / social rasters — precached after below-fold sections mount.
+const _landingFooterRasterPaths = <String>[
+  AppIcons.recripLogo,
   'assets/images/linkedin-new.png',
   'assets/images/instagram.png',
   'assets/images/twitter.png',
   'assets/images/facebook-new.png',
-};
+];
 
 class LandingPageMobileView extends StatefulWidget {
   const LandingPageMobileView({super.key});
@@ -53,13 +57,14 @@ class _LandingPageMobileViewState extends State<LandingPageMobileView> {
   final _contactKey = GlobalKey();
 
   final _scrollController = ScrollController();
-  late final FaqChatbotController _faqChatbotController;
+
+  /// Below-fold content is revealed in tiers so the hero paints before heavy sections.
+  int _belowFoldTier = 0;
 
   /// Nav highlight isolated so scroll-spy updates don’t rebuild the whole page.
   final ValueNotifier<_MobileNavTab?> _navHighlight =
       ValueNotifier<_MobileNavTab?>(null);
 
-  bool _renderDeferredSections = false;
   bool _lockPageScroll = false;
 
   /// Tracks active swiper pointers ([Listener] down/up/cancel) so deferred
@@ -83,19 +88,35 @@ class _LandingPageMobileViewState extends State<LandingPageMobileView> {
   @override
   void initState() {
     super.initState();
-    _faqChatbotController = Get.put(
-      FaqChatbotController(entries: landingChatbotEntries),
-      tag: _faqChatbotControllerTag,
-    );
     _scrollController.addListener(_scheduleNavSpyIfNeeded);
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
-      unawaited(_precacheLandingRasters());
-      setState(() => _renderDeferredSections = true);
+      unawaited(_precacheHeroRasters());
+      setState(() => _belowFoldTier = 1);
       WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (mounted) _syncNavHighlightFromScroll();
+        if (!mounted) return;
+        setState(() => _belowFoldTier = 2);
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (!mounted) return;
+          setState(() => _belowFoldTier = 3);
+          unawaited(_precacheFooterRasters());
+          _syncNavHighlightFromScroll();
+        });
       });
     });
+  }
+
+  /// Lazily registers the FAQ chatbot controller when the FAB is opened.
+  FaqChatbotController get _faqChatbotController {
+    if (!Get.isRegistered<FaqChatbotController>(
+      tag: _faqChatbotControllerTag,
+    )) {
+      Get.put(
+        FaqChatbotController(entries: landingChatbotEntries),
+        tag: _faqChatbotControllerTag,
+      );
+    }
+    return Get.find<FaqChatbotController>(tag: _faqChatbotControllerTag);
   }
 
   @override
@@ -104,16 +125,27 @@ class _LandingPageMobileViewState extends State<LandingPageMobileView> {
     _scrollController.removeListener(_scheduleNavSpyIfNeeded);
     _scrollController.dispose();
     _navHighlight.dispose();
-    Get.delete<FaqChatbotController>(tag: _faqChatbotControllerTag);
+    if (Get.isRegistered<FaqChatbotController>(tag: _faqChatbotControllerTag)) {
+      Get.delete<FaqChatbotController>(tag: _faqChatbotControllerTag);
+    }
     super.dispose();
   }
 
-  /// Fills [ImageCache] for mobile landing rasters in parallel (Decode is still
-  /// capped via [cacheWidth]/[ResizeImage] where used).
-  Future<void> _precacheLandingRasters() async {
+  /// Warms above-the-fold carousel and header rasters without blocking UI.
+  Future<void> _precacheHeroRasters() async {
     if (!mounted) return;
     await Future.wait<void>(
-      _landingMobileRasterWarmupPaths.map(
+      _landingHeroRasterPaths.map(
+        (path) => precacheImage(AssetImage(path), context),
+      ),
+    );
+  }
+
+  /// Warms footer/social rasters after below-fold sections mount.
+  Future<void> _precacheFooterRasters() async {
+    if (!mounted) return;
+    await Future.wait<void>(
+      _landingFooterRasterPaths.map(
         (path) => precacheImage(AssetImage(path), context),
       ),
     );
@@ -134,7 +166,7 @@ class _LandingPageMobileViewState extends State<LandingPageMobileView> {
     if (_suppressScrollSpy ||
         !_scrollController.hasClients ||
         _navSpyFramePending ||
-        !_renderDeferredSections) {
+        _belowFoldTier < 1) {
       return;
     }
     _navSpyFramePending = true;
@@ -294,24 +326,27 @@ class _LandingPageMobileViewState extends State<LandingPageMobileView> {
                         onInteractionEnd: _onSwiperInteractionEnd,
                       ),
                     ),
-                    if (_renderDeferredSections) ...[
+                    if (_belowFoldTier >= 1) ...[
                       _MobileFeatureSection(
                         key: _featuresKey,
                         padding: padding,
                       ),
                       _MobileStepSection(key: _stepsKey, padding: padding),
+                    ],
+                    if (_belowFoldTier >= 2) ...[
                       _MobileCtaSection(key: _pricingKey, padding: padding),
                       _MobileContactSection(key: _contactKey, padding: padding),
+                    ],
+                    if (_belowFoldTier >= 3) ...[
                       _MobileFaqSection(padding: padding),
                       _MobileBottomCtaSection(padding: padding),
                       _MobileFooterSection(padding: padding),
-                    ] else ...[
-                      const LandingSectionSkeleton(
+                    ] else
+                      LandingSectionSkeleton(
                         padding: padding,
-                        blockCount: 3,
-                        includeWideBlock: true,
+                        blockCount: _belowFoldTier == 0 ? 1 : 2,
+                        includeWideBlock: _belowFoldTier == 0,
                       ),
-                    ],
                   ],
                 ),
               ),
@@ -328,10 +363,7 @@ class _LandingPageMobileViewState extends State<LandingPageMobileView> {
           AppIcons.headset,
           width: 22,
           height: 22,
-          colorFilter: const ColorFilter.mode(
-            Colors.white,
-            BlendMode.srcIn,
-          ),
+          colorFilter: const ColorFilter.mode(Colors.white, BlendMode.srcIn),
         ),
       ),
       floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
@@ -355,7 +387,9 @@ class _LandingPageMobileViewState extends State<LandingPageMobileView> {
                 children: [
                   ConstrainedBox(
                     constraints: const BoxConstraints(maxWidth: 430),
-                    child: LandingFaqChatbotCard(controller: _faqChatbotController),
+                    child: LandingFaqChatbotCard(
+                      controller: _faqChatbotController,
+                    ),
                   ),
                   Positioned(
                     top: -18,
