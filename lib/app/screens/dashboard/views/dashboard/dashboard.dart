@@ -52,7 +52,7 @@ class Dashboard extends GetView<DashboardController> {
   @override
   Widget build(BuildContext context) {
     if (!Get.isRegistered<DashboardController>()) {
-      Get.put(DashboardController());
+      Get.put(DashboardController(), permanent: true);
     }
     final width = MediaQuery.sizeOf(context).width;
     if (width < _mobileBreakpoint) {

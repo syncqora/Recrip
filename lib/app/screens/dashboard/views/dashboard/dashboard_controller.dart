@@ -25,6 +25,12 @@ class DashboardController extends GetxController {
   final expiredMemberCount = 0.obs;
   final memberCountsLoading = false.obs;
 
+  /// Whether member schema has already been fetched this session.
+  bool _memberSchemaLoaded = false;
+
+  /// Whether KPI counts have been loaded at least once.
+  bool _hasLoadedInitialCounts = false;
+
   late final MemberRepository _memberRepository;
   late final AuthService _authService;
 
@@ -33,8 +39,19 @@ class DashboardController extends GetxController {
     super.onInit();
     _memberRepository = Get.find<MemberRepository>();
     _authService = Get.find<AuthService>();
-    loadMembers();
-    loadMemberCounts();
+    // Let the dashboard shell paint before network work starts.
+    Future.microtask(_bootstrapDashboard);
+  }
+
+  /// Loads schema, counts, and members in parallel for faster first paint.
+  Future<void> _bootstrapDashboard() async {
+    await Future.wait([loadMemberCounts(), loadMembers()]);
+  }
+
+  Future<void> _ensureMemberSchema() async {
+    if (_memberSchemaLoaded) return;
+    await _memberRepository.getMemberSchema();
+    _memberSchemaLoaded = true;
   }
 
   /// Track if member counts are currently loading to prevent duplicate requests.
@@ -46,8 +63,11 @@ class DashboardController extends GetxController {
   Future<void> loadMemberCounts() async {
     if (_memberCountsLoadingFlag) return;
 
+    final showLoading = !_hasLoadedInitialCounts;
     _memberCountsLoadingFlag = true;
-    memberCountsLoading.value = true;
+    if (showLoading) {
+      memberCountsLoading.value = true;
+    }
 
     try {
       await Future.wait([
@@ -55,6 +75,7 @@ class DashboardController extends GetxController {
         _loadCountForStatus('expiring', expiringMemberCount),
         _loadCountForStatus('expired', expiredMemberCount),
       ]);
+      _hasLoadedInitialCounts = true;
     } finally {
       memberCountsLoading.value = false;
       _memberCountsLoadingFlag = false;
@@ -87,6 +108,9 @@ class DashboardController extends GetxController {
   Future<void> onLogout() async {
     await Get.find<AuthService>().logout();
     Get.find<AppSettingsController>().isUserLoggedIn.value = false;
+    if (Get.isRegistered<DashboardController>()) {
+      Get.delete<DashboardController>(force: true);
+    }
     appNav.changePage(AppRoutes.home);
   }
 
@@ -160,11 +184,11 @@ class DashboardController extends GetxController {
     membersLoading.value = true;
     membersErrorMessage.value = null;
     try {
-      await _memberRepository.getMemberSchema();
-      final response = await _memberRepository.getMembers(
-        pageNumber: 1,
-        pageSize: 20,
-      );
+      final results = await Future.wait([
+        _ensureMemberSchema(),
+        _memberRepository.getMembers(pageNumber: 1, pageSize: 20),
+      ]);
+      final response = results[1] as MemberSchemaResponse;
       memberTableData.assignAll(
         response.items.map(_memberRowFromAsset).toList(),
       );

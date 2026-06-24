@@ -46,7 +46,7 @@ class Dashboard extends GetView<DashboardController> {
 
   @override
   Widget build(BuildContext context) {
-    Get.put(DashboardController());
+    Get.put(DashboardController(), permanent: true);
     final width = MediaQuery.sizeOf(context).width;
     final isLandscape =
         MediaQuery.of(context).orientation == Orientation.landscape;

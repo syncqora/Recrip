@@ -12,6 +12,7 @@ import 'dashboard_controller.dart';
 import '../../modals/add_member_modal.dart';
 import '../../modals/help_support_modal.dart';
 import '../../modals/modal_route_helper.dart';
+import '../members/members_mobile_view.dart';
 import '../members/members_view.dart';
 import '../reminders/reminders_view.dart';
 import '../renewals/renewals_view.dart';
@@ -22,9 +23,14 @@ import 'package:saas/shared/constants/app_icons.dart';
 
 /// Mobile layout: compact app bar + drawer, single-column scroll.
 /// Dashboard content: header, 2x2 KPI cards, AI Insights, Revenue Insights, renewals as list cards, footer.
-class DashboardMobileView extends StatelessWidget {
+class DashboardMobileView extends StatefulWidget {
   const DashboardMobileView({super.key});
 
+  @override
+  State<DashboardMobileView> createState() => _DashboardMobileViewState();
+}
+
+class _DashboardMobileViewState extends State<DashboardMobileView> {
   static const _purple = Color(0xFF4F46E5);
   static const _purpleLight = Color(0xFFEEEDFB);
   static const _sidebarIconColor = Color(0xFF64748B);
@@ -49,61 +55,35 @@ class DashboardMobileView extends StatelessWidget {
     settings: AppIcons.settings,
   );
 
-  static final _renewalRows = [
-    _RenewalRow(
-      name: 'Rahul Kamath',
-      plan: 'Quarterly',
-      expiry: '01/01/2026',
-      status: 'Expired',
-      isExpired: true,
-    ),
-    _RenewalRow(
-      name: 'Lina Benny Thomas',
-      plan: 'Monthly',
-      expiry: '15/01/2026',
-      status: 'Expiring',
-      isExpired: false,
-    ),
-    _RenewalRow(
-      name: 'Ankith Rawat',
-      plan: 'Yearly',
-      expiry: '15/01/2026',
-      status: 'Expiring',
-      isExpired: false,
-    ),
-    _RenewalRow(
-      name: 'Alex George',
-      plan: 'Monthly',
-      expiry: '15/01/2026',
-      status: 'Expiring',
-      isExpired: false,
-    ),
-    _RenewalRow(
-      name: 'Mary Steenberg',
-      plan: 'Yearly',
-      expiry: '15/01/2026',
-      status: 'Expiring',
-      isExpired: false,
-    ),
-    _RenewalRow(
-      name: 'Mary Steenberg',
-      plan: 'Monthly',
-      expiry: '15/01/2026',
-      status: 'Expiring',
-      isExpired: false,
-    ),
-    _RenewalRow(
-      name: 'Mary Steenberg',
-      plan: 'Quarterly',
-      expiry: '15/01/2026',
-      status: 'Expiring',
-      isExpired: false,
-    ),
-  ];
+  late final DashboardController _controller;
+  final Set<int> _visitedTabs = {0};
+  bool _showBelowFold = false;
+  Worker? _navWorker;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = Get.find<DashboardController>();
+    _navWorker = ever<int>(_controller.selectedNavIndex, (index) {
+      if (_visitedTabs.add(index) && mounted) {
+        setState(() {});
+      }
+    });
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) setState(() => _showBelowFold = true);
+    });
+  }
+
+  @override
+  void dispose() {
+    _navWorker?.dispose();
+    super.dispose();
+  }
+
+  static const _renewalPreviewLimit = 5;
 
   @override
   Widget build(BuildContext context) {
-    final controller = Get.find<DashboardController>();
     return Scaffold(
       backgroundColor: const Color(0xFFF8FAFC),
       appBar: AppBar(
@@ -151,16 +131,40 @@ class DashboardMobileView extends StatelessWidget {
           ),
         ],
       ),
-      drawer: _buildDrawer(context, controller),
+      drawer: _buildDrawer(context, _controller),
       body: Obx(() {
-        final index = controller.selectedNavIndex.value;
-        if (index == 1) return const MembersView();
-        if (index == 2) return const SubscriptionsView();
-        if (index == 3) return const RenewalsView();
-        if (index == 4) return const RemindersView();
-        if (index == 5) return const ReportsView();
-        if (index == 6) return const SettingsView();
-        return _buildDashboardContent(context, controller);
+        final index = _controller.selectedNavIndex.value;
+        return IndexedStack(
+          index: index,
+          sizing: StackFit.expand,
+          children: [
+            _buildDashboardContent(context, _controller),
+            if (_visitedTabs.contains(1))
+              const MembersView()
+            else
+              const SizedBox.shrink(),
+            if (_visitedTabs.contains(2))
+              const SubscriptionsView()
+            else
+              const SizedBox.shrink(),
+            if (_visitedTabs.contains(3))
+              const RenewalsView()
+            else
+              const SizedBox.shrink(),
+            if (_visitedTabs.contains(4))
+              const RemindersView()
+            else
+              const SizedBox.shrink(),
+            if (_visitedTabs.contains(5))
+              const ReportsView()
+            else
+              const SizedBox.shrink(),
+            if (_visitedTabs.contains(6))
+              const SettingsView()
+            else
+              const SizedBox.shrink(),
+          ],
+        );
       }),
     );
   }
@@ -178,11 +182,13 @@ class DashboardMobileView extends StatelessWidget {
           const SizedBox(height: 20),
           _buildSummaryGrid(controller),
           const SizedBox(height: 20),
-          _buildInsightsCard(),
-          const SizedBox(height: 16),
-          _buildRevenueInsightsCard(),
-          const SizedBox(height: 20),
-          _buildRenewalsSection(context, controller),
+          const _MobileInsightsCard(),
+          if (_showBelowFold) ...[
+            const SizedBox(height: 16),
+            const _MobileRevenueInsightsCard(),
+            const SizedBox(height: 20),
+            _buildRenewalsSection(context, controller),
+          ],
           const SizedBox(height: 24),
           _buildFooter(),
         ],
@@ -405,17 +411,42 @@ class DashboardMobileView extends StatelessWidget {
   Widget _buildSummaryGrid(DashboardController controller) {
     return Obx(() {
       if (controller.memberCountsLoading.value) {
-        return GridView.count(
-          crossAxisCount: 2,
-          shrinkWrap: true,
-          physics: const NeverScrollableScrollPhysics(),
-          mainAxisSpacing: 12,
-          crossAxisSpacing: 12,
-          childAspectRatio: 1.5,
-          children: List.generate(
-            4,
-            (_) => const DashboardKpiCardSkeleton(minHeight: 96),
-          ),
+        return Column(
+          children: [
+            Row(
+              children: [
+                Expanded(
+                  child: Padding(
+                    padding: const EdgeInsets.only(right: 6),
+                    child: DashboardKpiCardSkeleton(minHeight: 96),
+                  ),
+                ),
+                Expanded(
+                  child: Padding(
+                    padding: const EdgeInsets.only(left: 6),
+                    child: DashboardKpiCardSkeleton(minHeight: 96),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+            Row(
+              children: [
+                Expanded(
+                  child: Padding(
+                    padding: const EdgeInsets.only(right: 6),
+                    child: DashboardKpiCardSkeleton(minHeight: 96),
+                  ),
+                ),
+                Expanded(
+                  child: Padding(
+                    padding: const EdgeInsets.only(left: 6),
+                    child: DashboardKpiCardSkeleton(minHeight: 96),
+                  ),
+                ),
+              ],
+            ),
+          ],
         );
       }
 
@@ -449,14 +480,24 @@ class DashboardMobileView extends StatelessWidget {
           AppStrings.summaryRenewedThisMonth,
         ),
       ];
-      return GridView.count(
-        crossAxisCount: 2,
-        shrinkWrap: true,
-        physics: const NeverScrollableScrollPhysics(),
-        mainAxisSpacing: 12,
-        crossAxisSpacing: 12,
-        childAspectRatio: 1.5,
-        children: cards.map((c) => _summaryCard(c)).toList(),
+      return Column(
+        children: [
+          Row(
+            children: [
+              Expanded(child: _summaryCard(cards[0])),
+              const SizedBox(width: 12),
+              Expanded(child: _summaryCard(cards[1])),
+            ],
+          ),
+          const SizedBox(height: 12),
+          Row(
+            children: [
+              Expanded(child: _summaryCard(cards[2])),
+              const SizedBox(width: 12),
+              Expanded(child: _summaryCard(cards[3])),
+            ],
+          ),
+        ],
       );
     });
   }
@@ -531,239 +572,94 @@ class DashboardMobileView extends StatelessWidget {
     );
   }
 
-  Widget _buildInsightsCard() {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: const Color(0xFFC7D2FE), width: 1),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.06),
-            blurRadius: 12,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            AppStrings.aiInsightsTitle,
-            style: Get.textTheme.titleMedium?.copyWith(
-              fontWeight: FontWeight.bold,
-              color: Colors.black,
-            ),
-          ),
-          const SizedBox(height: 12),
-          RichText(
-            text: TextSpan(
-              style: Get.textTheme.bodySmall?.copyWith(
-                color: _textMuted,
-                fontWeight: FontWeight.w400,
-              ),
-              children: [
-                const TextSpan(text: AppStrings.aiInsightsYouMayLosePrefix),
-                TextSpan(
-                  text: AppStrings.aiInsightsLostAmount,
-                  style: Get.textTheme.bodySmall?.copyWith(
-                    color: _textDark,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-                const TextSpan(text: AppStrings.aiInsightsThisWeekSuffix),
-                TextSpan(
-                  text: AppStrings.aiInsightsRecoveredAmount,
-                  style: Get.textTheme.bodySmall?.copyWith(
-                    color: _textDark,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-                const TextSpan(text: AppStrings.aiInsightsMessageEnding),
-              ],
-            ),
-            maxLines: 3,
-            overflow: TextOverflow.ellipsis,
-          ),
-          const SizedBox(height: 20),
-          Align(
-            alignment: Alignment.centerRight,
-            child: SendRemindersButton(
-              onTap: () => Get.find<DashboardController>().onSendRemindersNow(),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  static const _revenueRecoveredBlue = Color(0xFF4DA5F2);
-  static const _revenueLostRed = Color(0xFFFF7373);
-
-  Widget _buildRevenueInsightsCard() {
-    const chartSize = 100.0;
-    final recoveredFraction = 18624 / (18624 + 2540);
-    final lostFraction = 2540 / (18624 + 2540);
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: const Color(0xFFE2E8F0)),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.06),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            AppStrings.revenueInsightsTitle,
-            style: Get.textTheme.bodyMedium?.copyWith(
-              fontWeight: FontWeight.w600,
-              color: _textDark,
-            ),
-          ),
-          const SizedBox(height: 30),
-          Center(
-            child: SizedBox(
-              width: chartSize,
-              height: chartSize,
-              child: CustomPaint(
-                painter: _DonutChartPainter(
-                  segments: [
-                    (_revenueRecoveredBlue, recoveredFraction),
-                    (_revenueLostRed, lostFraction),
-                  ],
-                  strokeWidth: 24,
-                ),
-              ),
-            ),
-          ),
-          const SizedBox(height: 24),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.start,
-            children: [
-              _revenueLegendItem(
-                color: _revenueRecoveredBlue,
-                label: AppStrings.revenueRecoveredLabel,
-                value: '₹18,624',
-              ),
-              const SizedBox(width: 34),
-              _revenueLegendItem(
-                color: _revenueLostRed,
-                label: AppStrings.revenueLostLabel,
-                value: '₹2,540',
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _revenueLegendItem({
-    required Color color,
-    required String label,
-    required String value,
-  }) {
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Container(
-          width: 10,
-          height: 10,
-          decoration: BoxDecoration(color: color, shape: BoxShape.circle),
-        ),
-        const SizedBox(width: 8),
-        Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(
-              label,
-              style: Get.textTheme.bodySmall?.copyWith(
-                color: _textMuted,
-                fontSize: 11,
-                fontWeight: FontWeight.w400,
-              ),
-            ),
-            const SizedBox(height: 2),
-            Text(
-              value,
-              style: Get.textTheme.labelMedium?.copyWith(
-                fontWeight: FontWeight.bold,
-                color: Colors.black,
-                fontSize: 13,
-              ),
-            ),
-          ],
-        ),
-      ],
-    );
-  }
-
   Widget _buildRenewalsSection(
     BuildContext context,
     DashboardController controller,
   ) {
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: const Color(0xFFE2E8F0)),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.06),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Padding(
-            padding: const EdgeInsets.all(16),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Expanded(
-                  child: Text(
-                    AppStrings.actionRequiredRenewals,
-                    style: Get.textTheme.titleSmall?.copyWith(
-                      color: const Color(0xFF0F172A),
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                ),
-                GestureDetector(
-                  onTap: controller.onViewAllRenewals,
-                  child: Text(
-                    AppStrings.viewAllRenewals,
-                    style: Get.textTheme.labelMedium?.copyWith(
-                      color: _purple,
-                      fontWeight: FontWeight.w600,
-                      fontSize: 13,
-                      decorationColor: _purple,
-                    ),
-                  ),
-                ),
-              ],
+    return Obx(() {
+      final loading = controller.membersLoading.value;
+      final rows = controller.memberTableData
+          .map(
+            (m) => _RenewalRow(
+              name: m.name,
+              plan: m.plan,
+              expiry: m.expiry,
+              status: switch (m.status) {
+                MemberStatus.active => AppStrings.active,
+                MemberStatus.expired => AppStrings.expired,
+                MemberStatus.expiring => AppStrings.expiring,
+              },
+              isExpired: m.status == MemberStatus.expired,
             ),
-          ),
-          const Divider(height: 1, thickness: 1, color: Color(0xFFE2E8F0)),
-          ..._renewalRows.map((row) => _renewalCard(context, row)),
-        ],
-      ),
-    );
+          )
+          .take(_renewalPreviewLimit)
+          .toList();
+
+      return Container(
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: const Color(0xFFE2E8F0)),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.06),
+              blurRadius: 8,
+              offset: const Offset(0, 2),
+            ),
+          ],
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Padding(
+              padding: const EdgeInsets.all(16),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Expanded(
+                    child: Text(
+                      AppStrings.actionRequiredRenewals,
+                      style: Get.textTheme.titleSmall?.copyWith(
+                        color: const Color(0xFF0F172A),
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                  GestureDetector(
+                    onTap: controller.onViewAllRenewals,
+                    child: Text(
+                      AppStrings.viewAllRenewals,
+                      style: Get.textTheme.labelMedium?.copyWith(
+                        color: _purple,
+                        fontWeight: FontWeight.w600,
+                        fontSize: 13,
+                        decorationColor: _purple,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const Divider(height: 1, thickness: 1, color: Color(0xFFE2E8F0)),
+            if (loading && rows.isEmpty)
+              const Padding(
+                padding: EdgeInsets.all(16),
+                child: DashboardDataTableSkeleton(height: 220),
+              )
+            else if (rows.isEmpty)
+              Padding(
+                padding: const EdgeInsets.all(16),
+                child: Text(
+                  AppStrings.membersEmptyState,
+                  style: Get.textTheme.bodySmall?.copyWith(color: _textMuted),
+                ),
+              )
+            else
+              ...rows.map((row) => _renewalCard(context, row)),
+          ],
+        ),
+      );
+    });
   }
 
   Widget _renewalCard(BuildContext context, _RenewalRow row) {
@@ -882,6 +778,202 @@ class DashboardMobileView extends StatelessWidget {
           ),
         ),
       ),
+    );
+  }
+}
+
+/// Static AI insights card — no reactive rebuilds.
+class _MobileInsightsCard extends StatelessWidget {
+  const _MobileInsightsCard();
+
+  static const _textDark = Color(0xFF0F172A);
+  static const _textMuted = Color(0xFF666666);
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: const Color(0xFFC7D2FE), width: 1),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.06),
+            blurRadius: 12,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            AppStrings.aiInsightsTitle,
+            style: Get.textTheme.titleMedium?.copyWith(
+              fontWeight: FontWeight.bold,
+              color: Colors.black,
+            ),
+          ),
+          const SizedBox(height: 12),
+          RichText(
+            text: TextSpan(
+              style: Get.textTheme.bodySmall?.copyWith(
+                color: _textMuted,
+                fontWeight: FontWeight.w400,
+              ),
+              children: [
+                const TextSpan(text: AppStrings.aiInsightsYouMayLosePrefix),
+                TextSpan(
+                  text: AppStrings.aiInsightsLostAmount,
+                  style: Get.textTheme.bodySmall?.copyWith(
+                    color: _textDark,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                const TextSpan(text: AppStrings.aiInsightsThisWeekSuffix),
+                TextSpan(
+                  text: AppStrings.aiInsightsRecoveredAmount,
+                  style: Get.textTheme.bodySmall?.copyWith(
+                    color: _textDark,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                const TextSpan(text: AppStrings.aiInsightsMessageEnding),
+              ],
+            ),
+            maxLines: 3,
+            overflow: TextOverflow.ellipsis,
+          ),
+          const SizedBox(height: 20),
+          Align(
+            alignment: Alignment.centerRight,
+            child: SendRemindersButton(
+              onTap: () => Get.find<DashboardController>().onSendRemindersNow(),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Static revenue chart card — built after first frame to speed initial open.
+class _MobileRevenueInsightsCard extends StatelessWidget {
+  const _MobileRevenueInsightsCard();
+
+  static const _textDark = Color(0xFF0F172A);
+  static const _textMuted = Color(0xFF666666);
+  static const _revenueRecoveredBlue = Color(0xFF4DA5F2);
+  static const _revenueLostRed = Color(0xFFFF7373);
+
+  @override
+  Widget build(BuildContext context) {
+    const chartSize = 100.0;
+    final recoveredFraction = 18624 / (18624 + 2540);
+    final lostFraction = 2540 / (18624 + 2540);
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: const Color(0xFFE2E8F0)),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.06),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            AppStrings.revenueInsightsTitle,
+            style: Get.textTheme.bodyMedium?.copyWith(
+              fontWeight: FontWeight.w600,
+              color: _textDark,
+            ),
+          ),
+          const SizedBox(height: 30),
+          Center(
+            child: SizedBox(
+              width: chartSize,
+              height: chartSize,
+              child: CustomPaint(
+                painter: _DonutChartPainter(
+                  segments: [
+                    (_revenueRecoveredBlue, recoveredFraction),
+                    (_revenueLostRed, lostFraction),
+                  ],
+                  strokeWidth: 24,
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(height: 24),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.start,
+            children: [
+              _revenueLegendItem(
+                color: _revenueRecoveredBlue,
+                label: AppStrings.revenueRecoveredLabel,
+                value: '₹18,624',
+              ),
+              const SizedBox(width: 34),
+              _revenueLegendItem(
+                color: _revenueLostRed,
+                label: AppStrings.revenueLostLabel,
+                value: '₹2,540',
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _revenueLegendItem({
+    required Color color,
+    required String label,
+    required String value,
+  }) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Container(
+          width: 10,
+          height: 10,
+          decoration: BoxDecoration(color: color, shape: BoxShape.circle),
+        ),
+        const SizedBox(width: 8),
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              label,
+              style: Get.textTheme.bodySmall?.copyWith(
+                color: _textMuted,
+                fontSize: 11,
+                fontWeight: FontWeight.w400,
+              ),
+            ),
+            const SizedBox(height: 2),
+            Text(
+              value,
+              style: Get.textTheme.labelMedium?.copyWith(
+                fontWeight: FontWeight.bold,
+                color: Colors.black,
+                fontSize: 13,
+              ),
+            ),
+          ],
+        ),
+      ],
     );
   }
 }
